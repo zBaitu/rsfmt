@@ -60,12 +60,18 @@ pub struct Crate {
     pub items: Vec<Item>,
 }
 
-pub type Doc = Chunk;
 
 #[derive(Debug)]
 pub enum AttrKind {
     Doc(Doc),
     Attr(Attr),
+}
+
+#[derive(Debug)]
+pub struct Doc {
+    pub loc: Loc,
+    pub is_inner: bool,
+    pub doc: String,
 }
 
 #[derive(Debug)]

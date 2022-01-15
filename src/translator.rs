@@ -398,7 +398,8 @@ impl Translator {
     fn trans_doc(&mut self, attr: &ast::Attribute) -> Doc {
         Doc {
             loc: self.leaf_loc(&attr.span),
-            s : attr.doc_str().unwrap().to_ident_string(),
+            is_inner: is_inner(attr.style),
+            doc: attr.doc_str().unwrap().to_ident_string(),
         }
     }
 

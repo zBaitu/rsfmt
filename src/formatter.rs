@@ -109,15 +109,6 @@ impl Display for Crate {
     }
 }
 
-impl Display for AttrKind {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            AttrKind::Doc(ref doc) => Display::fmt(doc, f),
-            AttrKind::Attr(ref attr) => Display::fmt(attr, f),
-        }
-    }
-}
-
 impl Display for Chunk {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut first = true;
@@ -130,6 +121,27 @@ impl Display for Chunk {
             first = false;
         }
         OK
+    }
+}
+
+impl Display for AttrKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AttrKind::Doc(ref doc) => Display::fmt(doc, f),
+            AttrKind::Attr(ref attr) => Display::fmt(attr, f),
+        }
+    }
+}
+
+impl Display for Doc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "//")?;
+        if self.is_inner {
+            write!(f, "!")?;
+        } else {
+            write!(f, "/")?;
+        }
+        write!(f, "{}", self.doc)
     }
 }
 
@@ -1845,6 +1857,12 @@ impl Formatter {
         }
     }
 
+
+    fn fmt_chunk(&mut self, chunk: &Chunk) {
+        maybe_nl!(self, chunk);
+        self.fmt_long_str(&chunk.s);
+    }
+
     fn fmt_attrs(&mut self, attrs: &Vec<AttrKind>) {
         let mut attr_group: Vec<&Attr> = Vec::new();
 
@@ -1875,16 +1893,19 @@ impl Formatter {
     fn fmt_doc(&mut self, doc: &Doc) {
         self.try_fmt_leading_comments(&doc.loc);
         self.insert_indent();
-        self.fmt_chunk(doc);
+
+        self.raw_insert("//");
+        if doc.is_inner {
+            self.raw_insert("!");
+        } else {
+            self.raw_insert("/");
+        }
+        self.raw_insert(&doc.doc);
+
         self.try_fmt_trailing_comment(&doc.loc);
         self.nl();
     }
 
-
-    fn fmt_chunk(&mut self, chunk: &Chunk) {
-        maybe_nl!(self, chunk);
-        self.fmt_long_str(&chunk.s);
-    }
 
 
     fn fmt_long_str(&mut self, s: &str) {
