@@ -472,13 +472,6 @@ impl Translator {
     }
 
     #[inline]
-    fn leaf_loc(&mut self, sp: &ast::Span) -> Loc {
-        let loc = self.loc(sp);
-        self.set_loc(&loc);
-        loc
-    }
-
-    #[inline]
     fn loc(&mut self, sp: &ast::Span) -> Loc {
         self.trans_comments(sp.lo().0);
 
@@ -493,6 +486,13 @@ impl Translator {
     fn set_loc(&mut self, loc: &Loc) {
         self.trans_comments(loc.end);
         self.last_loc = *loc;
+    }
+
+    #[inline]
+    fn leaf_loc(&mut self, sp: &ast::Span) -> Loc {
+        let loc = self.loc(sp);
+        self.set_loc(&loc);
+        loc
     }
 
     #[inline]
