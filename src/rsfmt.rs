@@ -11,7 +11,7 @@ use walkdir::WalkDir;
 
 use crate::Opt;
 use crate::translator::{self, TrResult};
-//use crate::ft;
+use crate::formatter;
 
 macro_rules! p {
     () => ({println!()});
@@ -39,7 +39,6 @@ pub fn dump_ast(path: &PathBuf) {
                 return;
             }
         };
-
         d!(krate);
 
         p!(SEP);
@@ -64,17 +63,14 @@ pub fn debug(path: &PathBuf) {
 pub fn print(path: &PathBuf) {
     let src = fs::read_to_string(path).unwrap();
     let result = trans(src, path);
-    //p!(result.krate);
+    p!(result.krate);
 }
 
-/*
 pub fn fmt_from_stdin(opt: Opt) {
     let mut src = String::new();
     io::stdin().read_to_string(&mut src).unwrap();
     fmt_str(src, &PathBuf::from("stdin"), &opt);
 }
-
-
 
 pub fn fmt(opt: Opt) {
     let path = opt.input.as_ref().unwrap();
@@ -107,7 +103,7 @@ fn fmt_file(path: &PathBuf, opt: &Opt) {
 
 fn fmt_str(src: String, path: &PathBuf, opt: &Opt) {
     let tr_result = trans(src, path);
-    let ft_result = ft::fmt(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
+    let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
     if opt.overwrite {
         let mut file = File::create(path).unwrap();
         file.write_all(ft_result.s.as_bytes()).unwrap();
@@ -126,13 +122,12 @@ fn fmt_str(src: String, path: &PathBuf, opt: &Opt) {
         p!(ft_result.s);
     }
 }
-*/
 
 fn trans(src: String, path: &PathBuf) -> TrResult {
     span::with_default_session_globals(|| {
         let sess = ParseSess::new(FilePathMapping::empty());
         let krate = parse::parse_crate_from_source_str(FileName::from(path.to_path_buf()), src.clone(), &sess).unwrap();
         let cmnts = comments::gather_comments(&sess.source_map(), FileName::from(path.to_path_buf()), src.clone());
-        translator::trans(src, sess, krate, cmnts)
+        translator::translate(src, sess, krate, cmnts)
     })
 }

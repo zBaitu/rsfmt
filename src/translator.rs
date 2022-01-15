@@ -283,7 +283,7 @@ pub struct TrResult {
     pub trailing_cmnts: HashMap<Pos, String>,
 }
 
-pub fn trans(src: String, sess: ParseSess, krate: ast::Crate, cmnts: Vec<ast::Comment>) -> TrResult {
+pub fn translate(src: String, sess: ParseSess, krate: ast::Crate, cmnts: Vec<ast::Comment>) -> TrResult {
     Translator::new(src, sess, trans_comments(cmnts)).trans_crate(krate)
 }
 

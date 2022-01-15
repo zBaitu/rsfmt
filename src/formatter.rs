@@ -2,10 +2,10 @@ use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Display};
 
 use ir::*;
-use ts::*;
+use typesetter::*;
 
 use crate::ir;
-use crate::ts;
+use crate::typesetter;
 use crate::{need_nl_indent, need_wrap};
 
 const OK: fmt::Result = Ok(());
@@ -105,7 +105,7 @@ select_str!(range, is_inclusive, "..=", "..");
 impl Display for Crate {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         display_attrs(f, &self.attrs)?;
-        Display::fmt(&self.module, f)
+        display_items!(f, &self.items)
     }
 }
 
@@ -353,7 +353,8 @@ impl Display for ParenParam {
 
 impl Display for TypeAlias {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "type {}{} = {}", self.name, self.generics, self.ty)
+        // TODO
+        write!(f, "type {}{} = {}", self.name, self.generics, self.ty.as_ref().unwrap())
     }
 }
 
@@ -481,13 +482,15 @@ impl Display for Existential {
 
 impl Display for Const {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "const {}: {} = {}", self.name, self.ty, self.expr)
+        // TODO
+        write!(f, "const {}: {} = {}", self.name, self.ty, self.expr.as_ref().unwrap())
     }
 }
 
 impl Display for Static {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}: {} = {}", static_head(self.is_mut), self.name, self.ty, self.expr)
+        // TODO
+        write!(f, "{}{}: {} = {}", static_head(self.is_mut), self.name, self.ty, self.expr.as_ref().unwrap())
     }
 }
 
@@ -596,7 +599,8 @@ impl Display for Fn {
         display_generics(f, &self.generics)?;
         Display::fmt(&self.sig, f)?;
         display_where(f, &self.generics)?;
-        try_display_block_one_line(f, &self.block)
+        // TODO
+        try_display_block_one_line(f, &self.block.as_ref().unwrap())
     }
 }
 
@@ -1741,7 +1745,7 @@ macro_rules! fmt_items_maybe_nl {
     });
 }
 
-pub fn fmt(krate: Crate, leading_cmnts: HashMap<Pos, Vec<String>>, trailing_cmnts: HashMap<Pos, String>) -> TsResult {
+pub fn format(krate: Crate, leading_cmnts: HashMap<Pos, Vec<String>>, trailing_cmnts: HashMap<Pos, String>) -> TsResult {
     Formatter::new(leading_cmnts, trailing_cmnts).fmt_crate(krate)
 }
 
@@ -1777,8 +1781,9 @@ impl Formatter {
     fn fmt_crate(mut self, krate: Crate) -> TsResult {
         self.try_fmt_leading_comments(&krate.loc);
         self.fmt_attrs(&krate.attrs);
-        self.fmt_mod(&krate.module);
-        self.fmt_left_comments(&krate.module.loc);
+        self.fmt_items(&krate.items);
+        // TODO
+        //self.fmt_left_comments(&krate.module.loc);
         self.ts.result()
     }
 
@@ -2082,7 +2087,8 @@ impl Formatter {
     fn fmt_type_alias(&mut self, item: &TypeAlias) {
         self.insert(&format!("type {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
-        maybe_wrap!(self, " = ", "= ", item.ty, fmt_type);
+        // TODO
+        maybe_wrap!(self, " = ", "= ", item.ty.as_ref().unwrap(), fmt_type);
         self.raw_insert(";");
     }
 
@@ -2373,7 +2379,8 @@ impl Formatter {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
         self.fmt_type(&item.ty);
-        maybe_wrap!(self, " = ", "= ", item.expr, fmt_expr);
+        // TODO
+        maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
         self.raw_insert(";");
     }
 
@@ -2381,8 +2388,9 @@ impl Formatter {
     fn fmt_static(&mut self, item: &Static) {
         self.insert(&format!("{}{}", static_head(item.is_mut), item.name));
         insert_sep!(self, ":", item.ty);
+        // TODO
         self.fmt_type(&item.ty);
-        maybe_wrap!(self, " = ", "= ", item.expr, fmt_expr);
+        maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
         self.raw_insert(";");
     }
 
@@ -2506,7 +2514,8 @@ impl Formatter {
         self.fmt_generics(&item.generics);
         self.fmt_fn_sig(&item.sig);
         self.fmt_where(&item.generics);
-        self.try_fmt_block_one_line(&item.block);
+        // TODO
+        self.try_fmt_block_one_line(&item.block.as_ref().unwrap());
     }
 
     fn fmt_trait(&mut self, item: &Trait) {
@@ -2626,7 +2635,8 @@ impl Formatter {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
         self.fmt_type(&item.ty);
-        maybe_wrap!(self, " = ", "= ", item.expr, fmt_expr);
+        // TODO
+        maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
     }
 
     #[inline]

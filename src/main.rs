@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 mod ast;
-//mod ft;
+mod formatter;
 mod ir;
 mod rsfmt;
 mod translator;
-//mod ts;
+mod typesetter;
 
 #[derive(Debug, StructOpt)]
 pub struct Opt {
@@ -41,14 +41,14 @@ pub struct Opt {
 fn main() {
     let opt = Opt::from_args();
     if opt.input.is_none() {
-        //rsfmt::fmt_from_stdin(opt);
+        rsfmt::fmt_from_stdin(opt);
     } else if opt.ast {
         rsfmt::dump_ast(&opt.input.unwrap());
     } else if opt.debug {
         rsfmt::debug(&opt.input.unwrap());
     } else if opt.print {
-        //rsfmt::print(&opt.input.unwrap());
+        rsfmt::print(&opt.input.unwrap());
     } else {
-        //rsfmt::fmt(opt);
+        rsfmt::fmt(opt);
     }
 }
