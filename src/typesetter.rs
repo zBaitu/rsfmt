@@ -45,7 +45,7 @@ macro_rules! minus_nf {
     })
 }
 
-#[inline]
+
 fn list_len_info(list: &[&str]) -> (usize, usize) {
     let prefix_len = if list.len() > 1 {
         list.iter().take(list.len() - 1).map(|s| str_one_line_len(s)).sum()
@@ -56,7 +56,7 @@ fn list_len_info(list: &[&str]) -> (usize, usize) {
     (prefix_len, len)
 }
 
-#[inline]
+
 fn str_one_line_len(s: &str) -> usize {
     if let Some(pos) = s.find('\n') {
         pos
@@ -65,7 +65,7 @@ fn str_one_line_len(s: &str) -> usize {
     }
 }
 
-#[inline]
+
 fn fill_str(ch: char, count: usize) -> String {
     let mut s = String::with_capacity(count);
     for _ in 0..count {
@@ -119,17 +119,17 @@ impl Typesetter {
         }
     }
 
-    #[inline]
+
     pub fn force_insert(&mut self, s: &str) {
         self.s.push_str(s);
     }
 
-    #[inline]
+
     pub fn raw_insert(&mut self, s: &str) {
         raw_insert!(self, s);
     }
 
-    #[inline]
+
     pub fn insert(&mut self, s: &str) {
         if need_wrap!(self, s) {
             self.wrap_insert(s);
@@ -138,23 +138,23 @@ impl Typesetter {
         }
     }
 
-    #[inline]
+
     pub fn indent(&mut self) {
         self.indent.push_str(INDENT);
     }
 
-    #[inline]
+
     pub fn outdent(&mut self) {
         let len = self.indent.len();
         self.indent.truncate(len - INDENT.len());
     }
 
-    #[inline]
+
     pub fn insert_indent(&mut self) {
         raw_insert!(self, &self.indent);
     }
 
-    #[inline]
+
     pub fn nl(&mut self) {
         if let Some(ch) = self.s.chars().last() {
             if ch != NL && ch.is_whitespace() {
@@ -167,30 +167,30 @@ impl Typesetter {
         self.col = 0;
     }
 
-    #[inline]
+
     pub fn nl_indent(&mut self) {
         self.nl();
         self.insert_indent();
     }
 
-    #[inline]
+
     pub fn can_one_line(&self, s: &str) -> bool {
         self.left() > s.len()
     }
 
-    #[inline]
+
     pub fn need_wrap(&self, list: &[&str]) -> bool {
         let (prefix_len, len) = list_len_info(list);
         self.need_wrap_len(prefix_len, len)
     }
 
-    #[inline]
+
     pub fn need_nl_indent(&self, list: &[&str]) -> bool {
         let (prefix_len, len) = list_len_info(list);
         self.need_nl_indent_len(prefix_len, len)
     }
 
-    #[inline]
+
     pub fn wrap(&mut self) {
         self.nl();
 
@@ -202,30 +202,30 @@ impl Typesetter {
         }
     }
 
-    #[inline]
+
     pub fn insert_mark_align(&mut self, s: &str) {
         self.raw_insert(s);
         self.mark_align();
     }
 
-    #[inline]
+
     pub fn insert_unmark_align(&mut self, s: &str) {
         self.raw_insert(s);
         self.unmark_align();
     }
 
-    #[inline]
+
     fn wrap_insert(&mut self, s: &str) {
         self.wrap();
         self.raw_insert(s);
     }
 
-    #[inline]
+
     fn need_wrap_len(&self, prefix_len: usize, len: usize) -> bool {
         (minus_nf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_left())
     }
 
-    #[inline]
+
     fn nl_left(&self) -> usize {
         if self.should_align() {
             self.nl_align_left()
@@ -234,7 +234,7 @@ impl Typesetter {
         }
     }
 
-    #[inline]
+
     fn should_align(&self) -> bool {
         match self.align_stack.last() {
             Some(col) if *col <= MAX_ALIGN_COL => true,
@@ -242,48 +242,48 @@ impl Typesetter {
         }
     }
 
-    #[inline]
+
     fn nl_align_left(&self) -> usize {
         minus_nf!(MAX_WIDTH, *self.align_stack.last().unwrap())
     }
 
-    #[inline]
+
     fn nl_wrap_left(&self) -> usize {
         minus_nf!(MAX_WIDTH, self.indent.len() + WRAP_INDENT.len())
     }
 
-    #[inline]
+
     fn need_nl_indent_len(&self, prefix_len: usize, len: usize) -> bool {
         (minus_nf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_indent_left())
     }
 
-    #[inline]
+
     fn left(&self) -> usize {
         minus_nf!(MAX_WIDTH, self.col)
     }
 
-    #[inline]
+
     fn nl_indent_left(&self) -> usize {
         minus_nf!(MAX_WIDTH, self.indent.len())
     }
 
-    #[inline]
+
     fn insert_wrap_indent(&mut self) {
         self.raw_insert(WRAP_INDENT);
     }
 
-    #[inline]
+
     fn insert_align(&mut self) {
         let blank = fill_str(' ', *self.align_stack.last().unwrap());
         self.raw_insert(&blank);
     }
 
-    #[inline]
+
     fn mark_align(&mut self) {
         self.align_stack.push(self.col);
     }
 
-    #[inline]
+
     fn unmark_align(&mut self) {
         self.align_stack.pop();
     }

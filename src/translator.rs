@@ -36,7 +36,7 @@ fn trans_comments(cmnts: Vec<ast::Comment>) -> Vec<Comment> {
     })
 }
 
-#[inline]
+
 fn trans_comment(cmnt: ast::Comment) -> Comment {
     let kind = match cmnt.style {
         ast::CommentStyle::Trailing => CommentKind::Trailing,
@@ -50,28 +50,28 @@ fn trans_comment(cmnt: ast::Comment) -> Comment {
     }
 }
 
-#[inline]
+
 fn span(s: u32, e: u32) -> ast::Span {
     const ROOT: ast::SyntaxContext = ast::SyntaxContext::root();
     ast::Span::new(ast::BytePos(s), ast::BytePos(e), ROOT)
 }
 
-#[inline]
+
 fn is_inner(style: ast::AttrStyle) -> bool {
     style == ast::AttrStyle::Inner
 }
 
-#[inline]
+
 fn symbol_to_string(symbol: &ast::Symbol) -> String {
     symbol.as_str().to_string()
 }
 
-#[inline]
+
 fn token_lit_to_string(lit: &ast::TokenLit) -> String {
     symbol_to_string(&lit.symbol)
 }
 
-#[inline]
+
 fn ident_to_string(ident: &ast::Ident) -> String {
     if (*ident).name != ast::kw::PathRoot {
         symbol_to_string(&ident.name)
@@ -80,7 +80,7 @@ fn ident_to_string(ident: &ast::Ident) -> String {
     }
 }
 
-#[inline]
+
 fn path_to_string(path: &ast::Path) -> String {
     let mut first = true;
     path.segments.iter().fold(String::new(), |mut s, e| {
@@ -93,22 +93,22 @@ fn path_to_string(path: &ast::Path) -> String {
     })
 }
 
-#[inline]
+
 fn is_sized(modifier: ast::TraitBoundModifier) -> bool {
     modifier == ast::TraitBoundModifier::Maybe
 }
 
-#[inline]
+
 fn is_mut(mutability: ast::Mutability) -> bool {
     mutability == ast::Mutability::Mut
 }
 
-#[inline]
+
 fn is_dyn(syntax: ast::TraitObjectSyntax) -> bool {
     syntax == ast::TraitObjectSyntax::Dyn
 }
 
-#[inline]
+
 fn is_unsafe(unsafety: ast::Unsafe) -> bool {
     match unsafety {
         ast::Unsafe::Yes(_) => true,
@@ -117,7 +117,7 @@ fn is_unsafe(unsafety: ast::Unsafe) -> bool {
 }
 
 /*
-#[inline]
+
 fn is_async(asyncness: ast::IsAsync) -> bool {
     match asyncness {
         ast::IsAsync::Async {..} => true,
@@ -125,24 +125,24 @@ fn is_async(asyncness: ast::IsAsync) -> bool {
     }
 }
 
-#[inline]
+
 fn is_const(constness: ast::Constness) -> bool {
     constness == ast::Constness::Const
 }
  */
 
-#[inline]
+
 fn is_auto(autoness: ast::IsAuto) -> bool {
     return autoness == ast::IsAuto::Yes;
 }
 
-#[inline]
+
 fn abi_to_string(abi: ast::Abi) -> String {
     format!(r#""{:?}""#, abi)
 }
 
 /*
-#[inline]
+
 fn has_patten(arg: &ast::Arg, patten: &Patten) -> bool {
     match arg.to_self() {
         Some(sf) => {
@@ -161,7 +161,7 @@ fn has_patten(arg: &ast::Arg, patten: &Patten) -> bool {
 }
  */
 
-#[inline]
+
 fn is_neg(polarity: ast::ImplPolarity) -> bool {
     match polarity {
         ast::ImplPolarity::Negative(_) => true,
@@ -169,7 +169,7 @@ fn is_neg(polarity: ast::ImplPolarity) -> bool {
     }
 }
 
-#[inline]
+
 fn is_default(defaultness: ast::Defaultness) -> bool {
     match defaultness {
         ast::Defaultness::Default(_) => true,
@@ -177,7 +177,7 @@ fn is_default(defaultness: ast::Defaultness) -> bool {
     }
 }
 
-#[inline]
+
 fn is_block_unsafe(rules: ast::BlockCheckMode) -> bool {
     match rules {
         ast::BlockCheckMode::Unsafe(source) => source == ast::UnsafeSource::UserProvided,
@@ -185,17 +185,17 @@ fn is_block_unsafe(rules: ast::BlockCheckMode) -> bool {
     }
 }
 
-#[inline]
+
 fn uop_to_string(op: ast::UnOp) -> &'static str {
     ast::UnOp::to_string(op)
 }
 
-#[inline]
+
 fn is_inclusive(limit: ast::RangeLimits) -> bool {
     limit == ast::RangeLimits::Closed
 }
 
-#[inline]
+
 fn is_patten_inclusive(range_end: &ast::RangeEnd) -> bool {
     match *range_end {
         ast::RangeEnd::Included(..) => true,
@@ -203,17 +203,17 @@ fn is_patten_inclusive(range_end: &ast::RangeEnd) -> bool {
     }
 }
 
-#[inline]
+
 fn is_static(movability: ast::Movability) -> bool {
     movability == ast::Movability::Static
 }
 
-#[inline]
+
 fn is_move(capture: ast::CaptureBy) -> bool {
     capture == ast::CaptureBy::Value
 }
 
-#[inline]
+
 fn is_ref_mut(binding: ast::BindingMode) -> (bool, bool) {
     match binding {
         ast::BindingMode::ByRef(mutability) => (true, is_mut(mutability)),
@@ -221,7 +221,7 @@ fn is_ref_mut(binding: ast::BindingMode) -> (bool, bool) {
     }
 }
 
-#[inline]
+
 fn macro_start(token: &ast::TokenTree) -> u32 {
     let span = match token {
         ast::TokenTree::Token(ref token) => token.span,
@@ -230,7 +230,7 @@ fn macro_start(token: &ast::TokenTree) -> u32 {
     span.lo().0
 }
 
-#[inline]
+
 fn macro_end(token: &ast::TokenTree) -> u32 {
     let span = match token {
         ast::TokenTree::Token(ref token) => token.span,
@@ -239,7 +239,7 @@ fn macro_end(token: &ast::TokenTree) -> u32 {
     span.hi().0
 }
 
-#[inline]
+
 fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
     let (is_sep, s) = match token {
         ast::TokenKind::Comma => (true, ","),
@@ -255,7 +255,7 @@ fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
     }
 }
 
-#[inline]
+
 fn is_macro_semi(style: &ast::MacStmtStyle) -> bool {
     match *style {
         ast::MacStmtStyle::Semicolon => true,
@@ -263,7 +263,7 @@ fn is_macro_semi(style: &ast::MacStmtStyle) -> bool {
     }
 }
 
-#[inline]
+
 fn map_ref_mut<T, F, R>(opt: &Option<T>, mut f: F) -> Option<R> where F: FnMut(&T) -> R {
     match *opt {
         Some(ref v) => Some(f(v)),
@@ -332,13 +332,13 @@ impl Translator {
         }
     }
 
-    #[inline]
+
     fn trans_comments(&mut self, pos: Pos) {
         let cmnts = self.trans_trailing_comments(pos);
         self.trans_leading_comments(pos, cmnts);
     }
 
-    #[inline]
+
     fn trans_trailing_comments(&mut self, pos: Pos) -> Vec<String> {
         let mut cmnts = Vec::new();
 
@@ -356,7 +356,7 @@ impl Translator {
         cmnts
     }
 
-    #[inline]
+
     fn trans_leading_comments(&mut self, pos: Pos, mut cmnts: Vec<String>) {
         while self.cmnt_idx < self.cmnts.len() {
             let cmnt = &self.cmnts[self.cmnt_idx];
@@ -386,7 +386,7 @@ impl Translator {
         trans_list!(self, attrs, trans_attr_kind)
     }
 
-    #[inline]
+
     fn trans_attr_kind(&mut self, attr: &ast::Attribute) -> AttrKind {
         if attr.is_doc_comment() {
             AttrKind::Doc(self.trans_doc(attr))
@@ -455,7 +455,7 @@ impl Translator {
         items
     }
 
-    #[inline]
+
     fn trans_nested_meta_item(&mut self, nested_meta_item: &ast::NestedMetaItem) -> MetaItem {
         match nested_meta_item {
             ast::NestedMetaItem::Literal(ref lit) => {
@@ -471,7 +471,7 @@ impl Translator {
         }
     }
 
-    #[inline]
+
     fn loc(&mut self, sp: &ast::Span) -> Loc {
         self.trans_comments(sp.lo().0);
 
@@ -482,20 +482,20 @@ impl Translator {
         }
     }
 
-    #[inline]
+
     fn set_loc(&mut self, loc: &Loc) {
         self.trans_comments(loc.end);
         self.last_loc = *loc;
     }
 
-    #[inline]
+
     fn leaf_loc(&mut self, sp: &ast::Span) -> Loc {
         let loc = self.loc(sp);
         self.set_loc(&loc);
         loc
     }
 
-    #[inline]
+
     fn is_nl(&self, pos: Pos) -> bool {
         let nl = self.src[..pos as usize].rfind('\n');
         if nl.is_none() {
@@ -513,12 +513,12 @@ impl Translator {
         true
     }
 
-    #[inline]
+
     fn literal_to_string(&self, lit: &ast::Lit) -> String {
         self.span_to_snippet(&lit.span).unwrap()
     }
 
-    #[inline]
+
     fn span_to_snippet(&self, sp: &ast::Span) -> Result<String, ast::SpanSnippetError> {
         self.sess.source_map().span_to_snippet(*sp)
     }
@@ -545,7 +545,7 @@ impl Translator {
         trans_list!(self, items, trans_item)
     }
 
-    #[inline]
+
     fn trans_item(&mut self, item: &ast::Item) -> Item {
         let loc = self.loc(&item.span);
         let attrs = self.trans_attrs(&item.attrs);
@@ -591,7 +591,7 @@ impl Translator {
         }
     }
 
-    #[inline]
+
     fn trans_vis(&mut self, vis: &ast::Visibility) -> Vis {
         let vis = match vis.node {
             ast::VisibilityKind::Public => "pub".to_string(),
@@ -638,7 +638,7 @@ impl Translator {
         }
     }
 
-    #[inline]
+
     fn trans_use_tree(&mut self, tree: &ast::UseTree) -> UseTree {
         let (loc, path, trees) = match tree.kind {
             ast::UseTreeKind::Simple(rename, ..) => {
@@ -790,7 +790,7 @@ impl Translator {
         TypeParamBounds(trans_list!(self, bounds, trans_type_param_bound))
     }
 
-    #[inline]
+
     fn trans_type_param_bound(&mut self, bound: &ast::GenericBound) -> TypeParamBound {
         match *bound {
             ast::GenericBound::Outlives(ref lifetime) => {
@@ -834,7 +834,7 @@ impl Translator {
         trans_list!(self, predicates, trans_where_clause)
     }
 
-    #[inline]
+
     fn trans_where_clause(&mut self, predicate: &ast::WherePredicate) -> WhereClause {
         match *predicate {
             ast::WherePredicate::RegionPredicate(ref region) => self.trans_where_lifetime(region),
@@ -891,7 +891,7 @@ impl Translator {
         trans_list!(self, segments, trans_path_segment)
     }
 
-    #[inline]
+
     fn trans_path_segment(&mut self, seg: &ast::PathSegment) -> PathSegment {
         PathSegment {
             loc: self.loc(&seg.ident.span),
@@ -946,7 +946,7 @@ impl Translator {
         trans_list!(self, bindings, trans_type_binding)
     }
 
-    #[inline]
+
     fn trans_type_binding(&mut self, binding: &ast::AssocTyConstraint) -> TypeBinding {
         let loc = self.loc(&binding.span);
         let name = ident_to_string(&binding.ident);
@@ -988,7 +988,7 @@ impl Translator {
         trans_list!(self, types, trans_type)
     }
 
-    #[inline]
+
     fn trans_type(&mut self, ty: &ast::Ty) -> Type {
         let loc = self.loc(&ty.span);
 
@@ -1119,7 +1119,7 @@ impl Translator {
         trans_list!(self, fields, trans_struct_field)
     }
 
-    #[inline]
+
     fn trans_struct_field(&mut self, field: &ast::StructField) -> StructField {
         let loc = self.loc(&field.span);
         let attrs = self.trans_attrs(&field.attrs);
@@ -1141,7 +1141,7 @@ impl Translator {
         trans_list!(self, fields, trans_tuple_field)
     }
 
-    #[inline]
+
     fn trans_tuple_field(&mut self, field: &ast::StructField) -> TupleField {
         let loc = self.loc(&field.span);
         let attrs = self.trans_attrs(&field.attrs);
@@ -1190,7 +1190,7 @@ impl Translator {
         trans_list!(self, vars, trans_enum_field)
     }
 
-    #[inline]
+
     fn trans_enum_field(&mut self, var: &ast::Variant) -> EnumField {
         let loc = self.loc(&var.span);
         let attrs = self.trans_attrs(&var.node.attrs);
@@ -1231,7 +1231,7 @@ impl Translator {
         trans_list!(self, inputs, trans_arg)
     }
 
-    #[inline]
+
     fn trans_arg(&mut self, arg: &ast::Arg) -> Arg {
         let patten = self.trans_patten(&arg.pat);
         let has_patten = has_patten(arg, &patten);
@@ -1272,7 +1272,7 @@ impl Translator {
         trans_list!(self, items, trans_foreign_item)
     }
 
-    #[inline]
+
     fn trans_foreign_item(&mut self, item: &ast::ForeignItem) -> ForeignItem {
         let loc = self.loc(&item.span);
         let attrs = self.trans_attrs(&item.attrs);
@@ -1349,7 +1349,7 @@ impl Translator {
         trans_list!(self, items, trans_trait_item)
     }
 
-    #[inline]
+
     fn trans_trait_item(&mut self, item: &ast::AssocItem) -> TraitItem {
         let loc = self.loc(&item.span);
         let attrs = self.trans_attrs(&item.attrs);
@@ -1428,7 +1428,7 @@ impl Translator {
         trans_list!(self, items, trans_impl_item)
     }
 
-    #[inline]
+
     fn trans_impl_item(&mut self, item: &ast::AssocItem) -> ImplItem {
         let loc = self.loc(&item.span);
         let attrs = self.trans_attrs(&item.attrs);
@@ -1502,7 +1502,7 @@ impl Translator {
         trans_list!(self, stmts, trans_stmt)
     }
 
-    #[inline]
+
     fn trans_stmt(&mut self, stmt: &ast::Stmt) -> Stmt {
         let loc = self.loc(&stmt.span);
         let stmt = match stmt.node {
@@ -1541,7 +1541,7 @@ impl Translator {
         trans_list!(self, pats, trans_patten)
     }
 
-    #[inline]
+
     fn trans_patten(&mut self, patten: &ast::P<ast::Pat>) -> Patten {
         let loc = self.loc(&patten.span);
         let patten = match patten.node {
@@ -1625,7 +1625,7 @@ impl Translator {
         trans_list!(self, fields, trans_struct_field_patten)
     }
 
-    #[inline]
+
     fn trans_struct_field_patten(&mut self, field: &ast::Spanned<ast::FieldPat>) -> StructFieldPatten {
         let loc = self.loc(&field.span);
         let name = ident_to_string(&field.node.ident);
@@ -1809,7 +1809,7 @@ impl Translator {
         }
     }
 
-    #[inline]
+
     fn trans_index_expr(&mut self, obj: &ast::Expr, index: &ast::Expr) -> IndexExpr {
         IndexExpr {
             obj: self.trans_expr(obj),
@@ -1830,7 +1830,7 @@ impl Translator {
         trans_list!(self, fields, trans_struct_field_expr)
     }
 
-    #[inline]
+
     fn trans_struct_field_expr(&mut self, field: &ast::Field) -> StructFieldExpr {
         let loc = self.loc(&field.span);
         let name = ident_to_string(&field.ident);
@@ -1945,7 +1945,7 @@ impl Translator {
         trans_list!(self, arms, trans_arm)
     }
 
-    #[inline]
+
     fn trans_arm(&mut self, arm: &ast::Arm) -> Arm {
         let attrs = self.trans_thin_attrs(&arm.attrs);
         let pattens = self.trans_pattens(&arm.pats);

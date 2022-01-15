@@ -84,7 +84,7 @@ macro_rules! display_lines {
 
 macro_rules! select_str {
     ($fn_name:ident, $flag:ident, $true_value:expr, $false_value:expr) => (
-        #[inline]
+
         fn $fn_name($flag: bool) -> &'static str {
             static TRUE_HEAD: &'static str = $true_value;
             static FALSE_HEAD: &'static str = $false_value;
@@ -1165,7 +1165,7 @@ impl Display for Macro {
     }
 }
 
-#[inline]
+
 fn fmt_use_trees(f: &mut fmt::Formatter, trees: &Option<Vec<UseTree>>) -> fmt::Result {
     if trees.is_none() {
         return OK;
@@ -1180,7 +1180,7 @@ fn fmt_use_trees(f: &mut fmt::Formatter, trees: &Option<Vec<UseTree>>) -> fmt::R
     }
 }
 
-#[inline]
+
 fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<AttrKind>) -> fmt::Result {
     for attr in attrs {
         writeln!(f, "{}", attr)?;
@@ -1188,12 +1188,12 @@ fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<AttrKind>) -> fmt::Result {
     OK
 }
 
-#[inline]
+
 fn display_vis(f: &mut fmt::Formatter, vis: &Vis) -> fmt::Result {
     write!(f, "{}", vis_head(vis))
 }
 
-#[inline]
+
 fn try_display_type_param_bounds(f: &mut fmt::Formatter, bounds: &TypeParamBounds) -> fmt::Result {
     if !bounds.is_empty() {
         write!(f, ": ")?;
@@ -1202,12 +1202,12 @@ fn try_display_type_param_bounds(f: &mut fmt::Formatter, bounds: &TypeParamBound
     OK
 }
 
-#[inline]
+
 fn display_type_param_bounds(f: &mut fmt::Formatter, bounds: &TypeParamBounds) -> fmt::Result {
     display_lists!(f, " + ", &bounds.0)
 }
 
-#[inline]
+
 fn display_for_liftime_defs(f: &mut fmt::Formatter, lifetime_defs: &Vec<LifetimeDef>) -> fmt::Result {
     if !lifetime_defs.is_empty() {
         display_lists!(f, "for<", ", ", "> ", lifetime_defs)?;
@@ -1215,12 +1215,12 @@ fn display_for_liftime_defs(f: &mut fmt::Formatter, lifetime_defs: &Vec<Lifetime
     OK
 }
 
-#[inline]
+
 fn display_paren_param_inputs(f: &mut fmt::Formatter, inputs: &Vec<Type>) -> fmt::Result {
     display_lists!(f, "(", ", ", ")", inputs)
 }
 
-#[inline]
+
 fn display_qself(f: &mut fmt::Formatter, qself: &QSelf, path: &Path) -> fmt::Result {
     write!(f, "<{}", qself.ty)?;
     if qself.pos > 0 {
@@ -1233,12 +1233,12 @@ fn display_qself(f: &mut fmt::Formatter, qself: &QSelf, path: &Path) -> fmt::Res
     display_path_segments(f, &path.segments[qself.pos..])
 }
 
-#[inline]
+
 fn display_path_segments(f: &mut fmt::Formatter, segments: &[PathSegment]) -> fmt::Result {
     display_lists!(f, "", "::", "", segments)
 }
 
-#[inline]
+
 fn display_generics(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
     if !generics.is_empty() {
         display_lists!(f, "<", ", ", ">", &generics.lifetime_defs, &generics.type_params)?;
@@ -1246,7 +1246,7 @@ fn display_generics(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result 
     OK
 }
 
-#[inline]
+
 fn display_where(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
     if !generics.wh.is_empty() {
         write!(f, " where {}", generics.wh)?;
@@ -1254,17 +1254,17 @@ fn display_where(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
     OK
 }
 
-#[inline]
+
 fn display_args(f: &mut fmt::Formatter, args: &Vec<Arg>) -> fmt::Result {
     display_lists!(f, "(", ", ", ")", args)
 }
 
-#[inline]
+
 fn display_pattens(f: &mut fmt::Formatter, pattens: &Vec<Patten>) -> fmt::Result {
     display_lists!(f, " | ", pattens)
 }
 
-#[inline]
+
 fn try_display_block_one_line(f: &mut fmt::Formatter, block: &Block) -> fmt::Result {
     if block.is_one_literal_expr() {
         write!(f, " {{ {} }}", block.stmts[0])
@@ -1273,7 +1273,7 @@ fn try_display_block_one_line(f: &mut fmt::Formatter, block: &Block) -> fmt::Res
     }
 }
 
-#[inline]
+
 fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Result {
     Display::fmt(expr, f)?;
     if is_semi {
@@ -1282,7 +1282,7 @@ fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Resu
     OK
 }
 
-#[inline]
+
 fn ref_head(lifetime: &Option<Lifetime>, is_mut: bool) -> String {
     let mut head = String::new();
     head.push_str("&");
@@ -1298,7 +1298,7 @@ fn ref_head(lifetime: &Option<Lifetime>, is_mut: bool) -> String {
     head
 }
 
-#[inline]
+
 fn trait_type_head(is_dyn: bool, is_impl: bool) -> String {
     let mut head = String::new();
     if is_dyn {
@@ -1310,7 +1310,7 @@ fn trait_type_head(is_dyn: bool, is_impl: bool) -> String {
     head
 }
 
-#[inline]
+
 fn fn_head(header: &FnHeader) -> String {
     let mut head = String::new();
     if header.is_async {
@@ -1327,7 +1327,7 @@ fn fn_head(header: &FnHeader) -> String {
     head
 }
 
-#[inline]
+
 fn extern_head(abi: &str) -> String {
     let mut head = String::new();
     if abi != r#""Rust""# {
@@ -1338,7 +1338,7 @@ fn extern_head(abi: &str) -> String {
     head
 }
 
-#[inline]
+
 fn trait_head(is_auto: bool, is_unsafe: bool) -> String {
     let mut head = String::new();
     if is_auto {
@@ -1351,7 +1351,7 @@ fn trait_head(is_auto: bool, is_unsafe: bool) -> String {
     head
 }
 
-#[inline]
+
 fn impl_head(is_unsafe: bool, is_default: bool) -> String {
     let mut head = String::new();
     if is_unsafe {
@@ -1364,7 +1364,7 @@ fn impl_head(is_unsafe: bool, is_default: bool) -> String {
     head
 }
 
-#[inline]
+
 fn impl_item_head(is_default: bool) -> String {
     let mut head = String::new();
     if is_default {
@@ -1373,7 +1373,7 @@ fn impl_item_head(is_default: bool) -> String {
     head
 }
 
-#[inline]
+
 fn vis_head(vis: &Vis) -> String {
     let mut head = String::new();
     if !vis.is_empty() {
@@ -1383,7 +1383,7 @@ fn vis_head(vis: &Vis) -> String {
     head
 }
 
-#[inline]
+
 fn foreign_head(abi: &str) -> String {
     let mut head = String::new();
     head.push_str("extern");
@@ -1392,7 +1392,7 @@ fn foreign_head(abi: &str) -> String {
     head
 }
 
-#[inline]
+
 fn block_head(is_unsafe: bool) -> String {
     let mut head = String::new();
     if is_unsafe {
@@ -1401,7 +1401,7 @@ fn block_head(is_unsafe: bool) -> String {
     head
 }
 
-#[inline]
+
 fn ident_patten_head(is_ref: bool, is_mut: bool) -> String {
     let mut head = String::new();
     if is_ref {
@@ -1413,7 +1413,7 @@ fn ident_patten_head(is_ref: bool, is_mut: bool) -> String {
     head
 }
 
-#[inline]
+
 fn closure_head(is_static: bool, is_async: bool, is_move: bool) -> String {
     let mut head = String::new();
     if is_static {
@@ -1428,7 +1428,7 @@ fn closure_head(is_static: bool, is_async: bool, is_move: bool) -> String {
     head
 }
 
-#[inline]
+
 fn is_if_one_line(expr: &IfExpr) -> bool {
     if expr.br.is_none() {
         return false;
@@ -1444,7 +1444,7 @@ fn is_if_one_line(expr: &IfExpr) -> bool {
     }
 }
 
-#[inline]
+
 fn exract_if_else_value(expr: &IfExpr) -> (&Expr, &Expr) {
     let if_value = match &expr.block.stmts[0].stmt {
         StmtKind::Expr(ref expr, _) => expr,
@@ -1787,12 +1787,12 @@ impl Formatter {
         self.ts.result()
     }
 
-    #[inline]
+
     fn has_leading_comments(&self, loc: &Loc) -> bool {
         self.leading_cmnts.contains_key(&loc.start)
     }
 
-    #[inline]
+
     fn try_fmt_leading_comments(&mut self, loc: &Loc) -> bool {
         if self.has_leading_comments(loc) {
             self.fmt_leading_comments(loc);
@@ -1802,7 +1802,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_leading_comments(&mut self, loc: &Loc) {
         for cmnt in &self.leading_cmnts.remove(&loc.start).unwrap() {
             if !cmnt.is_empty() {
@@ -1813,26 +1813,26 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn has_trailing_comment(&self, loc: &Loc) -> bool {
         self.trailing_cmnts.contains_key(&loc.end)
     }
 
-    #[inline]
+
     fn try_fmt_trailing_comment(&mut self, loc: &Loc) {
         if self.has_trailing_comment(loc) {
             self.fmt_trailing_comment(loc);
         }
     }
 
-    #[inline]
+
     fn fmt_trailing_comment(&mut self, loc: &Loc) {
         self.raw_insert(" ");
         let cmnt = self.trailing_cmnts.remove(&loc.end).unwrap();
         self.raw_insert(&cmnt);
     }
 
-    #[inline]
+
     fn fmt_left_comments(&mut self, loc: &Loc) {
         let poses: Vec<_> = self.leading_cmnts.keys().cloned().collect();
         for pos in poses {
@@ -1871,7 +1871,7 @@ impl Formatter {
         self.fmt_attr_group(&attr_group);
     }
 
-    #[inline]
+
     fn fmt_doc(&mut self, doc: &Doc) {
         self.try_fmt_leading_comments(&doc.loc);
         self.insert_indent();
@@ -1880,13 +1880,13 @@ impl Formatter {
         self.nl();
     }
 
-    #[inline]
+
     fn fmt_chunk(&mut self, chunk: &Chunk) {
         maybe_nl!(self, chunk);
         self.fmt_long_str(&chunk.s);
     }
 
-    #[inline]
+
     fn fmt_long_str(&mut self, s: &str) {
         let mut first = true;
         for line in s.split('\n') {
@@ -1909,7 +1909,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_attr(&mut self, attr: &Attr) {
         self.raw_insert("#");
         if attr.is_inner {
@@ -1924,7 +1924,7 @@ impl Formatter {
         fmt_comma_lists!(self, "(", ")", items, fmt_meta_item);
     }
 
-    #[inline]
+
     fn fmt_meta_item(&mut self, item: &MetaItem) {
         maybe_nl!(self, item);
         self.fmt_long_str(&item.name);
@@ -1957,7 +1957,7 @@ impl Formatter {
         fmt_item_groups!(self, items, ItemKind::Use, &Use, fmt_use);
     }
 
-    #[inline]
+
     fn fmt_use(&mut self, item: &Use) {
         self.insert(&format!("use {}", &item.path));
         self.fmt_use_trees(&item.trees, false);
@@ -2099,7 +2099,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_lifetime_def(&mut self, lifetime_def: &LifetimeDef) {
         maybe_nl!(self, lifetime_def);
         maybe_wrap!(self, lifetime_def);
@@ -2111,12 +2111,12 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_lifetime(&mut self, lifetime: &Lifetime) {
         self.fmt_chunk(lifetime);
     }
 
-    #[inline]
+
     fn fmt_type_param(&mut self, type_param: &TypeParam) {
         maybe_nl!(self, type_param);
         maybe_wrap!(self, type_param);
@@ -2140,7 +2140,7 @@ impl Formatter {
         fmt_lists!(self, " + ", "+ ", &bounds.0, fmt_type_param_bound)
     }
 
-    #[inline]
+
     fn fmt_type_param_bound(&mut self, bound: &TypeParamBound) {
         match *bound {
             TypeParamBound::Lifetime(ref lifetime) => self.fmt_lifetime(lifetime),
@@ -2148,25 +2148,25 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_poly_trait_ref(&mut self, poly_trait_ref: &PolyTraitRef) {
         self.fmt_for_lifetime_defs(&poly_trait_ref.lifetime_defs);
         self.fmt_trait_ref(&poly_trait_ref.trait_ref);
     }
 
-    #[inline]
+
     fn fmt_for_lifetime_defs(&mut self, lifetime_defs: &Vec<LifetimeDef>) {
         if !lifetime_defs.is_empty() {
             fmt_comma_lists!(self, "for<", "> ", lifetime_defs, fmt_lifetime_def);
         }
     }
 
-    #[inline]
+
     fn fmt_trait_ref(&mut self, trait_ref: &TraitRef) {
         self.fmt_path(trait_ref, false);
     }
 
-    #[inline]
+
     fn fmt_where(&mut self, generics: &Generics) {
         let wh = &generics.wh;
         if !wh.is_empty() {
@@ -2179,7 +2179,7 @@ impl Formatter {
         fmt_comma_lists!(self, clauses, fmt_where_clause);
     }
 
-    #[inline]
+
     fn fmt_where_clause(&mut self, clause: &WhereClause) {
         match clause.clause {
             WhereKind::LifetimeDef(ref lifetime_def) => self.fmt_lifetime_def(lifetime_def),
@@ -2194,13 +2194,13 @@ impl Formatter {
         self.try_fmt_type_param_bounds(&bound.bounds);
     }
 
-    #[inline]
+
     fn fmt_generics_and_where(&mut self, generics: &Generics) {
         self.fmt_generics(generics);
         self.fmt_where(generics);
     }
 
-    #[inline]
+
     fn fmt_path(&mut self, path: &Path, from_expr: bool) {
         maybe_nl!(self, path);
         self.fmt_path_segments(&path.segments, from_expr);
@@ -2218,13 +2218,13 @@ impl Formatter {
         };
     }
 
-    #[inline]
+
     fn fmt_path_segment(&mut self, seg: &PathSegment, from_expr: bool) {
         self.insert(&seg.name);
         self.fmt_path_param(&seg.param, from_expr);
     }
 
-    #[inline]
+
     fn fmt_path_param(&mut self, param: &PathParam, from_expr: bool) {
         match *param {
             PathParam::Angle(ref param) => self.fmt_angle_param(param, from_expr),
@@ -2295,12 +2295,12 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_symbol_type(&mut self, ty: &str) {
         self.raw_insert(ty)
     }
 
-    #[inline]
+
     fn fmt_path_type(&mut self, ty: &PathType, from_expr: bool) {
         match ty.qself {
             Some(ref qself) => {
@@ -2311,31 +2311,31 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_ptr_type(&mut self, ty: &PtrType) {
         let head = ptr_head(ty.is_mut);
         maybe_wrap!(self, head, head, ty.ty, fmt_type);
     }
 
-    #[inline]
+
     fn fmt_ref_type(&mut self, ty: &RefType) {
         let head = &ref_head(&ty.lifetime, ty.is_mut);
         maybe_wrap!(self, head, head, ty.ty, fmt_type);
     }
 
-    #[inline]
+
     fn fmt_tuple_type(&mut self, ty: &TupleType) {
         fmt_comma_lists!(self, "(", ")", &ty.types, fmt_type);
     }
 
-    #[inline]
+
     fn fmt_slice_type(&mut self, ty: &SliceType) {
         self.insert_mark_align("[");
         self.fmt_type(&ty.ty);
         self.insert_unmark_align("]");
     }
 
-    #[inline]
+
     fn fmt_array_type(&mut self, ty: &ArrayType) {
         self.insert_mark_align("[");
         self.fmt_type(&ty.ty);
@@ -2344,21 +2344,21 @@ impl Formatter {
         self.insert_unmark_align("]");
     }
 
-    #[inline]
+
     fn fmt_trait_type(&mut self, ty: &TraitType) {
         let head = &trait_type_head(ty.is_dyn, ty.is_impl);
         self.insert(head);
         self.fmt_type_param_bounds(&ty.bounds);
     }
 
-    #[inline]
+
     fn fmt_bare_fn_type(&mut self, ty: &BareFnType) {
         self.fmt_for_lifetime_defs(&ty.lifetime_defs);
         self.insert(&fn_head(&ty.header));
         self.fmt_fn_sig(&ty.sig);
     }
 
-    #[inline]
+
     fn fmt_trait_alias(&mut self, item: &TraitAlias) {
         self.insert(&format!("trait {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
@@ -2366,7 +2366,7 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_existential(&mut self, item: &Existential) {
         self.insert(&format!("existential type {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
@@ -2374,7 +2374,7 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_const(&mut self, item: &Const) {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
@@ -2384,7 +2384,7 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_static(&mut self, item: &Static) {
         self.insert(&format!("{}{}", static_head(item.is_mut), item.name));
         insert_sep!(self, ":", item.ty);
@@ -2420,7 +2420,7 @@ impl Formatter {
         fmt_items!(self, fields, fmt_struct_field);
     }
 
-    #[inline]
+
     fn fmt_struct_field(&mut self, field: &StructField) {
         self.fmt_vis(&field.vis);
         self.insert(&field.name);
@@ -2433,7 +2433,7 @@ impl Formatter {
         fmt_comma_lists!(self, "(", ")", fields, fmt_tuple_field);
     }
 
-    #[inline]
+
     fn fmt_tuple_field(&mut self, field: &TupleField) {
         maybe_nl!(self, field);
         self.try_fmt_leading_comments(&field.loc);
@@ -2458,7 +2458,7 @@ impl Formatter {
         fmt_items!(self, fields, fmt_enum_field);
     }
 
-    #[inline]
+
     fn fmt_enum_field(&mut self, field: &EnumField) {
         self.insert(&field.name);
         self.fmt_struct_body(&field.body);
@@ -2477,7 +2477,7 @@ impl Formatter {
         fmt_items!(self, items, fmt_foreign_item);
     }
 
-    #[inline]
+
     fn fmt_foreign_item(&mut self, item: &ForeignItem) {
         self.fmt_vis(&item.vis);
         match item.item {
@@ -2489,19 +2489,19 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_foreign_type(&mut self, item: &ForeignType) {
         self.insert(&format!("type {};", item));
     }
 
-    #[inline]
+
     fn fmt_foreign_static(&mut self, item: &ForeignStatic) {
         self.insert(&format!("{}{}", static_head(item.is_mut), item.name));
         insert_sep!(self, ":", item.ty);
         self.fmt_type(&item.ty);
     }
 
-    #[inline]
+
     fn fmt_foreign_fn(&mut self, item: &ForeignFn) {
         self.insert(&format!("fn {}", item.name));
         self.fmt_generics(&item.generics);
@@ -2530,7 +2530,7 @@ impl Formatter {
         fmt_items_maybe_nl!(self, items, fmt_trait_item);
     }
 
-    #[inline]
+
     fn fmt_trait_item(&mut self, item: &TraitItem) -> bool {
         self.fmt_attrs(&item.attrs);
         match item.item {
@@ -2550,7 +2550,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_const_trait_item(&mut self, item: &ConstTraitItem) {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
@@ -2561,7 +2561,7 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_type_trait_item(&mut self, item: &TypeTraitItem) {
         self.insert(&format!("type {}", item.name));
         self.fmt_generics(&item.generics);
@@ -2573,7 +2573,7 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_method_trait_item(&mut self, item: &MethodTraitItem) -> bool {
         self.fmt_method_sig(&item.sig);
         if let Some(ref block) = item.block {
@@ -2606,7 +2606,7 @@ impl Formatter {
         fmt_items_maybe_nl!(self, items, fmt_impl_item);
     }
 
-    #[inline]
+
     fn fmt_impl_item(&mut self, item: &ImplItem) -> bool {
         self.fmt_vis(&item.vis);
         self.insert(&impl_item_head(item.is_default));
@@ -2630,7 +2630,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_const_impl_item(&mut self, item: &ConstImplItem) {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
@@ -2639,38 +2639,38 @@ impl Formatter {
         maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_type_impl_item(&mut self, item: &TypeImplItem) {
         self.insert(&format!("type {}", item.name));
         self.fmt_generics_and_where(&item.generics);
         maybe_wrap!(self, " = ", "= ", item.ty, fmt_type);
     }
 
-    #[inline]
+
     fn fmt_existential_impl_item(&mut self, item: &ExistentialImplItem) {
         self.insert(&format!("existential type {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
         maybe_wrap!(self, ": ", ": ", item.bounds, fmt_type_param_bounds);
     }
 
-    #[inline]
+
     fn fmt_method_impl_item(&mut self, item: &MethodImplItem) {
         self.fmt_method_sig(&item.sig);
         self.try_fmt_block_one_line(&item.block);
     }
 
-    #[inline]
+
     fn fmt_fn_sig(&mut self, sig: &FnSig) {
         self.fmt_fn_args(&sig.args);
         self.fmt_fn_return(&sig.ret);
     }
 
-    #[inline]
+
     fn fmt_fn_args(&mut self, args: &Vec<Arg>) -> bool {
         fmt_comma_lists!(self, "(", ")", args, fmt_arg)
     }
 
-    #[inline]
+
     fn fmt_arg(&mut self, arg: &Arg) {
         maybe_nl!(self, arg);
         maybe_wrap!(self, arg);
@@ -2686,7 +2686,7 @@ impl Formatter {
         self.fmt_type(&arg.ty);
     }
 
-    #[inline]
+
     fn fmt_fn_return(&mut self, ret: &Return) {
         if let Some(ref ty) = ret.ret {
             if ret.nl {
@@ -2699,7 +2699,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_method_sig(&mut self, sig: &MethodSig) {
         self.insert(&format!("{} {}", fn_head(&sig.header), sig.name));
         self.fmt_generics(&sig.generics);
@@ -2739,7 +2739,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_stmt(&mut self, stmt: &Stmt) {
         self.block_locs.push(stmt.loc);
         self.try_fmt_leading_comments(&stmt.loc);
@@ -2795,20 +2795,20 @@ impl Formatter {
         fmt_lists!(self, " | ", "| ", pattens, fmt_patten);
     }
 
-    #[inline]
+
     fn fmt_range_patten(&mut self, patten: &RangePatten) {
         self.fmt_expr(&patten.start);
         self.insert(range(patten.is_inclusive));
         self.fmt_expr(&patten.end);
     }
 
-    #[inline]
+
     fn fmt_ref_patten(&mut self, patten: &RefPatten) {
         self.insert(&ref_head(&None, patten.is_mut));
         self.fmt_patten(&patten.patten);
     }
 
-    #[inline]
+
     fn fmt_ident_patten(&mut self, patten: &IdentPatten) {
         self.insert(&format!("{}{}", ident_patten_head(patten.is_ref, patten.is_mut), patten.name));
         if let Some(ref patten) = patten.patten {
@@ -2816,7 +2816,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_struct_patten(&mut self, patten: &StructPatten) {
         self.fmt_path(&patten.path, true);
 
@@ -2860,7 +2860,7 @@ impl Formatter {
         self.raw_insert(" }");
     }
 
-    #[inline]
+
     fn fmt_struct_field_pattens(&mut self, fields: &Vec<StructFieldPatten>) {
         for field in fields {
             self.try_fmt_leading_comments(&field.loc);
@@ -2871,7 +2871,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_struct_field_patten(&mut self, field: &StructFieldPatten) {
         if field.shorthand {
             self.fmt_patten(&field.patten);
@@ -2882,23 +2882,23 @@ impl Formatter {
         self.raw_insert(",");
     }
 
-    #[inline]
+
     fn fmt_enum_patten(&mut self, patten: &EnumPatten) {
         self.fmt_path(&patten.path, true);
         fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
     }
 
-    #[inline]
+
     fn fmt_tuple_patten(&mut self, patten: &TuplePatten) {
         fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
     }
 
-    #[inline]
+
     fn fmt_slice_patten(&mut self, patten: &SlicePatten) {
         fmt_comma_lists!(self, "[", "]", &patten.pattens, fmt_patten);
     }
 
-    #[inline]
+
     fn fmt_expr_stmt(&mut self, expr: &Expr, is_semi: bool) {
         self.block_locs.push(expr.loc);
         self.try_fmt_leading_comments(&expr.loc);
@@ -2954,39 +2954,39 @@ impl Formatter {
         self.block_locs.pop();
     }
 
-    #[inline]
+
     fn fmt_literal_expr(&mut self, expr: &Chunk) {
         self.fmt_chunk(expr);
     }
 
-    #[inline]
+
     fn fmt_path_expr(&mut self, expr: &PathExpr) {
         self.fmt_path_type(expr, true);
     }
 
-    #[inline]
+
     fn fmt_ref_expr(&mut self, expr: &RefExpr) {
         let head = &ref_head(&None, expr.is_mut);
         maybe_wrap!(self, head, head, expr.expr, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_unary_op_expr(&mut self, expr: &UnaryOpExpr) {
         maybe_wrap!(self, &expr.op, &expr.op, expr.expr, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_try_expr(&mut self, expr: &Expr) {
         self.fmt_expr(expr);
         self.raw_insert("?");
     }
 
-    #[inline]
+
     fn fmt_list_op_expr(&mut self, expr: &ListOpExpr) {
         fmt_lists!(self, &expr.op, &expr.exprs, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_repeat_expr(&mut self, expr: &RepeatExpr) {
         self.insert_mark_align("[");
         self.fmt_expr(&expr.value);
@@ -2995,17 +2995,17 @@ impl Formatter {
         self.insert_unmark_align("]");
     }
 
-    #[inline]
+
     fn fmt_array_expr(&mut self, exprs: &Vec<Expr>) {
         fmt_comma_lists!(self, "[", "]", exprs, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_tuple_expr(&mut self, exprs: &Vec<Expr>) {
         fmt_comma_lists!(self, "(", ")", exprs, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_index_expr(&mut self, expr: &IndexExpr) {
         self.fmt_expr(&expr.obj);
         self.insert_mark_align("[");
@@ -3013,7 +3013,7 @@ impl Formatter {
         self.insert_unmark_align("]");
     }
 
-    #[inline]
+
     fn fmt_struct_expr(&mut self, expr: &StructExpr) {
         self.fmt_path(&expr.path, true);
 
@@ -3041,7 +3041,7 @@ impl Formatter {
         self.close_brace();
     }
 
-    #[inline]
+
     fn fmt_struct_field_exprs(&mut self, fields: &Vec<StructFieldExpr>) {
         for field in fields {
             self.try_fmt_leading_comments(&field.loc);
@@ -3052,7 +3052,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_struct_field_expr(&mut self, field: &StructFieldExpr) {
         self.insert(&field.name);
         let value = field.value.to_string();
@@ -3063,26 +3063,26 @@ impl Formatter {
         self.raw_insert(",");
     }
 
-    #[inline]
+
     fn fmt_field_expr(&mut self, expr: &FieldExpr) {
         maybe_wrap!(self, expr);
         self.fmt_expr(&expr.expr);
         self.insert(&format!(".{}", &expr.field));
     }
 
-    #[inline]
+
     fn fmt_type_expr(&mut self, expr: &TypeExpr) {
         self.fmt_expr(&expr.expr);
         maybe_wrap!(self, ": ", ":", expr.ty, fmt_type);
     }
 
-    #[inline]
+
     fn fmt_cast_expr(&mut self, expr: &CastExpr) {
         self.fmt_expr(&expr.expr);
         maybe_wrap!(self, " as ", "as ", expr.ty, fmt_type);
     }
 
-    #[inline]
+
     fn fmt_range_expr(&mut self, expr: &RangeExpr) {
         maybe_wrap!(self, expr);
 
@@ -3099,7 +3099,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_block_expr(&mut self, expr: &BlockExpr) {
         self.block_non_sep = true;
         if let Some(ref label) = expr.label {
@@ -3108,7 +3108,7 @@ impl Formatter {
         self.fmt_block(&expr.block);
     }
 
-    #[inline]
+
     fn fmt_if_expr(&mut self, expr: &IfExpr) {
         if self.if_stacks == 0 && is_if_one_line(expr) {
             return self.fmt_if_expr_one_line(expr);
@@ -3128,7 +3128,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_if_expr_one_line(&mut self, expr: &IfExpr) {
         self.block_non_sep = false;
         self.raw_insert("if ");
@@ -3142,7 +3142,7 @@ impl Formatter {
         self.raw_insert(" }");
     }
 
-    #[inline]
+
     fn fmt_while_expr(&mut self, expr: &WhileExpr) {
         self.fmt_label(&expr.label);
         self.raw_insert("while ");
@@ -3150,7 +3150,7 @@ impl Formatter {
         self.fmt_block(&expr.block);
     }
 
-    #[inline]
+
     fn fmt_label(&mut self, label: &Option<String>) {
         if let Some(ref label) = *label {
             self.insert(&format!("{}:", label));
@@ -3159,14 +3159,14 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_let_expr(&mut self, expr: &LetExpr) {
         self.raw_insert("let ");
         self.fmt_pattens(&expr.pattens);
         maybe_wrap!(self, " = ", "= ", expr.expr, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_for_expr(&mut self, expr: &ForExpr) {
         self.fmt_label(&expr.label);
         self.raw_insert("for ");
@@ -3175,14 +3175,14 @@ impl Formatter {
         self.fmt_block(&expr.block);
     }
 
-    #[inline]
+
     fn fmt_loop_expr(&mut self, expr: &LoopExpr) {
         self.fmt_label(&expr.label);
         self.raw_insert("loop");
         self.fmt_block(&expr.block);
     }
 
-    #[inline]
+
     fn fmt_break_expr(&mut self, expr: &BreakExpr) {
         self.fmt_jump_label("break", &expr.label);
         if let Some(ref expr) = expr.expr {
@@ -3191,12 +3191,12 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_continue_expr(&mut self, expr: &ContinueExpr) {
         self.fmt_jump_label("continue", &expr.label);
     }
 
-    #[inline]
+
     fn fmt_jump_label(&mut self, keyword: &str, label: &Option<String>) {
         let label = if let Some(ref label) = *label {
             format!(" {}", label)
@@ -3206,19 +3206,19 @@ impl Formatter {
         self.insert(&format!("{}{}", keyword, label));
     }
 
-    #[inline]
+
     fn fmt_match_expr(&mut self, expr: &MatchExpr) {
         self.raw_insert("match ");
         self.fmt_expr(&expr.expr);
         fmt_block!(self, &expr.arms, fmt_arms);
     }
 
-    #[inline]
+
     fn fmt_arms(&mut self, arms: &Vec<Arm>) {
         fmt_items!(self, arms, fmt_arm);
     }
 
-    #[inline]
+
     fn fmt_arm(&mut self, arm: &Arm) {
         fmt_lists!(self, " | ", "| ", &arm.pattens, fmt_patten);
         if let Some(ref guard) = arm.guard {
@@ -3238,13 +3238,13 @@ impl Formatter {
         self.raw_insert(",");
     }
 
-    #[inline]
+
     fn fmt_fn_call_expr(&mut self, expr: &FnCallExpr) {
         self.fmt_expr(&expr.name);
         fmt_comma_lists!(self, "(", ")", &expr.args, fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_method_call_expr(&mut self, expr: &MethodCallExpr) {
         self.fmt_expr(&expr.args[0]);
         maybe_nl!(self, expr.path);
@@ -3253,7 +3253,7 @@ impl Formatter {
         fmt_comma_lists!(self, "(", ")", &expr.args[1..], fmt_expr);
     }
 
-    #[inline]
+
     fn fmt_closure_expr(&mut self, expr: &ClosureExpr) {
         self.insert(&closure_head(expr.is_static, expr.is_async, expr.is_move));
         self.fmt_closure_args(&expr.sig.args);
@@ -3268,12 +3268,12 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_closure_args(&mut self, args: &Vec<Arg>) {
         fmt_comma_lists!(self, "|", "|", args, fmt_closure_arg);
     }
 
-    #[inline]
+
     fn fmt_closure_arg(&mut self, arg: &Arg) {
         maybe_nl!(self, arg);
         maybe_wrap!(self, arg);
@@ -3288,7 +3288,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_return_expr(&mut self, expr: &ReturnExpr) {
         self.raw_insert("return");
         if let Some(ref expr) = expr.ret {
@@ -3296,7 +3296,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn fmt_macro_def(&mut self, item: &MacroDef) {
         self.raw_insert(&format!("macro_rules! {}", item.name));
         self.open_brace();
@@ -3306,13 +3306,13 @@ impl Formatter {
         self.close_brace();
     }
 
-    #[inline]
+
     fn fmt_macro_item(&mut self, item: &Macro) {
         self.fmt_macro(item);
         self.raw_insert(";");
     }
 
-    #[inline]
+
     fn fmt_macro_stmt(&mut self, mac: &MacroStmt) {
         self.try_fmt_leading_comments(&mac.loc);
         self.fmt_attrs(&mac.attrs);
@@ -3329,7 +3329,7 @@ impl Formatter {
         self.nl();
     }
 
-    #[inline]
+
     fn fmt_macro(&mut self, mac: &Macro) {
         let (open, close) = match mac.style {
             MacroStyle::Paren => ("(", ")"),
@@ -3355,25 +3355,25 @@ impl Formatter {
         self.insert_unmark_align(close);
     }
 
-    #[inline]
+
     fn clear_flag(&mut self) {
         self.after_indent = false;
         self.after_wrap = false;
     }
 
-    #[inline]
+
     fn insert_indent(&mut self) {
         self.ts.insert_indent();
         self.after_indent = true;
     }
 
-    #[inline]
+
     fn force_insert(&mut self, s: &str) {
         self.ts.force_insert(s);
         self.clear_flag();
     }
 
-    #[inline]
+
     fn raw_insert(&mut self, s: &str) {
         if !s.is_empty() {
             self.ts.raw_insert(s);
@@ -3381,7 +3381,7 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn insert(&mut self, s: &str) {
         if !s.is_empty() {
             self.ts.insert(s);
@@ -3389,13 +3389,13 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn nl(&mut self) {
         self.ts.nl();
         self.clear_flag();
     }
 
-    #[inline]
+
     fn wrap(&mut self) {
         if !self.after_indent && !self.after_wrap {
             self.ts.wrap();
@@ -3403,19 +3403,19 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn insert_mark_align(&mut self, s: &str) {
         self.ts.insert_mark_align(s);
         self.clear_flag();
     }
 
-    #[inline]
+
     fn insert_unmark_align(&mut self, s: &str) {
         self.ts.insert_unmark_align(s);
         self.clear_flag();
     }
 
-    #[inline]
+
     fn nl_indent(&mut self) {
         if !self.after_indent {
             self.ts.nl_indent();
@@ -3423,17 +3423,17 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn indent(&mut self) {
         self.ts.indent();
     }
 
-    #[inline]
+
     fn outdent(&mut self) {
         self.ts.outdent();
     }
 
-    #[inline]
+
     fn fmt_vis(&mut self, vis: &Vis) {
         if !vis.is_empty() {
             self.raw_insert(vis);
@@ -3441,14 +3441,14 @@ impl Formatter {
         }
     }
 
-    #[inline]
+
     fn open_brace(&mut self) {
         self.raw_insert(" {");
         self.indent();
         self.nl();
     }
 
-    #[inline]
+
     fn close_brace(&mut self) {
         self.outdent();
         self.insert_indent();

@@ -176,7 +176,7 @@ pub struct Generics {
 }
 
 impl Generics {
-    #[inline]
+
     pub fn is_empty(&self) -> bool {
         self.lifetime_defs.is_empty() && self.type_params.is_empty()
     }
@@ -209,7 +209,7 @@ pub enum TypeParamBound {
 pub struct TypeParamBounds(pub Vec<TypeParamBound>);
 
 impl TypeParamBounds {
-    #[inline]
+
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -240,7 +240,7 @@ pub struct Where {
 }
 
 impl Where {
-    #[inline]
+
     pub fn is_empty(&self) -> bool {
         self.clauses.is_empty()
     }
@@ -296,7 +296,7 @@ impl PathSegment {
         }
     }
 
-    #[inline]
+
     pub fn is_empty(&self) -> bool {
         match self.param {
             PathParam::Angle(ref param) => param.is_empty(),
@@ -319,7 +319,7 @@ pub struct AngleParam {
 }
 
 impl AngleParam {
-    #[inline]
+
     pub fn is_empty(&self) -> bool {
         self.lifetimes.is_empty() && self.types.is_empty() && self.bindings.is_empty()
     }
@@ -346,7 +346,7 @@ pub struct ParenParam {
 }
 
 impl ParenParam {
-    #[inline]
+
     pub fn is_empty(&self) -> bool {
         self.inputs.is_empty()
     }
@@ -691,7 +691,7 @@ pub struct Block {
 }
 
 impl Block {
-    #[inline]
+
     pub fn is_one_literal_expr(&self) -> bool {
         if self.stmts.len() != 1 {
             return false;
