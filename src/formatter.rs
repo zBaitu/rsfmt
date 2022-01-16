@@ -84,7 +84,6 @@ macro_rules! display_lines {
 
 macro_rules! select_str {
     ($fn_name:ident, $flag:ident, $true_value:expr, $false_value:expr) => (
-
         fn $fn_name($flag: bool) -> &'static str {
             static TRUE_HEAD: &'static str = $true_value;
             static FALSE_HEAD: &'static str = $false_value;
@@ -2132,7 +2131,7 @@ impl Formatter {
         self.insert(&format!("type {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
         if let Some(ref ty) = item.ty {
-            maybe_wrap!(self, " = ", "= ", ty);
+            maybe_wrap!(self, " = ", "= ", ty, fmt_type);
         }
         self.raw_insert(";");
     }

@@ -943,11 +943,8 @@ impl Translator {
             ast::TyKind::CVarArgs => TypeKind::Symbol("..."),
             ast::TyKind::ImplicitSelf => TypeKind::Symbol("self"),
             ast::TyKind::Path(ref qself, ref path) => TypeKind::Path(Box::new(self.trans_path_type(qself, path))),
-            /*
             ast::TyKind::Ptr(ref mut_type) => TypeKind::Ptr(Box::new(self.trans_ptr_type(mut_type))),
-            ast::TyKind::Rptr(ref lifetime, ref mut_type) => {
-                TypeKind::Ref(Box::new(self.trans_ref_type(lifetime, mut_type)))
-            },
+            ast::TyKind::Rptr(ref lifetime, ref mut_type) => TypeKind::Ref(Box::new(self.trans_ref_type(lifetime, mut_type))),
             ast::TyKind::Tup(ref types) => TypeKind::Tuple(Box::new(self.trans_tuple_type(types))),
             ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&vec![ty.clone()]))),
             ast::TyKind::Slice(ref ty) => TypeKind::Slice(Box::new(self.trans_slice_type(ty))),
@@ -958,6 +955,8 @@ impl Translator {
             ast::TyKind::ImplTrait(_, ref bounds) => {
                 TypeKind::Trait(Box::new(self.trans_trait_type(false, true, bounds)))
             },
+            // TODO
+            /*
             ast::TyKind::BareFn(ref bare_fn) => {
                 TypeKind::BareFn(Box::new(self.trans_bare_fn_type(bare_fn)))
             },
@@ -982,25 +981,6 @@ impl Translator {
             path: self.trans_path(path),
         }
     }
-
-    /*
-
-
-
-
-    fn trans_existential(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
-    -> Existential {
-        Existential {
-            name: ident,
-            generics: self.trans_generics(generics),
-            bounds: self.trans_type_param_bounds(bounds),
-        }
-    }
-
-
-
-
-
 
     fn trans_ptr_type(&mut self, mut_type: &ast::MutTy) -> PtrType {
         PtrType {
@@ -1041,6 +1021,19 @@ impl Translator {
             is_dyn,
             is_impl,
             bounds: self.trans_type_param_bounds(bounds),
+        }
+    }
+
+    /*
+    fn trans_bare_fn_type(&mut self, bare_fn: &ast::BareFnTy) -> BareFnType {
+        BareFnType {
+            lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
+            header: FnHeader {
+                is_unsafe: is_unsafe(bare_fn.unsafety),
+                abi: abi_to_string(bare_fn.abi),
+                ..Default::default()
+            },
+            sig: self.trans_fn_sig(&bare_fn.decl),
         }
     }
 
@@ -1173,18 +1166,6 @@ impl Translator {
             name,
             body,
             expr,
-        }
-    }
-
-    fn trans_bare_fn_type(&mut self, bare_fn: &ast::BareFnTy) -> BareFnType {
-        BareFnType {
-            lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
-            header: FnHeader {
-                is_unsafe: is_unsafe(bare_fn.unsafety),
-                abi: abi_to_string(bare_fn.abi),
-                ..Default::default()
-            },
-            sig: self.trans_fn_sig(&bare_fn.decl),
         }
     }
 
@@ -1627,6 +1608,7 @@ impl Translator {
             pattens: self.trans_pattens(pats),
         }
     }
+    */
 
     fn trans_exprs(&mut self, exprs: &[ast::P<ast::Expr>]) -> Vec<Expr> {
         trans_list!(self, exprs, trans_expr)
@@ -1635,7 +1617,8 @@ impl Translator {
     fn trans_expr(&mut self, expr: &ast::Expr) -> Expr {
         let loc = self.loc(&expr.span);
         let attrs = self.trans_thin_attrs(&expr.attrs);
-        let expr = match expr.node {
+        let expr = match expr.kind {
+            /*
             ast::ExprKind::Lit(ref lit) => ExprKind::Literal(self.trans_literal_expr(lit)),
             ast::ExprKind::Path(ref qself, ref path) => ExprKind::Path(self.trans_path_type(qself, path)),
             ast::ExprKind::AddrOf(mutble, ref expr) => ExprKind::Ref(Box::new(self.trans_ref_expr(mutble, expr))),
@@ -1704,6 +1687,9 @@ impl Translator {
             ast::ExprKind::TryBlock(..) => unimplemented!("ast::ExprKind::TryBlock"),
             ast::ExprKind::Yield(..) => unimplemented!("ast::ExprKind::Yield"),
             ast::ExprKind::Err => unreachable!("ast::ExprKind::Err"),
+
+             */
+            _ => unimplemented!()
         };
         self.set_loc(&loc);
 
@@ -1714,6 +1700,7 @@ impl Translator {
         }
     }
 
+    /*
     fn trans_literal_expr(&mut self, lit: &ast::Lit) -> Chunk {
         Chunk {
             loc: self.leaf_loc(&lit.span),
