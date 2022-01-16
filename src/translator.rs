@@ -494,11 +494,11 @@ impl Translator {
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
-            /*
             ast::ItemKind::Const(defaultness, ref ty, ref expr) => ItemKind::Const(self.trans_const(defaultness, ident, ty, expr)),
-            ast::ItemKind::Static(ref ty, mutbl, ref expr) => {
-                ItemKind::Static(self.trans_static(mutbl, ident, ty, expr))
+            ast::ItemKind::Static(ref ty, mutability, ref expr) => {
+                ItemKind::Static(self.trans_static(mutability, ident, ty, expr))
             },
+            /*
             ast::ItemKind::Struct(ref var, ref generics) => ItemKind::Struct(self.trans_struct(ident, generics, var)),
             ast::ItemKind::Union(ref var, ref generics) => ItemKind::Union(self.trans_union(ident, generics, var)),
             ast::ItemKind::Enum(ref enum_def, ref generics) => {
@@ -1024,18 +1024,6 @@ impl Translator {
         }
     }
 
-    /*
-    fn trans_bare_fn_type(&mut self, bare_fn: &ast::BareFnTy) -> BareFnType {
-        BareFnType {
-            lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
-            header: FnHeader {
-                is_unsafe: is_unsafe(bare_fn.unsafety),
-                abi: abi_to_string(bare_fn.abi),
-                ..Default::default()
-            },
-            sig: self.trans_fn_sig(&bare_fn.decl),
-        }
-    }
 
     fn trans_const(&mut self, defaultness: ast::Defaultness, ident: String, ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>) -> Const {
         Const {
@@ -1046,16 +1034,17 @@ impl Translator {
         }
     }
 
-    fn trans_static(&mut self, mutbl: ast::Mutability, ident: String, ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>)
+    fn trans_static(&mut self, mutability: ast::Mutability, ident: String, ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>)
     -> Static {
         Static {
-            is_mut: is_mut(mutbl),
+            is_mut: is_mut(mutability),
             name: ident,
             ty: self.trans_type(ty),
             expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
         }
     }
 
+    /*
     fn trans_struct(&mut self, ident: String, generics: &ast::Generics, var: &ast::VariantData) -> Struct {
         Struct {
             name: ident,
@@ -1169,6 +1158,18 @@ impl Translator {
         }
     }
 
+    fn trans_bare_fn_type(&mut self, bare_fn: &ast::BareFnTy) -> BareFnType {
+        BareFnType {
+            lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
+            header: FnHeader {
+                is_unsafe: is_unsafe(bare_fn.unsafety),
+                abi: abi_to_string(bare_fn.abi),
+                ..Default::default()
+            },
+            sig: self.trans_fn_sig(&bare_fn.decl),
+        }
+    }
+
     fn trans_fn_sig(&mut self, decl: &ast::FnDecl) -> FnSig {
         FnSig {
             args: self.trans_args(&decl.inputs),
@@ -1229,8 +1230,8 @@ impl Translator {
         let ident = ident_to_string(&item.ident);
         let item = match item.node {
             ast::ForeignItemKind::Ty => ForeignKind::Type(ident),
-            ast::ForeignItemKind::Static(ref ty, mutbl) => {
-                ForeignKind::Static(self.trans_foreign_static(mutbl, ident, ty))
+            ast::ForeignItemKind::Static(ref ty, mutability) => {
+                ForeignKind::Static(self.trans_foreign_static(mutability, ident, ty))
             },
             ast::ForeignItemKind::Fn(ref decl, ref generics) => {
                 ForeignKind::Fn(self.trans_foreign_fn(ident, generics, decl))
@@ -1247,9 +1248,9 @@ impl Translator {
         }
     }
 
-    fn trans_foreign_static(&mut self, mutbl: ast::Mutability, ident: String, ty: &ast::Ty) -> ForeignStatic {
+    fn trans_foreign_static(&mut self, mutability: ast::Mutability, ident: String, ty: &ast::Ty) -> ForeignStatic {
         ForeignStatic {
-            is_mut: is_mut(mutbl),
+            is_mut: is_mut(mutability),
             name: ident,
             ty: self.trans_type(ty),
         }
@@ -1500,8 +1501,8 @@ impl Translator {
             ast::PatKind::Range(ref start, ref end, ref range_end) => {
                 PattenKind::Range(self.trans_range_patten(start, end, &range_end.node))
             },
-            ast::PatKind::Ref(ref patten, mutbl) => {
-                PattenKind::Ref(Box::new(self.trans_ref_patten(mutbl, patten)))
+            ast::PatKind::Ref(ref patten, mutability) => {
+                PattenKind::Ref(Box::new(self.trans_ref_patten(mutability, patten)))
             },
             ast::PatKind::Path(ref qself, ref path) => {
                 PattenKind::Path(self.trans_path_type(qself, path))
@@ -1543,9 +1544,9 @@ impl Translator {
         }
     }
 
-    fn trans_ref_patten(&mut self, mutbl: ast::Mutability, patten: &ast::P<ast::Pat>) -> RefPatten {
+    fn trans_ref_patten(&mut self, mutability: ast::Mutability, patten: &ast::P<ast::Pat>) -> RefPatten {
         RefPatten {
-            is_mut: is_mut(mutbl),
+            is_mut: is_mut(mutability),
             patten: self.trans_patten(patten),
         }
     }
@@ -1621,7 +1622,7 @@ impl Translator {
             /*
             ast::ExprKind::Lit(ref lit) => ExprKind::Literal(self.trans_literal_expr(lit)),
             ast::ExprKind::Path(ref qself, ref path) => ExprKind::Path(self.trans_path_type(qself, path)),
-            ast::ExprKind::AddrOf(mutble, ref expr) => ExprKind::Ref(Box::new(self.trans_ref_expr(mutble, expr))),
+            ast::ExprKind::AddrOf(mutabilitye, ref expr) => ExprKind::Ref(Box::new(self.trans_ref_expr(mutabilitye, expr))),
             ast::ExprKind::Unary(op, ref expr) => ExprKind::UnaryOp(Box::new(self.trans_unary_expr(op, expr))),
             ast::ExprKind::Try(ref expr) => ExprKind::Try(Box::new(self.trans_expr(expr))),
             ast::ExprKind::Binary(ref op, ref left, ref right) => {
@@ -1708,9 +1709,9 @@ impl Translator {
         }
     }
 
-    fn trans_ref_expr(&mut self, mutble: ast::Mutability, expr: &ast::Expr) -> RefExpr {
+    fn trans_ref_expr(&mut self, mutabilitye: ast::Mutability, expr: &ast::Expr) -> RefExpr {
         RefExpr {
-            is_mut: is_mut(mutble),
+            is_mut: is_mut(mutabilitye),
             expr: self.trans_expr(expr),
         }
     }

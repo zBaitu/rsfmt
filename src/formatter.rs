@@ -489,15 +489,21 @@ impl Display for TraitAlias {
 
 impl Display for Const {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO
-        write!(f, "const {}: {} = {}", self.name, self.ty, self.expr.as_ref().unwrap())
+        write!(f, "const {}: {}", self.name, self.ty)?;
+        if let Some(ref expr) = self.expr {
+            write!(f, " = {}", expr)?;
+        }
+        OK
     }
 }
 
 impl Display for Static {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO
-        write!(f, "{}{}: {} = {}", static_head(self.is_mut), self.name, self.ty, self.expr.as_ref().unwrap())
+        write!(f, "{}{}: {}", static_head(self.is_mut), self.name, self.ty)?;
+        if let Some(ref expr) = self.expr {
+            write!(f, " = {}", expr)?;
+        }
+        OK
     }
 }
 
@@ -1556,44 +1562,6 @@ macro_rules! fmt_comma_lists {
     });
 }
 
-macro_rules! fmt_use_trees {
-    ($sf:expr, $list:expr, $fmt:ident, $wrap:expr) => ({
-        $sf.insert_mark_align("{");
-        let mut nl = false;
-
-        let mut first = true;
-        for e in $list {
-            if first {
-                nl = e.loc.nl;
-                if nl {
-                    $sf.indent();
-                }
-            }
-
-            if !first {
-                $sf.raw_insert(",");
-                if !e.loc.nl && !need_wrap!($sf.ts, " ", &e.to_string()) {
-                    $sf.raw_insert(" ");
-                } else if !nl || $wrap {
-                    $sf.wrap();
-                }
-            }
-
-            if nl {
-                $sf.nl_indent();
-            }
-            $sf.$fmt(e);
-            first = false;
-        }
-
-        if nl {
-            $sf.outdent();
-            $sf.nl_indent();
-        }
-        $sf.insert_unmark_align("}");
-    });
-}
-
 macro_rules! fmt_item_groups {
     ($sf:expr, $items:expr, $item_kind:path, $item_type:ty, $fmt_item:ident) => ({
         let mut group: Vec<(&Loc, &String, &Vec<AttrKind>, $item_type)> = Vec::new();
@@ -1979,7 +1947,6 @@ impl Formatter {
         if trees.len() == 1 {
             self.fmt_use_one_tree(&trees[0]);
         } else {
-            //fmt_use_trees!(self, trees, fmt_use_one_tree, wrap);
             self.fmt_use_more_trees(trees, wrap);
         }
     }
@@ -2416,8 +2383,9 @@ impl Formatter {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
         self.fmt_type(&item.ty);
-        // TODO
-        maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
+        if let Some(ref expr) = item.expr {
+            maybe_wrap!(self, " = ", "= ", expr, fmt_expr);
+        }
         self.raw_insert(";");
     }
 
@@ -2425,9 +2393,10 @@ impl Formatter {
     fn fmt_static(&mut self, item: &Static) {
         self.insert(&format!("{}{}", static_head(item.is_mut), item.name));
         insert_sep!(self, ":", item.ty);
-        // TODO
         self.fmt_type(&item.ty);
-        maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
+        if let Some(ref expr) = item.expr {
+            maybe_wrap!(self, " = ", "= ", expr, fmt_expr);
+        }
         self.raw_insert(";");
     }
 
