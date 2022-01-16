@@ -171,13 +171,13 @@ impl Display for Item {
         display_vis(f, &self.vis)?;
         match self.item {
             ItemKind::ExternCrate(ref item) => Display::fmt(item, f)?,
+            ItemKind::Use(ref item) => Display::fmt(item, f)?,
             ItemKind::Mod(ref item) => {
                 writeln!(f, "mod {} {{", item.name)?;
                 Display::fmt(item, f)?;
                 return write!(f, "}}");
             },
             ItemKind::ModDecl(ref item) => Display::fmt(item, f)?,
-            ItemKind::Use(ref item) => Display::fmt(item, f)?,
             ItemKind::TypeAlias(ref item) => Display::fmt(item, f)?,
             ItemKind::TraitAlias(ref item) => Display::fmt(item, f)?,
             ItemKind::Existential(ref item) => Display::fmt(item, f)?,
@@ -206,14 +206,14 @@ impl Display for ExternCrate {
 impl Display for Use {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "use {}", self.path)?;
-        fmt_use_trees(f, &self.trees)
+        display_use_trees(f, &self.trees)
     }
 }
 
 impl Display for UseTree {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.path)?;
-        fmt_use_trees(f, &self.trees)
+        display_use_trees(f, &self.trees)
     }
 }
 
@@ -1178,20 +1178,6 @@ impl Display for Macro {
 }
 
 
-fn fmt_use_trees(f: &mut fmt::Formatter, trees: &Option<Vec<UseTree>>) -> fmt::Result {
-    if trees.is_none() {
-        return OK;
-    }
-
-    let trees: &Vec<UseTree> = &trees.as_ref().unwrap();
-    write!(f, "::")?;
-    if trees.len() == 1 {
-        write!(f, "{}", trees[0])
-    } else {
-        display_lists!(f, "{{", ", ", "}}", trees)
-    }
-}
-
 
 fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<AttrKind>) -> fmt::Result {
     for attr in attrs {
@@ -1203,6 +1189,20 @@ fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<AttrKind>) -> fmt::Result {
 
 fn display_vis(f: &mut fmt::Formatter, vis: &Vis) -> fmt::Result {
     write!(f, "{}", vis_head(vis))
+}
+
+fn display_use_trees(f: &mut fmt::Formatter, trees: &Option<Vec<UseTree>>) -> fmt::Result {
+    if trees.is_none() {
+        return OK;
+    }
+
+    let trees: &Vec<UseTree> = &trees.as_ref().unwrap();
+    write!(f, "::")?;
+    if trees.len() == 1 {
+        write!(f, "{}", trees[0])
+    } else {
+        display_lists!(f, "{{", ", ", "}}", trees)
+    }
 }
 
 

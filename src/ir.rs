@@ -100,9 +100,9 @@ pub struct Item {
 #[derive(Debug)]
 pub enum ItemKind {
     ExternCrate(ExternCrate),
+    Use(Use),
     Mod(Mod),
     ModDecl(ModDecl),
-    Use(Use),
     TypeAlias(TypeAlias),
     TraitAlias(TraitAlias),
     Existential(Existential),
@@ -125,19 +125,6 @@ pub struct ExternCrate {
 }
 
 #[derive(Debug)]
-pub struct Mod {
-    pub loc: Loc,
-    pub is_unsafe: bool,
-    pub name: String,
-    pub items: Vec<Item>,
-}
-
-#[derive(Debug)]
-pub struct ModDecl {
-    pub name: String,
-}
-
-#[derive(Debug)]
 pub struct Use {
     pub path: String,
     pub trees: Option<Vec<UseTree>>,
@@ -148,6 +135,19 @@ pub struct UseTree {
     pub loc: Loc,
     pub path: String,
     pub trees: Option<Vec<UseTree>>,
+}
+
+#[derive(Debug)]
+pub struct Mod {
+    pub loc: Loc,
+    pub is_unsafe: bool,
+    pub name: String,
+    pub items: Vec<Item>,
+}
+
+#[derive(Debug)]
+pub struct ModDecl {
+    pub name: String,
 }
 
 #[derive(Debug)]
