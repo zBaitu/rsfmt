@@ -491,10 +491,10 @@ impl Translator {
                 }
             },
             ast::ItemKind::TyAlias(ref ty_kind) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_kind)),
-            /*
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
+            /*
             ast::ItemKind::Const(defaultness, ref ty, ref expr) => ItemKind::Const(self.trans_const(defaultness, ident, ty, expr)),
             ast::ItemKind::Static(ref ty, mutbl, ref expr) => {
                 ItemKind::Static(self.trans_static(mutbl, ident, ty, expr))
@@ -640,6 +640,14 @@ impl Translator {
             generics: self.trans_generics(&ty_kind.1),
             bounds: self.trans_type_param_bounds(&ty_kind.2),
             ty: map_ref_mut(&ty_kind.3, |ty| self.trans_type(ty)),
+        }
+    }
+
+    fn trans_trait_alias(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds) -> TraitAlias {
+        TraitAlias {
+            name: ident,
+            generics: self.trans_generics(generics),
+            bounds: self.trans_type_param_bounds(bounds),
         }
     }
 
@@ -930,12 +938,12 @@ impl Translator {
         let loc = self.loc(&ty.span);
 
         let ty = match ty.kind {
-            /*
             ast::TyKind::Infer => TypeKind::Symbol("_"),
             ast::TyKind::Never => TypeKind::Symbol("!"),
             ast::TyKind::CVarArgs => TypeKind::Symbol("..."),
             ast::TyKind::ImplicitSelf => TypeKind::Symbol("self"),
             ast::TyKind::Path(ref qself, ref path) => TypeKind::Path(Box::new(self.trans_path_type(qself, path))),
+            /*
             ast::TyKind::Ptr(ref mut_type) => TypeKind::Ptr(Box::new(self.trans_ptr_type(mut_type))),
             ast::TyKind::Rptr(ref lifetime, ref mut_type) => {
                 TypeKind::Ref(Box::new(self.trans_ref_type(lifetime, mut_type)))
@@ -968,19 +976,17 @@ impl Translator {
         }
     }
 
+    fn trans_path_type(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path) -> PathType {
+        PathType {
+            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
+            path: self.trans_path(path),
+        }
+    }
+
     /*
 
 
 
-
-    fn trans_trait_alias(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
-    -> TraitAlias {
-        TraitAlias {
-            name: ident,
-            generics: self.trans_generics(generics),
-            bounds: self.trans_type_param_bounds(bounds),
-        }
-    }
 
     fn trans_existential(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
     -> Existential {
@@ -995,13 +1001,6 @@ impl Translator {
 
 
 
-
-    fn trans_path_type(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path) -> PathType {
-        PathType {
-            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
-            path: self.trans_path(path),
-        }
-    }
 
     fn trans_ptr_type(&mut self, mut_type: &ast::MutTy) -> PtrType {
         PtrType {

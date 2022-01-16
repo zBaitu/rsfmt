@@ -1,3 +1,7 @@
+type a;
+type a = _;
+type a = !;
+
 //type a = bool;
 //type a = result::Result;
 //type a = <::i32 as Vec<bool>>::MAX;

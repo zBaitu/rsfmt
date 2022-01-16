@@ -180,7 +180,6 @@ impl Display for Item {
             },
             ItemKind::TypeAlias(ref item) => Display::fmt(item, f)?,
             ItemKind::TraitAlias(ref item) => Display::fmt(item, f)?,
-            ItemKind::Existential(ref item) => Display::fmt(item, f)?,
             ItemKind::Const(ref item) => Display::fmt(item, f)?,
             ItemKind::Static(ref item) => Display::fmt(item, f)?,
             ItemKind::Struct(ref item) => Display::fmt(item, f)?,
@@ -365,8 +364,11 @@ impl Display for ParenParam {
 
 impl Display for TypeAlias {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO
-        write!(f, "type {}{} = {}", self.name, self.generics, self.ty.as_ref().unwrap())
+        write!(f, "type {}{}", self.name, self.generics)?;
+        if let Some(ref ty) = self.ty {
+            write!(f, " = {}", ty)?;
+        }
+        OK
     }
 }
 
@@ -483,12 +485,6 @@ impl Display for Return {
 impl Display for TraitAlias {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "trait {}{} = {}", self.name, self.generics, self.bounds)
-    }
-}
-
-impl Display for Existential {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "existential type {}{}: {}", self.name, self.generics, self.bounds)
     }
 }
 
@@ -711,7 +707,6 @@ impl Display for ImplItem {
         match self.item {
             ImplItemKind::Const(ref item) => Display::fmt(item, f)?,
             ImplItemKind::Type(ref item) => Display::fmt(item, f)?,
-            ImplItemKind::Existential(ref item) => Display::fmt(item, f)?,
             ImplItemKind::Method(ref item) => {
                 is_method = true;
                 Display::fmt(item, f)?
@@ -728,12 +723,6 @@ impl Display for ImplItem {
 impl Display for TypeImplItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "type {}{} = {}", self.name, self.generics, self.ty)
-    }
-}
-
-impl Display for ExistentialImplItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "existential type {}{}: {}", self.name, self.generics, self.bounds)
     }
 }
 
@@ -1795,8 +1784,7 @@ impl Formatter {
         self.fmt_attrs(&krate.attrs);
         self.fmt_group_items(&krate.items);
         self.fmt_items(&krate.items);
-        // TODO
-        //self.fmt_left_comments(&krate.module.loc);
+        self.fmt_left_comments(&krate.loc);
         self.ts.result()
     }
 
@@ -2079,10 +2067,6 @@ impl Formatter {
                 self.fmt_trait_alias(item);
                 false
             },
-            ItemKind::Existential(ref item) => {
-                self.fmt_existential(item);
-                false
-            },
             ItemKind::Const(ref item) => {
                 self.fmt_const(item);
                 false
@@ -2147,8 +2131,16 @@ impl Formatter {
     fn fmt_type_alias(&mut self, item: &TypeAlias) {
         self.insert(&format!("type {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
-        // TODO
-        maybe_wrap!(self, " = ", "= ", item.ty.as_ref().unwrap(), fmt_type);
+        if let Some(ref ty) = item.ty {
+            maybe_wrap!(self, " = ", "= ", ty);
+        }
+        self.raw_insert(";");
+    }
+
+    fn fmt_trait_alias(&mut self, item: &TraitAlias) {
+        self.insert(&format!("trait {}", &item.name));
+        self.fmt_generics_and_where(&item.generics);
+        maybe_wrap!(self, " = ", "= ", item.bounds, fmt_type_param_bounds);
         self.raw_insert(";");
     }
 
@@ -2419,20 +2411,6 @@ impl Formatter {
     }
 
 
-    fn fmt_trait_alias(&mut self, item: &TraitAlias) {
-        self.insert(&format!("trait {}", &item.name));
-        self.fmt_generics_and_where(&item.generics);
-        maybe_wrap!(self, " = ", "= ", item.bounds, fmt_type_param_bounds);
-        self.raw_insert(";");
-    }
-
-
-    fn fmt_existential(&mut self, item: &Existential) {
-        self.insert(&format!("existential type {}", &item.name));
-        self.fmt_generics_and_where(&item.generics);
-        maybe_wrap!(self, ": ", ": ", item.bounds, fmt_type_param_bounds);
-        self.raw_insert(";");
-    }
 
 
     fn fmt_const(&mut self, item: &Const) {
@@ -2675,7 +2653,6 @@ impl Formatter {
         match item.item {
             ImplItemKind::Const(ref item) => self.fmt_const_impl_item(item),
             ImplItemKind::Type(ref item) => self.fmt_type_impl_item(item),
-            ImplItemKind::Existential(ref item) => self.fmt_existential_impl_item(item),
             ImplItemKind::Method(ref item) => {
                 is_method = true;
                 self.fmt_method_impl_item(item);
@@ -2706,12 +2683,6 @@ impl Formatter {
         maybe_wrap!(self, " = ", "= ", item.ty, fmt_type);
     }
 
-
-    fn fmt_existential_impl_item(&mut self, item: &ExistentialImplItem) {
-        self.insert(&format!("existential type {}", &item.name));
-        self.fmt_generics_and_where(&item.generics);
-        maybe_wrap!(self, ": ", ": ", item.bounds, fmt_type_param_bounds);
-    }
 
 
     fn fmt_method_impl_item(&mut self, item: &MethodImplItem) {

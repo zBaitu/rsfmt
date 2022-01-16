@@ -105,7 +105,6 @@ pub enum ItemKind {
     Mod(Mod),
     TypeAlias(TypeAlias),
     TraitAlias(TraitAlias),
-    Existential(Existential),
     Const(Const),
     Static(Static),
     Struct(Struct),
@@ -161,13 +160,6 @@ pub struct TypeAlias {
 
 #[derive(Debug)]
 pub struct TraitAlias {
-    pub name: String,
-    pub generics: Generics,
-    pub bounds: TypeParamBounds,
-}
-
-#[derive(Debug)]
-pub struct Existential {
     pub name: String,
     pub generics: Generics,
     pub bounds: TypeParamBounds,
@@ -661,7 +653,6 @@ pub struct ImplItem {
 pub enum ImplItemKind {
     Const(ConstImplItem),
     Type(TypeImplItem),
-    Existential(ExistentialImplItem),
     Method(MethodImplItem),
     Macro(Macro),
 }
@@ -673,13 +664,6 @@ pub struct TypeImplItem {
     pub name: String,
     pub generics: Generics,
     pub ty: Type,
-}
-
-#[derive(Debug)]
-pub struct ExistentialImplItem {
-    pub name: String,
-    pub generics: Generics,
-    pub bounds: TypeParamBounds,
 }
 
 #[derive(Debug)]
