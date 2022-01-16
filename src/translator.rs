@@ -483,13 +483,13 @@ impl Translator {
         let item = match item.kind {
             ast::ItemKind::ExternCrate(ref rename) => ItemKind::ExternCrate(self.trans_extren_crate(ident, rename)),
             ast::ItemKind::Use(ref tree) => ItemKind::Use(self.trans_use(tree)),
-            /*
             ast::ItemKind::Mod(unsafety, ref module) => {
                 match module {
+                    ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(ident)),
                     ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(ident, unsafety, items, span)),
-                    ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(ident))
                 }
             },
+            /*
             ast::ItemKind::TyAlias(ref ty_kind) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_kind)),
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
@@ -613,7 +613,12 @@ impl Translator {
         trees
     }
 
-    /*
+    fn trans_mod_decl(&mut self, ident: String) -> ModDecl {
+        ModDecl {
+            name: ident,
+        }
+    }
+
     fn trans_mod(&mut self, name: String, unsafety: ast::Unsafe, items: &Vec<ast::P<ast::Item>>, span: &ast::Span) -> Mod {
         let loc = self.loc(span);
         let items = self.trans_items(items);
@@ -627,14 +632,9 @@ impl Translator {
         }
     }
 
+    /*
 
 
-
-    fn trans_mod_decl(&mut self, ident: String) -> ModDecl {
-        ModDecl {
-            name: ident,
-        }
-    }
 
 
     fn trans_type_alias(&mut self, ident: String, ty_kind: &ast::TyAliasKind) -> TypeAlias {

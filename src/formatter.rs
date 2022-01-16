@@ -172,12 +172,12 @@ impl Display for Item {
         match self.item {
             ItemKind::ExternCrate(ref item) => Display::fmt(item, f)?,
             ItemKind::Use(ref item) => Display::fmt(item, f)?,
+            ItemKind::ModDecl(ref item) => Display::fmt(item, f)?,
             ItemKind::Mod(ref item) => {
                 writeln!(f, "mod {} {{", item.name)?;
                 Display::fmt(item, f)?;
                 return write!(f, "}}");
             },
-            ItemKind::ModDecl(ref item) => Display::fmt(item, f)?,
             ItemKind::TypeAlias(ref item) => Display::fmt(item, f)?,
             ItemKind::TraitAlias(ref item) => Display::fmt(item, f)?,
             ItemKind::Existential(ref item) => Display::fmt(item, f)?,
@@ -217,18 +217,18 @@ impl Display for UseTree {
     }
 }
 
+impl Display for ModDecl {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "mod {}", self.name)
+    }
+}
+
 impl Display for Mod {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for item in &self.items {
             writeln!(f, "{}", item)?;
         }
         OK
-    }
-}
-
-impl Display for ModDecl {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "mod {}", self.name)
     }
 }
 

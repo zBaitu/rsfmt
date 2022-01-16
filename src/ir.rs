@@ -101,8 +101,8 @@ pub struct Item {
 pub enum ItemKind {
     ExternCrate(ExternCrate),
     Use(Use),
-    Mod(Mod),
     ModDecl(ModDecl),
+    Mod(Mod),
     TypeAlias(TypeAlias),
     TraitAlias(TraitAlias),
     Existential(Existential),
@@ -138,16 +138,16 @@ pub struct UseTree {
 }
 
 #[derive(Debug)]
+pub struct ModDecl {
+    pub name: String,
+}
+
+#[derive(Debug)]
 pub struct Mod {
     pub loc: Loc,
     pub is_unsafe: bool,
     pub name: String,
     pub items: Vec<Item>,
-}
-
-#[derive(Debug)]
-pub struct ModDecl {
-    pub name: String,
 }
 
 #[derive(Debug)]
