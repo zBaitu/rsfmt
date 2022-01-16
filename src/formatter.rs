@@ -2029,7 +2029,7 @@ impl Formatter {
 
                  */
 
-                if !tree.loc.nl && !need_wrap!(self.ts, " ", &tree.to_string()) {
+                if !nl && !tree.loc.nl && !need_wrap!(self.ts, " ", &tree.to_string()) {
                     self.raw_insert(" ");
                 } else if !nl || wrap {
                     self.wrap();
