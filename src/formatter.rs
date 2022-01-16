@@ -1982,11 +1982,6 @@ impl Formatter {
         self.raw_insert(";");
     }
 
-    fn fmt_use_tree(&mut self, item: &UseTree) {
-        self.insert(&item.path);
-        self.fmt_use_trees(&item.trees, true);
-    }
-
     fn fmt_use_trees(&mut self, trees: &Option<Vec<UseTree>>, wrap: bool) {
         if trees.is_none() {
             return;
@@ -1995,10 +1990,65 @@ impl Formatter {
         self.insert("::");
         let trees: &Vec<UseTree> = trees.as_ref().unwrap();
         if trees.len() == 1 {
-            self.fmt_use_tree(&trees[0]);
+            self.fmt_use_one_tree(&trees[0]);
         } else {
-            fmt_use_trees!(self, trees, fmt_use_tree, wrap);
+            //fmt_use_trees!(self, trees, fmt_use_one_tree, wrap);
+            self.fmt_use_more_trees(trees, wrap);
         }
+    }
+
+    fn fmt_use_one_tree(&mut self, item: &UseTree) {
+        self.insert(&item.path);
+        self.fmt_use_trees(&item.trees, true);
+    }
+
+    fn fmt_use_more_trees(&mut self, trees: &Vec<UseTree>, wrap: bool) {
+        self.insert_mark_align("{");
+        let mut nl = false;
+
+        let mut first = true;
+        for tree in trees {
+            if first {
+                nl = tree.loc.nl;
+                if nl {
+                    self.indent();
+                }
+            }
+
+            //let nl = all_nl || tree.loc.nl;
+            if !first {
+                self.raw_insert(",");
+                /*
+                if !nl {
+                    if !need_wrap!(self.ts, " ", &tree.to_string()) {
+                        self.raw_insert(" ");
+                    } else if wrap {
+                        self.wrap();
+                    }
+                }
+
+                 */
+
+                if !tree.loc.nl && !need_wrap!(self.ts, " ", &tree.to_string()) {
+                    self.raw_insert(" ");
+                } else if !nl || wrap {
+                    self.wrap();
+                }
+
+            }
+
+            if nl {
+                self.nl_indent();
+            }
+            self.fmt_use_one_tree(tree);
+            first = false;
+        }
+
+        if nl {
+            self.outdent();
+            self.nl_indent();
+        }
+        self.insert_unmark_align("}");
     }
 
     fn fmt_mod_decl_items(&mut self, items: &Vec<Item>) {
