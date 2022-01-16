@@ -2023,10 +2023,10 @@ impl Formatter {
                     self.wrap();
                 }
             }
-
             if all_nl {
                 self.nl_indent();
             }
+
             self.fmt_use_one_tree(tree);
             first = false;
         }
