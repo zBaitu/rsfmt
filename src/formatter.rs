@@ -2004,47 +2004,34 @@ impl Formatter {
 
     fn fmt_use_more_trees(&mut self, trees: &Vec<UseTree>, wrap: bool) {
         self.insert_mark_align("{");
-        let mut nl = false;
+        let mut all_nl = false;
 
         let mut first = true;
         for tree in trees {
             if first {
-                nl = tree.loc.nl;
-                if nl {
+                all_nl = tree.loc.nl;
+                if all_nl {
                     self.indent();
                 }
             }
 
-            //let nl = all_nl || tree.loc.nl;
             if !first {
                 self.raw_insert(",");
-                /*
-                if !nl {
-                    if !need_wrap!(self.ts, " ", &tree.to_string()) {
-                        self.raw_insert(" ");
-                    } else if wrap {
-                        self.wrap();
-                    }
-                }
-
-                 */
-
-                if !nl && !tree.loc.nl && !need_wrap!(self.ts, " ", &tree.to_string()) {
+                if !all_nl && !tree.loc.nl && !need_wrap!(self.ts, " ", &tree.to_string()) {
                     self.raw_insert(" ");
-                } else if !nl || wrap {
+                } else if !all_nl || wrap {
                     self.wrap();
                 }
-
             }
 
-            if nl {
+            if all_nl {
                 self.nl_indent();
             }
             self.fmt_use_one_tree(tree);
             first = false;
         }
 
-        if nl {
+        if all_nl {
             self.outdent();
             self.nl_indent();
         }
