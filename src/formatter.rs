@@ -2068,7 +2068,7 @@ impl Formatter {
         let nl = match item.item {
             ItemKind::ExternCrate(..) | ItemKind::Use(..) | ItemKind::ModDecl(..) => unreachable!("{:?}", item.item),
             ItemKind::Mod(ref item) => {
-                self.fmt_sub_mod(item);
+                self.fmt_mod(item);
                 true
             },
             ItemKind::TypeAlias(ref item) => {
@@ -2134,14 +2134,14 @@ impl Formatter {
         nl
     }
 
-    fn fmt_mod(&mut self, module: &Mod) {
-        self.fmt_group_items(&module.items);
-        self.fmt_items(&module.items);
+    fn fmt_mod(&mut self, item: &Mod) {
+        self.insert(&format!("mod {}", &item.name));
+        fmt_block!(self, item.items, item, fmt_mod_items);
     }
 
-    fn fmt_sub_mod(&mut self, item: &Mod) {
-        self.insert(&format!("mod {}", &item.name));
-        fmt_block!(self, item.items, item, fmt_mod);
+    fn fmt_mod_items(&mut self, module: &Mod) {
+        self.fmt_group_items(&module.items);
+        self.fmt_items(&module.items);
     }
 
     fn fmt_type_alias(&mut self, item: &TypeAlias) {

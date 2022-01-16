@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use rustc_ap_rustc_ast::Async::No;
 
 use rustc_ap_rustc_session::parse::ParseSess;
 
@@ -111,7 +112,7 @@ fn is_dyn(syntax: ast::TraitObjectSyntax) -> bool {
 
 fn is_unsafe(unsafety: ast::Unsafe) -> bool {
     match unsafety {
-        ast::Unsafe::Yes(_) => true,
+        ast::Unsafe::Yes(..) => true,
         ast::Unsafe::No => false,
     }
 }
@@ -164,7 +165,7 @@ fn has_patten(arg: &ast::Arg, patten: &Patten) -> bool {
 
 fn is_neg(polarity: ast::ImplPolarity) -> bool {
     match polarity {
-        ast::ImplPolarity::Negative(_) => true,
+        ast::ImplPolarity::Negative(..) => true,
         ast::ImplPolarity::Positive => false,
     }
 }
@@ -172,7 +173,7 @@ fn is_neg(polarity: ast::ImplPolarity) -> bool {
 
 fn is_default(defaultness: ast::Defaultness) -> bool {
     match defaultness {
-        ast::Defaultness::Default(_) => true,
+        ast::Defaultness::Default(..) => true,
         ast::Defaultness::Final   => false,
     }
 }
@@ -489,8 +490,8 @@ impl Translator {
                     ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(ident, unsafety, items, span)),
                 }
             },
-            /*
             ast::ItemKind::TyAlias(ref ty_kind) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_kind)),
+            /*
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
@@ -632,11 +633,6 @@ impl Translator {
         }
     }
 
-    /*
-
-
-
-
     fn trans_type_alias(&mut self, ident: String, ty_kind: &ast::TyAliasKind) -> TypeAlias {
         TypeAlias {
             is_default: is_default(ty_kind.0),
@@ -644,24 +640,6 @@ impl Translator {
             generics: self.trans_generics(&ty_kind.1),
             bounds: self.trans_type_param_bounds(&ty_kind.2),
             ty: map_ref_mut(&ty_kind.3, |ty| self.trans_type(ty)),
-        }
-    }
-
-    fn trans_trait_alias(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
-    -> TraitAlias {
-        TraitAlias {
-            name: ident,
-            generics: self.trans_generics(generics),
-            bounds: self.trans_type_param_bounds(bounds),
-        }
-    }
-
-    fn trans_existential(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
-    -> Existential {
-        Existential {
-            name: ident,
-            generics: self.trans_generics(generics),
-            bounds: self.trans_type_param_bounds(bounds),
         }
     }
 
@@ -751,7 +729,7 @@ impl Translator {
     }
 
     fn trans_poly_trait_ref(&mut self, poly_trait_ref: &ast::PolyTraitRef, modifier: ast::TraitBoundModifier)
-    -> PolyTraitRef {
+                            -> PolyTraitRef {
         if is_sized(modifier) {
             return PolyTraitRef::new_sized(self.leaf_loc(&poly_trait_ref.span));
         }
@@ -767,10 +745,129 @@ impl Translator {
             trait_ref,
         }
     }
-
     fn trans_trait_ref(&mut self, trait_ref: &ast::TraitRef) -> TraitRef {
         self.trans_path(&trait_ref.path)
     }
+
+
+    fn trans_path(&mut self, path: &ast::Path) -> Path {
+        let loc = self.loc(&path.span);
+        let segments = self.trans_path_segments(&path.segments);
+        self.set_loc(&loc);
+
+        Path {
+            loc,
+            segments,
+        }
+    }
+
+    fn trans_path_segments(&mut self, segments: &Vec<ast::PathSegment>) -> Vec<PathSegment> {
+        trans_list!(self, segments, trans_path_segment)
+    }
+
+
+    fn trans_path_segment(&mut self, seg: &ast::PathSegment) -> PathSegment {
+        PathSegment {
+            loc: self.loc(&seg.ident.span),
+            name: ident_to_string(&seg.ident),
+            param: self.trans_generics_args_or_none(&seg.args),
+        }
+    }
+
+    fn trans_generics_args_or_none(&mut self, args: &Option<ast::P<ast::GenericArgs>>) -> PathParam {
+        match *args {
+            Some(ref args) => self.trans_generic_args(args),
+            None => PathParam::Angle(Default::default()),
+        }
+    }
+
+    fn trans_generic_args(&mut self, args: &ast::GenericArgs) -> PathParam {
+        match *args {
+            ast::AngleBracketed(ref param) => PathParam::Angle(self.trans_angle_param(param)),
+            ast::Parenthesized(ref param) => PathParam::Paren(self.trans_paren_param(param)),
+        }
+    }
+
+    fn trans_angle_param(&mut self, param: &ast::AngleBracketedArgs) -> AngleParam {
+        AngleParam {
+            lifetimes: self.trans_generic_args_to_lifetime(&param.args),
+            types: self.trans_generic_args_to_types(&param.args),
+            bindings: self.trans_type_constraints(&param.args),
+        }
+    }
+
+    fn trans_generic_args_to_lifetime(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Lifetime> {
+        args.into_iter().fold(Vec::new(), |mut lifetimes, arg| {
+            if let ast::AngleBracketedArg::Arg(ref arg) = arg {
+                if let ast::GenericArg::Lifetime(ref lifetime) = arg {
+                    lifetimes.push(self.trans_lifetime(&lifetime.ident));
+                }
+            }
+            lifetimes
+        })
+    }
+
+    fn trans_generic_args_to_types(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Type> {
+        args.into_iter().fold(Vec::new(), |mut types, arg| {
+            if let ast::AngleBracketedArg::Arg(ref arg) = arg {
+                if let ast::GenericArg::Type(ref ty) = arg {
+                    types.push(self.trans_type(ty));
+                }
+            }
+            types
+        })
+    }
+
+    fn trans_type_constraints(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<TypeBinding> {
+        args.into_iter().fold(Vec::new(), |mut constraints, arg| {
+            if let ast::AngleBracketedArg::Constraint(ref constraint) = arg {
+                constraints.push(self.trans_type_constraint(constraint));
+            }
+            constraints
+        })
+    }
+
+
+    fn trans_type_constraint(&mut self, binding: &ast::AssocTyConstraint) -> TypeBinding {
+        let loc = self.loc(&binding.span);
+        let name = ident_to_string(&binding.ident);
+        let binding = match binding.kind {
+            ast::AssocTyConstraintKind::Equality { ref ty, } => TypeBindingKind::Eq(self.trans_type(ty)),
+            ast::AssocTyConstraintKind::Bound { ref bounds, } =>
+                TypeBindingKind::Bound(self.trans_type_param_bounds(bounds)),
+        };
+        self.set_loc(&loc);
+
+        TypeBinding {
+            loc,
+            name,
+            binding,
+        }
+    }
+
+    fn trans_paren_param(&mut self, args: &ast::ParenthesizedArgs) -> ParenParam {
+        let loc = self.loc(&args.span);
+        let inputs = self.trans_types(&args.inputs);
+        let output = match args.output {
+            ast::FnRetTy::Ty(ref ty) => Some(self.trans_type(ty)),
+            ast::FnRetTy::Default(..) =>  None,
+        };
+        self.set_loc(&loc);
+
+        ParenParam {
+            loc,
+            inputs,
+            output,
+        }
+    }
+
+    fn trans_qself(&mut self, qself: &ast::QSelf) -> QSelf {
+        QSelf {
+            ty: self.trans_type(&qself.ty),
+            pos: qself.position,
+        }
+    }
+
 
     fn trans_where(&mut self, predicates: &Vec<ast::WherePredicate>) -> Where {
         Where {
@@ -824,114 +921,6 @@ impl Translator {
         }
     }
 
-    fn trans_path(&mut self, path: &ast::Path) -> Path {
-        let loc = self.loc(&path.span);
-        let segments = self.trans_path_segments(&path.segments);
-        self.set_loc(&loc);
-
-        Path {
-            loc,
-            segments,
-        }
-    }
-
-    fn trans_path_segments(&mut self, segments: &Vec<ast::PathSegment>) -> Vec<PathSegment> {
-        trans_list!(self, segments, trans_path_segment)
-    }
-
-
-    fn trans_path_segment(&mut self, seg: &ast::PathSegment) -> PathSegment {
-        PathSegment {
-            loc: self.loc(&seg.ident.span),
-            name: ident_to_string(&seg.ident),
-            param: self.trans_generics_args_or_none(&seg.args),
-        }
-    }
-
-    fn trans_generics_args_or_none(&mut self, args: &Option<ast::P<ast::GenericArgs>>) -> PathParam {
-        match *args {
-            Some(ref args) => self.trans_generic_args(args),
-            None => PathParam::Angle(Default::default()),
-        }
-    }
-
-    fn trans_generic_args(&mut self, args: &ast::GenericArgs) -> PathParam {
-        match *args {
-            ast::AngleBracketed(ref param) => PathParam::Angle(self.trans_angle_param(param)),
-            ast::Parenthesized(ref param) => PathParam::Paren(self.trans_paren_param(param)),
-        }
-    }
-
-    fn trans_angle_param(&mut self, param: &ast::AngleBracketedArgs) -> AngleParam {
-        AngleParam {
-            lifetimes: self.trans_generic_args_to_lifetime(&param.args),
-            types: self.trans_generic_args_to_types(&param.args),
-            bindings: self.trans_type_bindings(&param.constraints),
-        }
-    }
-
-    // TODO:
-    fn trans_generic_args_to_lifetime(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Lifetime> {
-        args.into_iter().fold(Vec::new(), |mut lifetimes, arg| {
-            if let ast::GenericArg::Lifetime(ref lifetime) = arg {
-                lifetimes.push(self.trans_lifetime(&lifetime.ident));
-            }
-            lifetimes
-        })
-    }
-
-    // TODO:
-    fn trans_generic_args_to_types(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Type> {
-        args.into_iter().fold(Vec::new(), |mut types, arg| {
-            if let ast::GenericArg::Type(ref ty) = arg {
-                types.push(self.trans_type(ty));
-            }
-            types
-        })
-    }
-
-    fn trans_type_bindings(&mut self, bindings: &Vec<ast::AssocTyConstraint>) -> Vec<TypeBinding> {
-        trans_list!(self, bindings, trans_type_binding)
-    }
-
-
-    fn trans_type_binding(&mut self, binding: &ast::AssocTyConstraint) -> TypeBinding {
-        let loc = self.loc(&binding.span);
-        let name = ident_to_string(&binding.ident);
-        let binding = match binding.kind {
-            ast::AssocTyConstraintKind::Equality { ref ty, } => TypeBindingKind::Eq(self.trans_type(ty)),
-            ast::AssocTyConstraintKind::Bound { ref bounds, } =>
-                    TypeBindingKind::Bound(self.trans_type_param_bounds(bounds)),
-        };
-        self.set_loc(&loc);
-
-        TypeBinding {
-            loc,
-            name,
-            binding,
-        }
-    }
-
-    fn trans_paren_param(&mut self, args: &ast::ParenthesizedArgs) -> ParenParam {
-        let loc = self.loc(&args.span);
-        let inputs = self.trans_types(&args.inputs);
-        let output = map_ref_mut(&args.output, |ty| self.trans_type(ty));
-        self.set_loc(&loc);
-
-        ParenParam {
-            loc,
-            inputs,
-            output,
-        }
-    }
-
-    fn trans_qself(&mut self, qself: &ast::QSelf) -> QSelf {
-        QSelf {
-            ty: self.trans_type(&qself.ty),
-            pos: qself.position,
-        }
-    }
-
     fn trans_types(&mut self, types: &Vec<ast::P<ast::Ty>>) -> Vec<Type> {
         trans_list!(self, types, trans_type)
     }
@@ -940,7 +929,8 @@ impl Translator {
     fn trans_type(&mut self, ty: &ast::Ty) -> Type {
         let loc = self.loc(&ty.span);
 
-        let ty = match ty.node {
+        let ty = match ty.kind {
+            /*
             ast::TyKind::Infer => TypeKind::Symbol("_"),
             ast::TyKind::Never => TypeKind::Symbol("!"),
             ast::TyKind::CVarArgs => TypeKind::Symbol("..."),
@@ -966,6 +956,9 @@ impl Translator {
             ast::TyKind::Mac(ref mac) => TypeKind::Macro(self.trans_macro(mac)),
             ast::TyKind::Typeof(..) => unimplemented!("ast::TyKind::Typeof"),
             ast::TyKind::Err => unreachable!("ast::TyKind::Err"),
+
+             */
+            _ => unreachable!("{:#?}", ty.kind),
         };
 
         self.set_loc(&loc);
@@ -974,6 +967,34 @@ impl Translator {
             ty,
         }
     }
+
+    /*
+
+
+
+
+    fn trans_trait_alias(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
+    -> TraitAlias {
+        TraitAlias {
+            name: ident,
+            generics: self.trans_generics(generics),
+            bounds: self.trans_type_param_bounds(bounds),
+        }
+    }
+
+    fn trans_existential(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
+    -> Existential {
+        Existential {
+            name: ident,
+            generics: self.trans_generics(generics),
+            bounds: self.trans_type_param_bounds(bounds),
+        }
+    }
+
+
+
+
+
 
     fn trans_path_type(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path) -> PathType {
         PathType {
