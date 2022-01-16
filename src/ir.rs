@@ -53,13 +53,14 @@ impl Chunk {
     }
 }
 
+pub type Vis = String;
+
 #[derive(Debug)]
 pub struct Crate {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
     pub items: Vec<Item>,
 }
-
 
 #[derive(Debug)]
 pub enum AttrKind {
@@ -89,14 +90,6 @@ pub struct MetaItem {
 }
 
 #[derive(Debug)]
-pub struct Mod {
-    pub loc: Loc,
-    pub is_unsafe: bool,
-    pub name: String,
-    pub items: Vec<Item>,
-}
-
-#[derive(Debug)]
 pub struct Item {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
@@ -104,13 +97,11 @@ pub struct Item {
     pub item: ItemKind,
 }
 
-pub type Vis = String;
-
 #[derive(Debug)]
 pub enum ItemKind {
+    ExternCrate(ExternCrate),
     Mod(Mod),
     ModDecl(ModDecl),
-    ExternCrate(ExternCrate),
     Use(Use),
     TypeAlias(TypeAlias),
     TraitAlias(TraitAlias),
@@ -129,12 +120,20 @@ pub enum ItemKind {
 }
 
 #[derive(Debug)]
-pub struct ModDecl {
+pub struct ExternCrate {
     pub name: String,
 }
 
 #[derive(Debug)]
-pub struct ExternCrate {
+pub struct Mod {
+    pub loc: Loc,
+    pub is_unsafe: bool,
+    pub name: String,
+    pub items: Vec<Item>,
+}
+
+#[derive(Debug)]
+pub struct ModDecl {
     pub name: String,
 }
 

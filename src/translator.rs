@@ -315,8 +315,7 @@ impl Translator {
 
         let loc = self.loc(&krate.span);
         let attrs = self.trans_attrs(&krate.attrs);
-        //let items = self.trans_items(&krate.items);
-
+        let items = self.trans_items(&krate.items);
         let crate_file_end = self.crate_file_end();
         self.trans_comments(crate_file_end);
 
@@ -324,8 +323,7 @@ impl Translator {
             krate: Crate {
                 loc,
                 attrs,
-                //items,
-                items: Vec::new(),
+                items,
             },
             leading_cmnts: self.leading_cmnts,
             trailing_cmnts: self.trailing_cmnts,
@@ -472,76 +470,6 @@ impl Translator {
         }
     }
 
-
-    fn loc(&mut self, sp: &ast::Span) -> Loc {
-        self.trans_comments(sp.lo().0);
-
-        Loc {
-            start: sp.lo().0,
-            end: sp.hi().0,
-            nl: self.is_nl(sp.lo().0),
-        }
-    }
-
-
-    fn set_loc(&mut self, loc: &Loc) {
-        self.trans_comments(loc.end);
-        self.last_loc = *loc;
-    }
-
-
-    fn leaf_loc(&mut self, sp: &ast::Span) -> Loc {
-        let loc = self.loc(sp);
-        self.set_loc(&loc);
-        loc
-    }
-
-
-    fn is_nl(&self, pos: Pos) -> bool {
-        let nl = self.src[..pos as usize].rfind('\n');
-        if nl.is_none() {
-            return false;
-        }
-
-        let mut prev = ' ';
-        let start = nl.unwrap() + 1;
-        for ch in self.src[start..pos as usize].chars() {
-            if !ch.is_whitespace() && ch != '.' || !prev.is_whitespace() {
-                return false;
-            }
-            prev = ch;
-        }
-        true
-    }
-
-
-    fn literal_to_string(&self, lit: &ast::Lit) -> String {
-        self.span_to_snippet(&lit.span).unwrap()
-    }
-
-
-    fn span_to_snippet(&self, sp: &ast::Span) -> Result<String, ast::SpanSnippetError> {
-        self.sess.source_map().span_to_snippet(*sp)
-    }
-
-    fn crate_file_end(&self) -> Pos {
-        self.sess.source_map().files().last().unwrap().end_pos.0
-    }
-
-    /*
-    fn trans_mod(&mut self, name: String, unsafety: ast::Unsafe, items: &Vec<ast::P<ast::Item>>, span: &ast::Span) -> Mod {
-        let loc = self.loc(span);
-        let items = self.trans_items(items);
-        self.set_loc(&loc);
-
-        Mod {
-            loc,
-            is_unsafe: is_unsafe(unsafety),
-            name,
-            items,
-        }
-    }
-
     fn trans_items(&mut self, items: &Vec<ast::P<ast::Item>>) -> Vec<Item> {
         trans_list!(self, items, trans_item)
     }
@@ -552,14 +480,15 @@ impl Translator {
         let attrs = self.trans_attrs(&item.attrs);
         let vis = self.trans_vis(&item.vis);
         let ident = ident_to_string(&item.ident);
-        let item = match item.node {
+        let item = match item.kind {
+            ast::ItemKind::ExternCrate(ref alias) => ItemKind::ExternCrate(self.trans_extren_crate(ident, alias)),
+            /*
             ast::ItemKind::Mod(unsafety, ref module) => {
                 match module {
                     ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(ident, unsafety, items, span)),
                     ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(ident))
                 }
             },
-            ast::ItemKind::ExternCrate(ref rename) => ItemKind::ExternCrate(self.trans_extren_crate(ident, rename)),
             ast::ItemKind::Use(ref tree) => ItemKind::Use(self.trans_use(tree)),
             ast::ItemKind::TyAlias(ref ty_kind) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_kind)),
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
@@ -581,6 +510,9 @@ impl Translator {
             ast::ItemKind::MacroDef(ref mac_def) => ItemKind::MacroDef(self.trans_macro_def(ident, mac_def)),
             ast::ItemKind::Mac(ref mac) => ItemKind::Macro(self.trans_macro(mac)),
             ast::ItemKind::GlobalAsm(..) => unimplemented!("ast::ItemKind::GlobalAsm"),
+
+             */
+            _ => unimplemented!(),
         };
 
         self.set_loc(&loc);
@@ -592,9 +524,8 @@ impl Translator {
         }
     }
 
-
     fn trans_vis(&mut self, vis: &ast::Visibility) -> Vis {
-        let vis = match vis.node {
+        match vis.kind {
             ast::VisibilityKind::Public => "pub".to_string(),
             ast::VisibilityKind::Crate(sugar) => match sugar {
                 ast::CrateSugar::PubCrate => "pub(crate)".to_string(),
@@ -609,25 +540,40 @@ impl Translator {
                 }
             },
             ast::VisibilityKind::Inherited => "".to_string(),
-        };
-
-        vis
-    }
-
-    fn trans_mod_decl(&mut self, ident: String) -> ModDecl {
-        ModDecl {
-            name: ident,
         }
     }
 
-    fn trans_extren_crate(&mut self, ident: String, rename: &Option<ast::Symbol>) -> ExternCrate {
-        let name = match *rename {
-            Some(ref rename) => format!("{} as {}", symbol_to_string(rename), ident),
+    fn trans_extren_crate(&mut self, ident: String, alias: &Option<ast::Symbol>) -> ExternCrate {
+        let name = match *alias {
+            Some(ref alias) => format!("{} as {}", symbol_to_string(alias), ident),
             None => ident,
         };
 
         ExternCrate {
             name,
+        }
+    }
+
+    /*
+    fn trans_mod(&mut self, name: String, unsafety: ast::Unsafe, items: &Vec<ast::P<ast::Item>>, span: &ast::Span) -> Mod {
+        let loc = self.loc(span);
+        let items = self.trans_items(items);
+        self.set_loc(&loc);
+
+        Mod {
+            loc,
+            is_unsafe: is_unsafe(unsafety),
+            name,
+            items,
+        }
+    }
+
+
+
+
+    fn trans_mod_decl(&mut self, ident: String) -> ModDecl {
+        ModDecl {
+            name: ident,
         }
     }
 
@@ -2085,4 +2031,58 @@ impl Translator {
         (exprs, seps)
     }
      */
+    fn loc(&mut self, sp: &ast::Span) -> Loc {
+        self.trans_comments(sp.lo().0);
+
+        Loc {
+            start: sp.lo().0,
+            end: sp.hi().0,
+            nl: self.is_nl(sp.lo().0),
+        }
+    }
+
+
+    fn set_loc(&mut self, loc: &Loc) {
+        self.trans_comments(loc.end);
+        self.last_loc = *loc;
+    }
+
+
+    fn leaf_loc(&mut self, sp: &ast::Span) -> Loc {
+        let loc = self.loc(sp);
+        self.set_loc(&loc);
+        loc
+    }
+
+
+    fn is_nl(&self, pos: Pos) -> bool {
+        let nl = self.src[..pos as usize].rfind('\n');
+        if nl.is_none() {
+            return false;
+        }
+
+        let mut prev = ' ';
+        let start = nl.unwrap() + 1;
+        for ch in self.src[start..pos as usize].chars() {
+            if !ch.is_whitespace() && ch != '.' || !prev.is_whitespace() {
+                return false;
+            }
+            prev = ch;
+        }
+        true
+    }
+
+
+    fn literal_to_string(&self, lit: &ast::Lit) -> String {
+        self.span_to_snippet(&lit.span).unwrap()
+    }
+
+
+    fn span_to_snippet(&self, sp: &ast::Span) -> Result<String, ast::SpanSnippetError> {
+        self.sess.source_map().span_to_snippet(*sp)
+    }
+
+    fn crate_file_end(&self) -> Pos {
+        self.sess.source_map().files().last().unwrap().end_pos.0
+    }
 }

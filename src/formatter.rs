@@ -165,27 +165,18 @@ impl Display for MetaItem {
     }
 }
 
-impl Display for Mod {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for item in &self.items {
-            writeln!(f, "{}", item)?;
-        }
-        OK
-    }
-}
-
 impl Display for Item {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         display_attrs(f, &self.attrs)?;
         display_vis(f, &self.vis)?;
         match self.item {
+            ItemKind::ExternCrate(ref item) => Display::fmt(item, f)?,
             ItemKind::Mod(ref item) => {
                 writeln!(f, "mod {} {{", item.name)?;
                 Display::fmt(item, f)?;
                 return write!(f, "}}");
             },
             ItemKind::ModDecl(ref item) => Display::fmt(item, f)?,
-            ItemKind::ExternCrate(ref item) => Display::fmt(item, f)?,
             ItemKind::Use(ref item) => Display::fmt(item, f)?,
             ItemKind::TypeAlias(ref item) => Display::fmt(item, f)?,
             ItemKind::TraitAlias(ref item) => Display::fmt(item, f)?,
@@ -223,6 +214,15 @@ impl Display for UseTree {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.path)?;
         fmt_use_trees(f, &self.trees)
+    }
+}
+
+impl Display for Mod {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for item in &self.items {
+            writeln!(f, "{}", item)?;
+        }
+        OK
     }
 }
 
@@ -1793,6 +1793,7 @@ impl Formatter {
     fn fmt_crate(mut self, krate: Crate) -> TsResult {
         self.try_fmt_leading_comments(&krate.loc);
         self.fmt_attrs(&krate.attrs);
+        self.fmt_group_items(&krate.items);
         self.fmt_items(&krate.items);
         // TODO
         //self.fmt_left_comments(&krate.module.loc);
@@ -1955,10 +1956,6 @@ impl Formatter {
         }
     }
 
-    fn fmt_mod(&mut self, module: &Mod) {
-        self.fmt_group_items(&module.items);
-        self.fmt_items(&module.items);
-    }
 
     fn fmt_group_items(&mut self, items: &Vec<Item>) {
         self.fmt_extern_crate_items(items);
@@ -2098,6 +2095,11 @@ impl Formatter {
         self.try_fmt_trailing_comment(&item.loc);
         self.nl();
         nl
+    }
+
+    fn fmt_mod(&mut self, module: &Mod) {
+        self.fmt_group_items(&module.items);
+        self.fmt_items(&module.items);
     }
 
     fn fmt_sub_mod(&mut self, item: &Mod) {
