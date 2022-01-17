@@ -112,20 +112,23 @@ fn is_unsafe(unsafety: ast::Unsafe) -> bool {
     }
 }
 
-/*
 
-fn is_async(asyncness: ast::IsAsync) -> bool {
+fn is_async(asyncness: ast::Async) -> bool {
     match asyncness {
-        ast::IsAsync::Async {..} => true,
-        _ => false,
+        ast::Async::Yes {..} => true,
+        ast::Async::No => false,
     }
 }
 
 
-fn is_const(constness: ast::Constness) -> bool {
-    constness == ast::Constness::Const
+fn is_const(constness: ast::Const) -> bool {
+    match constness {
+        ast::Const::Yes(..) => true,
+        ast::Const::No => false,
+    }
 }
 
+/*
 fn is_auto(autoness: ast::IsAuto) -> bool {
     return autoness == ast::IsAuto::Yes;
 }
@@ -137,6 +140,13 @@ fn ext_to_string(ext: ast::Extern) -> Option<String> {
         ast::Extern::None => None,
         ast::Extern::Implicit => Some("extern".to_string()),
         ast::Extern::Explicit(ref str_lit) => Some(format!("extern {}", str_lit.symbol_unescaped.to_string())),
+    }
+}
+
+fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
+    match abi {
+        Some(ref abi) => Some(abi.symbol_unescaped.to_string()),
+        None => None,
     }
 }
 
@@ -486,7 +496,7 @@ impl Translator {
                     ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(ident, unsafety, items, span)),
                 }
             },
-            ast::ItemKind::TyAlias(ref ty_kind) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_kind)),
+            ast::ItemKind::TyAlias(ref type_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, type_alias)),
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
@@ -499,9 +509,9 @@ impl Translator {
             ast::ItemKind::Enum(ref enum_def, ref generics) => {
                 ItemKind::Enum(self.trans_enum(ident, generics, enum_def))
             },
-            /*
-            ast::ItemKind::ForeignMod(ref module) => ItemKind::ForeignMod(self.trans_foreign_mod(module)),
             ast::ItemKind::Fn(ref fn_kind) => ItemKind::Fn(self.trans_fn(ident, fn_kind)),
+            ast::ItemKind::ForeignMod(ref module) => ItemKind::ForeignMod(self.trans_foreign_mod(module)),
+            /*
             ast::ItemKind::Trait(ref trait_kind) => ItemKind::Trait(self.trans_trait(ident, trait_kind)),
             ast::ItemKind::Impl(ref impl_kind) => ItemKind::Impl(self.trans_impl(impl_kind)),
             ast::ItemKind::MacroDef(ref mac_def) => ItemKind::MacroDef(self.trans_macro_def(ident, mac_def)),
@@ -629,13 +639,13 @@ impl Translator {
         }
     }
 
-    fn trans_type_alias(&mut self, ident: String, ty_kind: &ast::TyAliasKind) -> TypeAlias {
+    fn trans_type_alias(&mut self, ident: String, type_alias: &ast::TyAliasKind) -> TypeAlias {
         TypeAlias {
-            is_default: is_default(ty_kind.0),
+            is_default: is_default(type_alias.0),
             name: ident,
-            generics: self.trans_generics(&ty_kind.1),
-            bounds: self.trans_type_param_bounds(&ty_kind.2),
-            ty: map_ref_mut(&ty_kind.3, |ty| self.trans_type(ty)),
+            generics: self.trans_generics(&type_alias.1),
+            bounds: self.trans_type_param_bounds(&type_alias.2),
+            ty: map_ref_mut(&type_alias.3, |ty| self.trans_type(ty)),
         }
     }
 
@@ -1203,67 +1213,13 @@ impl Translator {
         let right_arrow_pos = self.last_loc.end + snippet.find("->").unwrap() as Pos;
         self.is_nl(right_arrow_pos)
     }
-
-    /*
-    fn trans_foreign_mod(&mut self, module: &ast::ForeignMod) -> ForeignMod {
-        ForeignMod {
-            abi: abi_to_string(module.abi),
-            items: self.trans_foreign_items(&module.items),
-        }
-    }
-
-    fn trans_foreign_items(&mut self, items: &Vec<ast::ForeignItem>) -> Vec<ForeignItem> {
-        trans_list!(self, items, trans_foreign_item)
-    }
-
-
-    fn trans_foreign_item(&mut self, item: &ast::ForeignItem) -> ForeignItem {
-        let loc = self.loc(&item.span);
-        let attrs = self.trans_attrs(&item.attrs);
-        let vis = self.trans_vis(&item.vis);
-        let ident = ident_to_string(&item.ident);
-        let item = match item.node {
-            ast::ForeignItemKind::Ty => ForeignKind::Type(ident),
-            ast::ForeignItemKind::Static(ref ty, mutability) => {
-                ForeignKind::Static(self.trans_foreign_static(mutability, ident, ty))
-            },
-            ast::ForeignItemKind::Fn(ref decl, ref generics) => {
-                ForeignKind::Fn(self.trans_foreign_fn(ident, generics, decl))
-            },
-            ast::ForeignItemKind::Macro(ref mac) => ForeignKind::Macro(self.trans_macro(mac)),
-        };
-        self.set_loc(&loc);
-
-        ForeignItem {
-            loc,
-            attrs,
-            vis,
-            item,
-        }
-    }
-
-    fn trans_foreign_static(&mut self, mutability: ast::Mutability, ident: String, ty: &ast::Ty) -> ForeignStatic {
-        ForeignStatic {
-            is_mut: is_mut(mutability),
-            name: ident,
-            ty: self.trans_type(ty),
-        }
-    }
-
-    fn trans_foreign_fn(&mut self, ident: String, generics: &ast::Generics, decl: &ast::FnDecl) -> ForeignFn {
-        ForeignFn {
-            name: ident,
-            sig: self.trans_fn_sig(decl),
-            generics: self.trans_generics(generics),
-        }
-    }
-
+    
     fn trans_fn_header(&mut self, header: &ast::FnHeader) -> FnHeader {
         FnHeader {
             is_unsafe: is_unsafe(header.unsafety),
-            is_async: is_async(header.asyncness.node),
-            is_const: is_const(header.constness.node),
-            abi: abi_to_string(header.abi),
+            is_async: is_async(header.asyncness),
+            is_const: is_const(header.constness),
+            ext: ext_to_string(header.ext),
         }
     }
 
@@ -1278,6 +1234,47 @@ impl Translator {
         }
     }
 
+
+    fn trans_foreign_mod(&mut self, module: &ast::ForeignMod) -> ForeignMod {
+        ForeignMod {
+            abi: abi_to_string(&module.abi),
+            items: self.trans_foreign_items(&module.items),
+        }
+    }
+
+    fn trans_foreign_items(&mut self, items: &Vec<ast::P<ast::ForeignItem>>) -> Vec<ForeignItem> {
+        trans_list!(self, items, trans_foreign_item)
+    }
+
+    fn trans_foreign_item(&mut self, item: &ast::ForeignItem) -> ForeignItem {
+        let loc = self.loc(&item.span);
+        let attrs = self.trans_attrs(&item.attrs);
+        let vis = self.trans_vis(&item.vis);
+        let ident = ident_to_string(&item.ident);
+        let item = match item.kind {
+            ast::ForeignItemKind::TyAlias(ref ty_alias) => ForeignKind::TypeAlias(self.trans_type_alias(ident, ty_alias)),
+            ast::ForeignItemKind::Static(ref ty, mutability, ref expr) => {
+                ForeignKind::Static(self.trans_static(mutability, ident, ty, expr))
+            },
+            ast::ForeignItemKind::Fn(ref fn_kind) => {
+                ForeignKind::Fn(self.trans_fn(ident, fn_kind))
+            },
+            //ast::ForeignItemKind::Macro(ref mac) => ForeignKind::Macro(self.trans_macro(mac)),
+            // TODO
+            _ => unimplemented!("{:#?}", item)
+        };
+        self.set_loc(&loc);
+
+        ForeignItem {
+            loc,
+            attrs,
+            vis,
+            item,
+        }
+    }
+
+
+    /*
     fn trans_trait(&mut self, ident: String, trait_kind: &ast::TraitKind) -> Trait {
         Trait {
             is_auto: is_auto(trait_kind.0),
@@ -1429,6 +1426,7 @@ impl Translator {
             block: self.trans_block(block),
         }
     }
+    */
 
     fn trans_block(&mut self, block: &ast::Block) -> Block {
         let loc = self.loc(&block.span);
@@ -1449,12 +1447,13 @@ impl Translator {
 
     fn trans_stmt(&mut self, stmt: &ast::Stmt) -> Stmt {
         let loc = self.loc(&stmt.span);
-        let stmt = match stmt.node {
+        let stmt = match stmt.kind {
             ast::StmtKind::Item(ref item) => StmtKind::Item(self.trans_item(item)),
             ast::StmtKind::Local(ref local) => StmtKind::Let(self.trans_let(local)),
             ast::StmtKind::Semi(ref expr) => StmtKind::Expr(self.trans_expr(expr), true),
             ast::StmtKind::Expr(ref expr) => StmtKind::Expr(self.trans_expr(expr), false),
-            ast::StmtKind::Mac(ref p) => StmtKind::Macro(self.trans_macro_stmt(&p.2, &p.0, &p.1)),
+            //ast::StmtKind::Mac(ref p) => StmtKind::Macro(self.trans_macro_stmt(&p.2, &p.0, &p.1)),
+            _ => unimplemented!(),
         };
         self.set_loc(&loc);
 
@@ -1480,7 +1479,6 @@ impl Translator {
             init,
         }
     }
-    */
 
     fn trans_pattens(&mut self, pats: &Vec<ast::P<ast::Pat>>) -> Vec<Patten> {
         trans_list!(self, pats, trans_patten)

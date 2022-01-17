@@ -522,7 +522,7 @@ pub struct Return {
 
 #[derive(Debug)]
 pub struct ForeignMod {
-    pub abi: String,
+    pub abi: Option<String>,
     pub items: Vec<ForeignItem>,
 }
 
@@ -536,26 +536,10 @@ pub struct ForeignItem {
 
 #[derive(Debug)]
 pub enum ForeignKind {
-    Type(ForeignType),
-    Static(ForeignStatic),
-    Fn(ForeignFn),
+    TypeAlias(TypeAlias),
+    Static(Static),
+    Fn(Fn),
     Macro(Macro),
-}
-
-pub type ForeignType = String;
-
-#[derive(Debug)]
-pub struct ForeignStatic {
-    pub is_mut: bool,
-    pub name: String,
-    pub ty: Type,
-}
-
-#[derive(Debug)]
-pub struct ForeignFn {
-    pub name: String,
-    pub generics: Generics,
-    pub sig: FnSig,
 }
 
 #[derive(Debug, Default)]

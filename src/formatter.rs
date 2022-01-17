@@ -4,7 +4,7 @@ use std::fmt::{self, Display};
 use ir::*;
 use typesetter::*;
 
-use crate::ir;
+use crate::{ir, Opt};
 use crate::typesetter;
 use crate::{need_nl_indent, need_wrap};
 
@@ -583,26 +583,11 @@ impl Display for ForeignItem {
 impl Display for ForeignKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ForeignKind::Type(ref item) => write!(f, "type {}", item),
+            ForeignKind::TypeAlias(ref item) => write!(f, "type {}", item),
             ForeignKind::Static(ref item) => Display::fmt(item, f),
             ForeignKind::Fn(ref item) => Display::fmt(item, f),
             ForeignKind::Macro(ref item) => Display::fmt(item, f),
         }
-    }
-}
-
-impl Display for ForeignStatic {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}: {}", static_head(self.is_mut), self.name, self.ty)
-    }
-}
-
-impl Display for ForeignFn {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "fn {}", self.name)?;
-        display_generics(f, &self.generics)?;
-        Display::fmt(&self.sig, f)?;
-        display_where(f, &self.generics)
     }
 }
 
@@ -1380,11 +1365,13 @@ fn vis_head(vis: &Vis) -> String {
 }
 
 
-fn foreign_head(abi: &str) -> String {
+fn foreign_head(abi: &Option<String>) -> String {
     let mut head = String::new();
     head.push_str("extern");
     head.push_str(" ");
-    head.push_str(abi);
+    if let Some(ref abi) = abi {
+        head.push_str(abi);
+    }
     head
 }
 
@@ -2477,33 +2464,16 @@ impl Formatter {
     fn fmt_foreign_item(&mut self, item: &ForeignItem) {
         self.fmt_vis(&item.vis);
         match item.item {
-            ForeignKind::Type(ref item) => self.fmt_foreign_type(item),
-            ForeignKind::Static(ref item) => self.fmt_foreign_static(item),
-            ForeignKind::Fn(ref item) => self.fmt_foreign_fn(item),
+            ForeignKind::TypeAlias(ref item) => self.fmt_type_alias(item),
+            ForeignKind::Static(ref item) => self.fmt_static(item),
+            ForeignKind::Fn(ref item) => self.fmt_fn(item),
             ForeignKind::Macro(ref item) => self.fmt_macro(item),
         }
         self.raw_insert(";");
     }
 
 
-    fn fmt_foreign_type(&mut self, item: &ForeignType) {
-        self.insert(&format!("type {};", item));
-    }
 
-
-    fn fmt_foreign_static(&mut self, item: &ForeignStatic) {
-        self.insert(&format!("{}{}", static_head(item.is_mut), item.name));
-        insert_sep!(self, ":", item.ty);
-        self.fmt_type(&item.ty);
-    }
-
-
-    fn fmt_foreign_fn(&mut self, item: &ForeignFn) {
-        self.insert(&format!("fn {}", item.name));
-        self.fmt_generics(&item.generics);
-        self.fmt_fn_sig(&item.sig);
-        self.fmt_where(&item.generics);
-    }
 
     fn fmt_fn(&mut self, item: &Fn) {
         self.insert(&format!("{} {}", fn_head(&item.header), item.name));
