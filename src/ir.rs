@@ -826,6 +826,7 @@ pub type PathExpr = PathType;
 
 #[derive(Debug)]
 pub struct RefExpr {
+    pub is_raw: bool,
     pub is_mut: bool,
     pub expr: Expr,
 }
@@ -856,8 +857,10 @@ pub struct IndexExpr {
 
 #[derive(Debug)]
 pub struct StructExpr {
+    pub qself: Option<QSelf>,
     pub path: Path,
     pub fields: Vec<StructFieldExpr>,
+    pub has_rest: bool,
     pub base: Option<Expr>,
 }
 

@@ -100,6 +100,10 @@ fn is_mut(mutability: ast::Mutability) -> bool {
 }
 
 
+fn is_raw(borrow: ast::BorrowKind) -> bool {
+    borrow == ast::BorrowKind::Raw
+}
+
 fn is_dyn(syntax: ast::TraitObjectSyntax) -> bool {
     syntax == ast::TraitObjectSyntax::Dyn
 }
@@ -227,7 +231,6 @@ fn is_ref_mut(binding: ast::BindingMode) -> (bool, bool) {
         ast::BindingMode::ByValue(mutability) => (false, is_mut(mutability)),
     }
 }
-
 
 fn macro_start(token: &ast::TokenTree) -> u32 {
     let span = match token {
@@ -1062,7 +1065,7 @@ impl Translator {
     }
 
     fn trans_struct(&mut self, ident: String, generics: &ast::Generics, var: &ast::VariantData) -> Struct {
-        Struct {
+       Struct {
             name: ident,
             generics: self.trans_generics(generics),
             body: self.trans_struct_body(var),
@@ -1213,7 +1216,7 @@ impl Translator {
         let right_arrow_pos = self.last_loc.end + snippet.find("->").unwrap() as Pos;
         self.is_nl(right_arrow_pos)
     }
-    
+
     fn trans_fn_header(&mut self, header: &ast::FnHeader) -> FnHeader {
         FnHeader {
             is_unsafe: is_unsafe(header.unsafety),
@@ -1617,16 +1620,15 @@ impl Translator {
         let loc = self.loc(&expr.span);
         let attrs = self.trans_thin_attrs(&expr.attrs);
         let expr = match expr.kind {
-            /*
             ast::ExprKind::Lit(ref lit) => ExprKind::Literal(self.trans_literal_expr(lit)),
             ast::ExprKind::Path(ref qself, ref path) => ExprKind::Path(self.trans_path_type(qself, path)),
-            ast::ExprKind::AddrOf(mutabilitye, ref expr) => ExprKind::Ref(Box::new(self.trans_ref_expr(mutabilitye, expr))),
+            ast::ExprKind::AddrOf(borrow, mutabilitye, ref expr) => ExprKind::Ref(Box::new(self.trans_ref_expr(borrow, mutabilitye, expr))),
             ast::ExprKind::Unary(op, ref expr) => ExprKind::UnaryOp(Box::new(self.trans_unary_expr(op, expr))),
             ast::ExprKind::Try(ref expr) => ExprKind::Try(Box::new(self.trans_expr(expr))),
             ast::ExprKind::Binary(ref op, ref left, ref right) => {
                 ExprKind::ListOp(Box::new(self.trans_binary_expr(op, left, right)))
             },
-            ast::ExprKind::Assign(ref left, ref right) => {
+            ast::ExprKind::Assign(ref left, ref right, _) => {
                 ExprKind::ListOp(Box::new(self.trans_assign_expr(left, right)))
             },
             ast::ExprKind::AssignOp(ref op, ref left, ref right) => {
@@ -1637,9 +1639,8 @@ impl Translator {
             ast::ExprKind::Tup(ref exprs) => ExprKind::Tuple(Box::new(self.trans_exprs(exprs))),
             ast::ExprKind::Paren(ref expr) => ExprKind::Tuple(Box::new(vec![self.trans_expr(expr)])),
             ast::ExprKind::Index(ref obj, ref index) => ExprKind::Index(Box::new(self.trans_index_expr(obj, index))),
-            ast::ExprKind::Struct(ref path, ref fields, ref base) => {
-                ExprKind::Struct(Box::new(self.trans_struct_expr(path, fields, base)))
-            },
+            ast::ExprKind::Struct(ref expr) => ExprKind::Struct(Box::new(self.trans_struct_expr(expr))),
+            /*
             ast::ExprKind::Field(ref expr, ref ident) => ExprKind::Field(Box::new(self.trans_field_expr(expr, ident))),
             ast::ExprKind::Type(ref expr, ref ty) => ExprKind::Type(Box::new(self.trans_type_expr(expr, ty))),
             ast::ExprKind::Cast(ref expr, ref ty) => ExprKind::Cast(Box::new(self.trans_cast_expr(expr, ty))),
@@ -1699,7 +1700,6 @@ impl Translator {
         }
     }
 
-    /*
     fn trans_literal_expr(&mut self, lit: &ast::Lit) -> Chunk {
         Chunk {
             loc: self.leaf_loc(&lit.span),
@@ -1707,8 +1707,9 @@ impl Translator {
         }
     }
 
-    fn trans_ref_expr(&mut self, mutabilitye: ast::Mutability, expr: &ast::Expr) -> RefExpr {
+    fn trans_ref_expr(&mut self, borrow: ast::BorrowKind, mutabilitye: ast::Mutability, expr: &ast::Expr) -> RefExpr {
         RefExpr {
+            is_raw: is_raw(borrow),
             is_mut: is_mut(mutabilitye),
             expr: self.trans_expr(expr),
         }
@@ -1771,21 +1772,28 @@ impl Translator {
         }
     }
 
-    fn trans_struct_expr(&mut self, path: &ast::Path, fields: &Vec<ast::Field>, base: &Option<ast::P<ast::Expr>>)
-    -> StructExpr {
+    fn trans_struct_expr(&mut self, expr :&ast::StructExpr) -> StructExpr {
+        let (has_rest, base) = match expr.rest {
+            ast::StructRest::Base(ref expr) => (true, Some(self.trans_expr(expr))),
+            ast::StructRest::Rest(_) => (true, None),
+            ast::StructRest::None => (false, None),
+        };
+
         StructExpr {
-            path: self.trans_path(path),
-            fields: self.trans_struct_field_exprs(fields),
-            base: map_ref_mut(base, |expr| self.trans_expr(expr)),
+            qself: map_ref_mut(&expr.qself, |qself| self.trans_qself(qself)),
+            path: self.trans_path(&expr.path),
+            fields: self.trans_struct_field_exprs(&expr.fields),
+            has_rest,
+            base,
         }
     }
 
-    fn trans_struct_field_exprs(&mut self, fields: &Vec<ast::Field>) -> Vec<StructFieldExpr> {
+    fn trans_struct_field_exprs(&mut self, fields: &Vec<ast::ExprField>) -> Vec<StructFieldExpr> {
         trans_list!(self, fields, trans_struct_field_expr)
     }
 
 
-    fn trans_struct_field_expr(&mut self, field: &ast::Field) -> StructFieldExpr {
+    fn trans_struct_field_expr(&mut self, field: &ast::ExprField) -> StructFieldExpr {
         let loc = self.loc(&field.span);
         let name = ident_to_string(&field.ident);
         let value = self.trans_expr(&field.expr);
@@ -1805,6 +1813,7 @@ impl Translator {
         }
     }
 
+    /*
     fn trans_type_expr(&mut self, expr: &ast::Expr, ty: &ast::Ty) -> TypeExpr {
         TypeExpr {
             expr: self.trans_expr(expr),

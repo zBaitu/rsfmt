@@ -405,7 +405,7 @@ impl Display for PtrType {
 
 impl Display for RefType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", ref_head(&self.lifetime, self.is_mut), self.ty)
+        write!(f, "{}{}", ref_head(&self.lifetime, false, self.is_mut), self.ty)
     }
 }
 
@@ -750,7 +750,7 @@ impl Display for RangePatten {
 
 impl Display for RefPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", ref_head(&None, self.is_mut), self.patten)
+        write!(f, "{}{}", ref_head(&None, false, self.is_mut), self.patten)
     }
 }
 
@@ -884,7 +884,7 @@ impl Display for Expr {
 
 impl Display for RefExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", ref_head(&None, self.is_mut), self.expr)
+        write!(f, "{}{}", ref_head(&None, self.is_raw, self.is_mut), self.expr)
     }
 }
 
@@ -915,11 +915,19 @@ impl Display for IndexExpr {
 
 impl Display for StructExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.path, f)?;
+        match self.qself {
+            Some(ref qself) => display_qself(f, qself, &self.path)?,
+            None => Display::fmt(&self.path, f)?,
+        }
+
         writeln!(f, " {{")?;
         display_fields!(f, &self.fields)?;
-        if let Some(ref base) = self.base {
-            writeln!(f, "..{}", base)?;
+        if self.has_rest {
+            if let Some(ref base) = self.base {
+                writeln!(f, "..{}", base)?;
+            } else {
+                writeln!(f, "..")?;
+            }
         }
         write!(f, "}}")
     }
@@ -1274,9 +1282,17 @@ fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Resu
 }
 
 
-fn ref_head(lifetime: &Option<Lifetime>, is_mut: bool) -> String {
+fn ref_head(lifetime: &Option<Lifetime>, is_raw: bool, is_mut: bool) -> String {
     let mut head = String::new();
     head.push_str("&");
+    if is_raw {
+        if is_mut {
+            head.push_str("raw mut ");
+        } else {
+            head.push_str("raw const ");
+        }
+        return head;
+    }
 
     if let Some(ref lifetime) = *lifetime {
         head.push_str(&lifetime.s);
@@ -1285,7 +1301,6 @@ fn ref_head(lifetime: &Option<Lifetime>, is_mut: bool) -> String {
     if is_mut {
         head.push_str("mut ");
     }
-
     head
 }
 
@@ -2314,7 +2329,7 @@ impl Formatter {
 
 
     fn fmt_ref_type(&mut self, ty: &RefType) {
-        let head = &ref_head(&ty.lifetime, ty.is_mut);
+        let head = &ref_head(&ty.lifetime, false, ty.is_mut);
         maybe_wrap!(self, head, head, ty.ty, fmt_type);
     }
 
@@ -2763,7 +2778,7 @@ impl Formatter {
 
 
     fn fmt_ref_patten(&mut self, patten: &RefPatten) {
-        self.insert(&ref_head(&None, patten.is_mut));
+        self.insert(&ref_head(&None, false, patten.is_mut));
         self.fmt_patten(&patten.patten);
     }
 
@@ -2925,7 +2940,7 @@ impl Formatter {
 
 
     fn fmt_ref_expr(&mut self, expr: &RefExpr) {
-        let head = &ref_head(&None, expr.is_mut);
+        let head = &ref_head(&None, expr.is_raw, expr.is_mut);
         maybe_wrap!(self, head, head, expr.expr, fmt_expr);
     }
 
@@ -2974,9 +2989,15 @@ impl Formatter {
 
 
     fn fmt_struct_expr(&mut self, expr: &StructExpr) {
-        self.fmt_path(&expr.path, true);
+        match expr.qself {
+            Some(ref qself) => {
+                maybe_wrap!(self, expr);
+                self.fmt_qself_path(qself, &expr.path, false);
+            },
+            None => self.fmt_path(&expr.path, false),
+        }
 
-        if expr.fields.is_empty() {
+        if expr.fields.is_empty() && !expr.has_rest {
             self.insert(" {}");
             return;
         }
@@ -2988,11 +3009,13 @@ impl Formatter {
         };
 
         self.fmt_struct_field_exprs(&expr.fields);
-        if let Some(ref base) = expr.base {
+        if expr.has_rest {
             self.insert_indent();
             self.insert("..");
-            self.fmt_expr(base);
-            self.try_fmt_trailing_comment(&base.loc);
+            if let Some(ref base) = expr.base {
+                self.fmt_expr(base);
+                self.try_fmt_trailing_comment(&base.loc);
+            }
             self.nl();
         }
 

@@ -1,0 +1,6 @@
+fn f() {
+    &a;
+    &mut b;
+    &raw const c;
+    &raw mut d;
+}
