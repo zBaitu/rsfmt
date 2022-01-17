@@ -1,4 +1,5 @@
 use std::fmt::{self, Debug, Display};
+use crate::Opt;
 
 pub type Pos = u32;
 
@@ -501,12 +502,12 @@ pub struct EnumField {
 
 #[derive(Debug)]
 pub struct FnSig {
-    pub args: Vec<Arg>,
+    pub params: Vec<Param>,
     pub ret: Return,
 }
 
 #[derive(Debug)]
-pub struct Arg {
+pub struct Param {
     pub loc: Loc,
     pub patten: Patten,
     pub ty: Type,
@@ -562,7 +563,7 @@ pub struct FnHeader {
     pub is_unsafe: bool,
     pub is_async: bool,
     pub is_const: bool,
-    pub abi: String,
+    pub ext: Option<String>,
 }
 
 #[derive(Debug)]

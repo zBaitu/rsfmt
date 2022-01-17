@@ -63,19 +63,14 @@ fn is_inner(style: ast::AttrStyle) -> bool {
 }
 
 
-fn symbol_to_string(symbol: &ast::Symbol) -> String {
-    symbol.as_str().to_string()
-}
-
-
 fn token_lit_to_string(lit: &ast::TokenLit) -> String {
-    symbol_to_string(&lit.symbol)
+    lit.symbol.to_string()
 }
 
 
 fn ident_to_string(ident: &ast::Ident) -> String {
     if (*ident).name != ast::kw::PathRoot {
-        symbol_to_string(&ident.name)
+        ident.name.to_string()
     } else {
         "".to_string()
     }
@@ -130,22 +125,24 @@ fn is_async(asyncness: ast::IsAsync) -> bool {
 fn is_const(constness: ast::Constness) -> bool {
     constness == ast::Constness::Const
 }
- */
-
 
 fn is_auto(autoness: ast::IsAuto) -> bool {
     return autoness == ast::IsAuto::Yes;
 }
+ */
 
 
-fn abi_to_string(abi: ast::Abi) -> String {
-    format!(r#""{:?}""#, abi)
+fn ext_to_string(ext: ast::Extern) -> Option<String> {
+    match ext {
+        ast::Extern::None => None,
+        ast::Extern::Implicit => Some("extern".to_string()),
+        ast::Extern::Explicit(ref str_lit) => Some(format!("extern {}", str_lit.symbol_unescaped.to_string())),
+    }
 }
 
-/*
 
-fn has_patten(arg: &ast::Arg, patten: &Patten) -> bool {
-    match arg.to_self() {
+fn has_patten(param: &ast::Param, patten: &Patten) -> bool {
+    match param.to_self() {
         Some(sf) => {
             match sf.node {
                 ast::SelfKind::Value(..) | ast::SelfKind::Region(..) => return false,
@@ -160,7 +157,6 @@ fn has_patten(arg: &ast::Arg, patten: &Patten) -> bool {
         _ => true,
     }
 }
- */
 
 
 fn is_neg(polarity: ast::ImplPolarity) -> bool {
@@ -546,7 +542,7 @@ impl Translator {
 
     fn trans_extren_crate(&mut self, ident: String, rename: &Option<ast::Symbol>) -> ExternCrate {
         let name = match *rename {
-            Some(ref rename) => format!("{} as {}", symbol_to_string(rename), ident),
+            Some(ref rename) => format!("{} as {}", rename.to_string(), ident),
             None => ident,
         };
 
@@ -680,7 +676,7 @@ impl Translator {
     fn trans_lifetime(&mut self, ident: &ast::Ident) -> Lifetime {
         Lifetime {
             loc: self.leaf_loc(&ident.span),
-            s: symbol_to_string(&ident.name),
+            s: ident.name.to_string(),
         }
     }
 
@@ -956,16 +952,16 @@ impl Translator {
                 TypeKind::Trait(Box::new(self.trans_trait_type(false, true, bounds)))
             },
             // TODO
-            /*
             ast::TyKind::BareFn(ref bare_fn) => {
                 TypeKind::BareFn(Box::new(self.trans_bare_fn_type(bare_fn)))
             },
+            /*
             ast::TyKind::Mac(ref mac) => TypeKind::Macro(self.trans_macro(mac)),
             ast::TyKind::Typeof(..) => unimplemented!("ast::TyKind::Typeof"),
             ast::TyKind::Err => unreachable!("ast::TyKind::Err"),
 
              */
-            _ => unreachable!("{:#?}", ty.kind),
+            _ => unimplemented!("{:#?}", ty.kind),
         };
 
         self.set_loc(&loc);
@@ -1024,6 +1020,17 @@ impl Translator {
         }
     }
 
+    fn trans_bare_fn_type(&mut self, bare_fn: &ast::BareFnTy) -> BareFnType {
+        BareFnType {
+            lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
+            header: FnHeader {
+                is_unsafe: is_unsafe(bare_fn.unsafety),
+                ext: ext_to_string(bare_fn.ext),
+                ..Default::default()
+            },
+            sig: self.trans_fn_sig(&bare_fn.decl),
+        }
+    }
 
     fn trans_const(&mut self, defaultness: ast::Defaultness, ident: String, ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>) -> Const {
         Const {
@@ -1157,46 +1164,32 @@ impl Translator {
         }
     }
 
-    /*
-    fn trans_bare_fn_type(&mut self, bare_fn: &ast::BareFnTy) -> BareFnType {
-        BareFnType {
-            lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
-            header: FnHeader {
-                is_unsafe: is_unsafe(bare_fn.unsafety),
-                abi: abi_to_string(bare_fn.abi),
-                ..Default::default()
-            },
-            sig: self.trans_fn_sig(&bare_fn.decl),
-        }
-    }
-
     fn trans_fn_sig(&mut self, decl: &ast::FnDecl) -> FnSig {
         FnSig {
-            args: self.trans_args(&decl.inputs),
+            params: self.trans_params(&decl.inputs),
             ret: self.trans_return(&decl.output),
         }
     }
 
-    fn trans_args(&mut self, inputs: &Vec<ast::Arg>) -> Vec<Arg> {
-        trans_list!(self, inputs, trans_arg)
+    fn trans_params(&mut self, params: &Vec<ast::Param>) -> Vec<Param> {
+        trans_list!(self, params, trans_param)
     }
 
-
-    fn trans_arg(&mut self, arg: &ast::Arg) -> Arg {
-        let patten = self.trans_patten(&arg.pat);
-        let has_patten = has_patten(arg, &patten);
-        Arg {
+    fn trans_param(&mut self, param: &ast::Param) -> Param {
+        let patten = self.trans_patten(&param.pat);
+        let has_patten = has_patten(param, &patten);
+        Param {
             loc: patten.loc.clone(),
             patten,
-            ty: self.trans_type(&arg.ty),
+            ty: self.trans_type(&param.ty),
             has_patten,
         }
     }
 
-    fn trans_return(&mut self, output: &ast::FunctionRetTy) -> Return {
+    fn trans_return(&mut self, output: &ast::FnRetTy) -> Return {
         let (nl, ret) = match *output {
-            ast::FunctionRetTy::Default(..) => (false, None),
-            ast::FunctionRetTy::Ty(ref ty) => (self.is_return_nl(ty.span.lo().0), Some(self.trans_type(ty))),
+            ast::FnRetTy::Ty(ref ty) => (self.is_return_nl(ty.span.lo().0), Some(self.trans_type(ty))),
+            ast::FnRetTy::Default(..) => (false, None),
         };
 
         Return {
@@ -1206,11 +1199,12 @@ impl Translator {
     }
 
     fn is_return_nl(&self, pos: Pos) -> bool {
-        let snippet = self.span_to_snippet(span(self.last_loc.end, pos)).unwrap();
+        let snippet = self.span_to_snippet(&span(self.last_loc.end, pos)).unwrap();
         let right_arrow_pos = self.last_loc.end + snippet.find("->").unwrap() as Pos;
         self.is_nl(right_arrow_pos)
     }
 
+    /*
     fn trans_foreign_mod(&mut self, module: &ast::ForeignMod) -> ForeignMod {
         ForeignMod {
             abi: abi_to_string(module.abi),
@@ -1486,6 +1480,7 @@ impl Translator {
             init,
         }
     }
+    */
 
     fn trans_pattens(&mut self, pats: &Vec<ast::P<ast::Pat>>) -> Vec<Patten> {
         trans_list!(self, pats, trans_patten)
@@ -1494,7 +1489,8 @@ impl Translator {
 
     fn trans_patten(&mut self, patten: &ast::P<ast::Pat>) -> Patten {
         let loc = self.loc(&patten.span);
-        let patten = match patten.node {
+        let patten = match patten.kind {
+            /*
             ast::PatKind::Wild => PattenKind::Wildcard,
             ast::PatKind::Rest => PattenKind::Symbol(".."),
             ast::PatKind::Lit(ref expr) => PattenKind::Literal(self.trans_expr(expr)),
@@ -1527,6 +1523,9 @@ impl Translator {
             },
             ast::PatKind::Mac(ref mac) => PattenKind::Macro(self.trans_macro(mac)),
             ast::PatKind::Box(..) => unreachable!("ast::PatKind::Box"),
+
+             */
+            _ => unimplemented!("{:#?}", patten),
         };
         self.set_loc(&loc);
 
@@ -1536,6 +1535,7 @@ impl Translator {
         }
     }
 
+    /*
     fn trans_range_patten(&mut self, start: &ast::Expr, end: &ast::Expr, range_end: &ast::RangeEnd) -> RangePatten {
         RangePatten {
             start: self.trans_expr(start),

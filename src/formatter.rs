@@ -449,12 +449,12 @@ impl Display for TupleField {
 
 impl Display for FnSig {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_args(f, &self.args)?;
+        display_params(f, &self.params)?;
         Display::fmt(&self.ret, f)
     }
 }
 
-impl Display for Arg {
+impl Display for Param {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.has_patten {
             write!(f, "{}", self.patten)?;
@@ -1107,7 +1107,7 @@ impl Display for MethodCallExpr {
 impl Display for ClosureExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", closure_head(self.is_static, self.is_async, self.is_move))?;
-        display_lists!(f, "|", ", ", "|", &self.sig.args)?;
+        display_lists!(f, "|", ", ", "|", &self.sig.params)?;
         Display::fmt(&self.sig.ret, f)?;
 
         match self.expr.expr {
@@ -1261,8 +1261,8 @@ fn display_where(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
 }
 
 
-fn display_args(f: &mut fmt::Formatter, args: &Vec<Arg>) -> fmt::Result {
-    display_lists!(f, "(", ", ", ")", args)
+fn display_params(f: &mut fmt::Formatter, params: &Vec<Param>) -> fmt::Result {
+    display_lists!(f, "(", ", ", ")", params)
 }
 
 
@@ -1328,22 +1328,12 @@ fn fn_head(header: &FnHeader) -> String {
     if header.is_const {
         head.push_str("const ");
     }
-    head.push_str(&extern_head(&header.abi));
+    if let Some(ref ext) = header.ext {
+        head.push_str(&format!("{} ", &ext));
+    }
     head.push_str("fn");
     head
 }
-
-
-fn extern_head(abi: &str) -> String {
-    let mut head = String::new();
-    if abi != r#""Rust""# {
-        head.push_str("extern ");
-        head.push_str(abi);
-        head.push_str(" ");
-    }
-    head
-}
-
 
 fn trait_head(is_auto: bool, is_unsafe: bool) -> String {
     let mut head = String::new();
@@ -2660,29 +2650,29 @@ impl Formatter {
 
 
     fn fmt_fn_sig(&mut self, sig: &FnSig) {
-        self.fmt_fn_args(&sig.args);
+        self.fmt_fn_params(&sig.params);
         self.fmt_fn_return(&sig.ret);
     }
 
 
-    fn fmt_fn_args(&mut self, args: &Vec<Arg>) -> bool {
-        fmt_comma_lists!(self, "(", ")", args, fmt_arg)
+    fn fmt_fn_params(&mut self, params: &Vec<Param>) -> bool {
+        fmt_comma_lists!(self, "(", ")", params, fmt_param)
     }
 
 
-    fn fmt_arg(&mut self, arg: &Arg) {
-        maybe_nl!(self, arg);
-        maybe_wrap!(self, arg);
+    fn fmt_param(&mut self, param: &Param) {
+        maybe_nl!(self, param);
+        maybe_wrap!(self, param);
 
-        if arg.has_patten {
-            self.fmt_patten(&arg.patten);
+        if param.has_patten {
+            self.fmt_patten(&param.patten);
             self.raw_insert(": ");
         } else {
-            if let PattenKind::Ident(ref patten) = arg.patten.patten {
+            if let PattenKind::Ident(ref patten) = param.patten.patten {
                 self.insert(&ident_patten_head(patten.is_ref, patten.is_mut));
             }
         }
-        self.fmt_type(&arg.ty);
+        self.fmt_type(&param.ty);
     }
 
 
@@ -3255,7 +3245,7 @@ impl Formatter {
 
     fn fmt_closure_expr(&mut self, expr: &ClosureExpr) {
         self.insert(&closure_head(expr.is_static, expr.is_async, expr.is_move));
-        self.fmt_closure_args(&expr.sig.args);
+        self.fmt_closure_args(&expr.sig.params);
         self.fmt_fn_return(&expr.sig.ret);
 
         match expr.expr.expr {
@@ -3268,12 +3258,12 @@ impl Formatter {
     }
 
 
-    fn fmt_closure_args(&mut self, args: &Vec<Arg>) {
+    fn fmt_closure_args(&mut self, args: &Vec<Param>) {
         fmt_comma_lists!(self, "|", "|", args, fmt_closure_arg);
     }
 
 
-    fn fmt_closure_arg(&mut self, arg: &Arg) {
+    fn fmt_closure_arg(&mut self, arg: &Param) {
         maybe_nl!(self, arg);
         maybe_wrap!(self, arg);
 
