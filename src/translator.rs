@@ -513,8 +513,8 @@ impl Translator {
             ast::ItemKind::Fn(ref fn_kind) => ItemKind::Fn(self.trans_fn(ident, fn_kind)),
             ast::ItemKind::ForeignMod(ref module) => ItemKind::ForeignMod(self.trans_foreign_mod(module)),
             ast::ItemKind::Trait(ref trait_kind) => ItemKind::Trait(self.trans_trait(ident, trait_kind)),
-            /*
             ast::ItemKind::Impl(ref impl_kind) => ItemKind::Impl(self.trans_impl(impl_kind)),
+            /*
             ast::ItemKind::MacroDef(ref mac_def) => ItemKind::MacroDef(self.trans_macro_def(ident, mac_def)),
             ast::ItemKind::Mac(ref mac) => ItemKind::Macro(self.trans_macro(mac)),
             ast::ItemKind::GlobalAsm(..) => unimplemented!("ast::ItemKind::GlobalAsm"),
@@ -1318,15 +1318,14 @@ impl Translator {
     }
 
 
-    /*
     fn trans_impl(&mut self, impl_kind: &ast::ImplKind) -> Impl {
         Impl {
             is_unsafe: is_unsafe(impl_kind.unsafety),
             is_default: is_default(impl_kind.defaultness),
             is_neg: is_neg(impl_kind.polarity),
             generics: self.trans_generics(&impl_kind.generics),
-            trait_ref: map_ref_mut(trait_ref, |trait_ref| self.trans_trait_ref(trait_ref)),
-            ty: self.trans_type(ty),
+            trait_ref: map_ref_mut(&impl_kind.of_trait, |trait_ref| self.trans_trait_ref(trait_ref)),
+            ty: self.trans_type(&impl_kind.self_ty),
             items: self.trans_impl_items(&impl_kind.items),
         }
     }
@@ -1340,22 +1339,19 @@ impl Translator {
         let loc = self.loc(&item.span);
         let attrs = self.trans_attrs(&item.attrs);
         let vis = self.trans_vis(&item.vis);
-        let is_default = is_default(item.defaultness);
         let ident = ident_to_string(&item.ident);
         let item = match item.kind {
-            ast::AssocItemKind::Const(ref ty, ref expr) => {
-                ImplItemKind::Const(self.trans_const(ident, ty, expr))
+            ast::AssocItemKind::Const(defaultness, ref ty, ref expr) => {
+                ImplItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
             },
-            ast::AssocItemKind::Type(ref ty) => {
-                ImplItemKind::Type(self.trans_type_impl_item(ident, &item.generics, ty))
+            ast::AssocItemKind::TyAlias(ref ty_alias) => {
+                ImplItemKind::TypeAlias(self.trans_type_alias(ident, ty_alias))
             },
-            ast::AssocItemKind::Existential(ref bounds) => {
-                ImplItemKind::Existential(self.trans_type_existential_item(ident, &item.generics, bounds))
+            ast::AssocItemKind::Fn(ref fn_kind) => {
+                ImplItemKind::Fn(self.trans_fn(ident, &fn_kind))
             },
-            ast::AssocItemKind::Method(ref method_sig, ref block) => {
-                ImplItemKind::Method(self.trans_method_impl_item(ident, &item.generics, method_sig, block))
-            },
-            ast::AssocItemKind::Macro(ref mac) => ImplItemKind::Macro(self.trans_macro(mac)),
+            //ast::AssocItemKind::Macro(ref mac) => ImplItemKind::Macro(self.trans_macro(mac)),
+            _ => unimplemented!(),
         };
         self.set_loc(&loc);
 
@@ -1363,36 +1359,9 @@ impl Translator {
             loc,
             attrs,
             vis,
-            is_default,
             item,
         }
     }
-
-    fn trans_type_impl_item(&mut self, ident: String, generics: &ast::Generics, ty: &ast::Ty) -> TypeImplItem {
-        TypeImplItem {
-            name: ident,
-            generics: self.trans_generics(generics),
-            ty: self.trans_type(ty),
-        }
-    }
-
-    fn trans_type_existential_item(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds)
-    -> ExistentialImplItem {
-        ExistentialImplItem {
-            name: ident,
-            generics: self.trans_generics(generics),
-            bounds: self.trans_type_param_bounds(bounds),
-        }
-    }
-
-    fn trans_method_impl_item(&mut self, ident: String, generics: &ast::Generics, sig: &ast::MethodSig,
-                              block: &ast::P<ast::Block>) -> MethodImplItem {
-        MethodImplItem {
-            sig: self.trans_method_sig(ident, generics, sig),
-            block: self.trans_block(block),
-        }
-    }
-    */
 
     fn trans_block(&mut self, block: &ast::Block) -> Block {
         let loc = self.loc(&block.span);

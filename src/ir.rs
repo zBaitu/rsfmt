@@ -609,25 +609,15 @@ pub struct ImplItem {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
     pub vis: Vis,
-    pub is_default: bool,
     pub item: ImplItemKind,
 }
 
 #[derive(Debug)]
 pub enum ImplItemKind {
-    Const(ConstImplItem),
-    Type(TypeImplItem),
-    Method(MethodImplItem),
+    Const(Const),
+    TypeAlias(TypeAlias),
+    Fn(Fn),
     Macro(Macro),
-}
-
-pub type ConstImplItem = Const;
-
-#[derive(Debug)]
-pub struct TypeImplItem {
-    pub name: String,
-    pub generics: Generics,
-    pub ty: Type,
 }
 
 #[derive(Debug)]

@@ -658,35 +658,21 @@ impl Display for ImplItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         display_attrs(f, &self.attrs)?;
         display_vis(f, &self.vis)?;
-        write!(f, "{}", impl_item_head(self.is_default))?;
 
-        let mut is_method = false;
+        let mut is_fn = false;
         match self.item {
             ImplItemKind::Const(ref item) => Display::fmt(item, f)?,
-            ImplItemKind::Type(ref item) => Display::fmt(item, f)?,
-            ImplItemKind::Method(ref item) => {
-                is_method = true;
+            ImplItemKind::TypeAlias(ref item) => Display::fmt(item, f)?,
+            ImplItemKind::Fn(ref item) => {
+                is_fn = true;
                 Display::fmt(item, f)?
             },
             ImplItemKind::Macro(ref item) => Display::fmt(item, f)?,
         }
-        if !is_method {
+        if !is_fn {
             write!(f, ";")?;
         }
         OK
-    }
-}
-
-impl Display for TypeImplItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "type {}{} = {}", self.name, self.generics, self.ty)
-    }
-}
-
-impl Display for MethodImplItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.sig, f)?;
-        try_display_block_one_line(f, &self.block)
     }
 }
 
@@ -1339,14 +1325,6 @@ fn impl_head(is_unsafe: bool, is_default: bool) -> String {
     head
 }
 
-
-fn impl_item_head(is_default: bool) -> String {
-    let mut head = String::new();
-    if is_default {
-        head.push_str("default ");
-    }
-    head
-}
 
 
 fn vis_head(vis: &Vis) -> String {
@@ -2352,6 +2330,7 @@ impl Formatter {
 
 
 
+    // TODO default
     fn fmt_const(&mut self, item: &Const) {
         self.insert(&format!("const {}", item.name));
         insert_sep!(self, ":", item.ty);
@@ -2550,15 +2529,14 @@ impl Formatter {
 
     fn fmt_impl_item(&mut self, item: &ImplItem) -> bool {
         self.fmt_vis(&item.vis);
-        self.insert(&impl_item_head(item.is_default));
 
         let mut is_method = false;
         match item.item {
-            ImplItemKind::Const(ref item) => self.fmt_const_impl_item(item),
-            ImplItemKind::Type(ref item) => self.fmt_type_impl_item(item),
-            ImplItemKind::Method(ref item) => {
+            ImplItemKind::Const(ref item) => self.fmt_const(item),
+            ImplItemKind::TypeAlias(ref item) => self.fmt_type_alias(item),
+            ImplItemKind::Fn(ref item) => {
                 is_method = true;
-                self.fmt_method_impl_item(item);
+                self.fmt_fn(item);
             },
             ImplItemKind::Macro(ref item) => self.fmt_macro(item),
         }
@@ -2570,28 +2548,6 @@ impl Formatter {
         }
     }
 
-
-    fn fmt_const_impl_item(&mut self, item: &ConstImplItem) {
-        self.insert(&format!("const {}", item.name));
-        insert_sep!(self, ":", item.ty);
-        self.fmt_type(&item.ty);
-        // TODO
-        maybe_wrap!(self, " = ", "= ", item.expr.as_ref().unwrap(), fmt_expr);
-    }
-
-
-    fn fmt_type_impl_item(&mut self, item: &TypeImplItem) {
-        self.insert(&format!("type {}", item.name));
-        self.fmt_generics_and_where(&item.generics);
-        maybe_wrap!(self, " = ", "= ", item.ty, fmt_type);
-    }
-
-
-
-    fn fmt_method_impl_item(&mut self, item: &MethodImplItem) {
-        self.fmt_method_sig(&item.sig);
-        self.try_fmt_block_one_line(&item.block);
-    }
 
 
     fn fmt_fn_sig(&mut self, sig: &FnSig) {
