@@ -730,8 +730,8 @@ pub enum PattenKind {
 
 #[derive(Debug)]
 pub struct RangePatten {
-    pub start: Expr,
-    pub end: Expr,
+    pub start: Option<Expr>,
+    pub end: Option<Expr>,
     pub is_inclusive: bool,
 }
 
@@ -753,6 +753,7 @@ pub struct IdentPatten {
 
 #[derive(Debug)]
 pub struct StructPatten {
+    pub qself: Option<QSelf>,
     pub path: Path,
     pub fields: Vec<StructFieldPatten>,
     pub omit: bool,
@@ -768,6 +769,7 @@ pub struct StructFieldPatten {
 
 #[derive(Debug)]
 pub struct EnumPatten {
+    pub qself: Option<QSelf>,
     pub path: Path,
     pub pattens: Vec<Patten>,
 }

@@ -390,10 +390,7 @@ impl Display for Type {
 
 impl Display for PathType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.qself {
-            Some(ref qself) => display_qself(f, qself, &self.path),
-            None => Display::fmt(&self.path, f),
-        }
+        display_qself_or_path(f, &self.qself, &self.path)
     }
 }
 
@@ -744,7 +741,14 @@ impl Display for Patten {
 
 impl Display for RangePatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}{}", self.start, range(self.is_inclusive), self.end)
+        if let Some(ref start) = self.start {
+            Display::fmt(start, f)?;
+        }
+        write!(f, "{}", range(self.is_inclusive))?;
+        if let Some(ref end) = self.end {
+            Display::fmt(end, f)?;
+        }
+        OK
     }
 }
 
@@ -766,7 +770,7 @@ impl Display for IdentPatten {
 
 impl Display for StructPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.path, f)?;
+        display_qself_or_path(f, &self.qself, &self.path)?;
 
         if self.fields.is_empty() {
             if self.omit {
@@ -915,10 +919,7 @@ impl Display for IndexExpr {
 
 impl Display for StructExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.qself {
-            Some(ref qself) => display_qself(f, qself, &self.path)?,
-            None => Display::fmt(&self.path, f)?,
-        }
+        display_qself_or_path(f, &self.qself, &self.path)?;
 
         writeln!(f, " {{")?;
         display_fields!(f, &self.fields)?;
@@ -1073,8 +1074,7 @@ impl Display for MatchExpr {
 
 impl Display for Arm {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO
-        //display_pattens(f, &self.pattens)?;
+        Display::fmt(&self.patten, f)?;
         if let Some(ref guard) = self.guard {
             write!(f, " if {}", guard)?;
         }
@@ -1222,7 +1222,14 @@ fn display_paren_param_inputs(f: &mut fmt::Formatter, inputs: &Vec<Type>) -> fmt
 }
 
 
-fn display_qself(f: &mut fmt::Formatter, qself: &QSelf, path: &Path) -> fmt::Result {
+fn display_qself_or_path(f: &mut fmt::Formatter, qself: &Option<QSelf>, path: &Path) -> fmt::Result {
+    match qself {
+        Some(ref qself) => display_qself_and_path(f, qself, path),
+        None => Display::fmt(path, f),
+    }
+}
+
+fn display_qself_and_path(f: &mut fmt::Formatter, qself: &QSelf, path: &Path) -> fmt::Result {
     write!(f, "<{}", qself.ty)?;
     if qself.pos > 0 {
         write!(f, " as ")?;
@@ -2773,9 +2780,13 @@ impl Formatter {
 
 
     fn fmt_range_patten(&mut self, patten: &RangePatten) {
-        self.fmt_expr(&patten.start);
+        if let Some(ref start) = patten.start {
+            self.fmt_expr(start);
+        }
         self.insert(range(patten.is_inclusive));
-        self.fmt_expr(&patten.end);
+        if let Some(ref end) = patten.end {
+            self.fmt_expr(end);
+        }
     }
 
 
@@ -2794,7 +2805,14 @@ impl Formatter {
 
 
     fn fmt_struct_patten(&mut self, patten: &StructPatten) {
-        self.fmt_path(&patten.path, true);
+        // TODO
+        match patten.qself {
+            Some(ref qself) => {
+                maybe_wrap!(self, patten);
+                self.fmt_qself_path(qself, &patten.path, false);
+            },
+            None => self.fmt_path(&patten.path, false),
+        }
 
         if patten.fields.is_empty() {
             if patten.omit {
@@ -2860,7 +2878,14 @@ impl Formatter {
 
 
     fn fmt_enum_patten(&mut self, patten: &EnumPatten) {
-        self.fmt_path(&patten.path, true);
+        match patten.qself {
+            Some(ref qself) => {
+                maybe_wrap!(self, patten);
+                self.fmt_qself_path(qself, &patten.path, false);
+            },
+            None => self.fmt_path(&patten.path, false),
+        }
+
         fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
     }
 
@@ -3205,8 +3230,7 @@ impl Formatter {
 
 
     fn fmt_arm(&mut self, arm: &Arm) {
-        // TODO
-        //fmt_lists!(self, " | ", "| ", &arm.pattens, fmt_patten);
+        self.fmt_patten(&arm.patten);
         if let Some(ref guard) = arm.guard {
             maybe_wrap!(self, " if ", "if ", guard, fmt_expr);
         }

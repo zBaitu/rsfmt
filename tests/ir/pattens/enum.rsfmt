@@ -6,3 +6,4 @@ fn f() {
         Some(a, .., b) => true,
     }
 }
+

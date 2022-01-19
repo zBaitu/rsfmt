@@ -1483,15 +1483,14 @@ impl Translator {
         }
     }
 
-    fn trans_pattens(&mut self, pats: &Vec<ast::Pat>) -> Vec<Patten> {
-        trans_list!(self, pats, trans_patten)
+    fn trans_pattens(&mut self, pattens: &Vec<ast::P<ast::Pat>>) -> Vec<Patten> {
+        trans_list!(self, pattens, trans_patten)
     }
 
 
     fn trans_patten(&mut self, patten: &ast::Pat) -> Patten {
         let loc = self.loc(&patten.span);
         let patten = match patten.kind {
-            /*
             ast::PatKind::Wild => PattenKind::Wildcard,
             ast::PatKind::Rest => PattenKind::Symbol(".."),
             ast::PatKind::Lit(ref expr) => PattenKind::Literal(self.trans_expr(expr)),
@@ -1507,14 +1506,14 @@ impl Translator {
             ast::PatKind::Ident(binding, ref ident, ref patten) => {
                 PattenKind::Ident(Box::new(self.trans_ident_patten(binding, ident, patten)))
             },
-            ast::PatKind::Struct(ref path, ref fields, etc) => {
-                PattenKind::Struct(self.trans_struct_patten(path, fields, etc))
+            ast::PatKind::Struct(ref qself, ref path, ref fields, etc) => {
+                PattenKind::Struct(self.trans_struct_patten(qself, path, fields, etc))
             },
-            ast::PatKind::TupleStruct(ref path, ref pats) => {
-                PattenKind::Enum(self.trans_enum_patten(path, pats))
+            ast::PatKind::TupleStruct(ref qself, ref path, ref pattens) => {
+                PattenKind::Enum(self.trans_enum_patten(qself, path, pattens))
             },
-            ast::PatKind::Paren(ref pat) => {
-                PattenKind::Tuple(self.trans_tuple_patten(&vec![pat.clone()]))
+            ast::PatKind::Paren(ref patten) => {
+                PattenKind::Tuple(self.trans_tuple_patten(&vec![patten.clone()]))
             },
             ast::PatKind::Tuple(ref pattens) => {
                 PattenKind::Tuple(self.trans_tuple_patten(pattens))
@@ -1522,6 +1521,7 @@ impl Translator {
             ast::PatKind::Slice(ref pattens) => {
                 PattenKind::Slice(Box::new(self.trans_slice_patten(pattens)))
             },
+            /*
             ast::PatKind::Mac(ref mac) => PattenKind::Macro(self.trans_macro(mac)),
             ast::PatKind::Box(..) => unreachable!("ast::PatKind::Box"),
 
@@ -1536,11 +1536,10 @@ impl Translator {
         }
     }
 
-    /*
-    fn trans_range_patten(&mut self, start: &ast::Expr, end: &ast::Expr, range_end: &ast::RangeEnd) -> RangePatten {
+    fn trans_range_patten(&mut self, start: &Option<ast::P<ast::Expr>>, end: &Option<ast::P<ast::Expr>>, range_end: &ast::RangeEnd) -> RangePatten {
         RangePatten {
-            start: self.trans_expr(start),
-            end: self.trans_expr(end),
+            start: map_ref_mut(&start, |start| self.trans_expr(start)),
+            end: map_ref_mut(&end, |end| self.trans_expr(end)),
             is_inclusive: is_patten_inclusive(range_end),
         }
     }
@@ -1563,25 +1562,26 @@ impl Translator {
         }
     }
 
-    fn trans_struct_patten(&mut self, path: &ast::Path, fields: &Vec<ast::Spanned<ast::FieldPat>>, omit: bool)
+    fn trans_struct_patten(&mut self, qself: &Option<ast::QSelf>,  path: &ast::Path, fields: &Vec<ast::PatField>, omit: bool)
     -> StructPatten {
         StructPatten {
+            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
             path: self.trans_path(path),
             fields: self.trans_struct_field_pattens(fields),
             omit,
         }
     }
 
-    fn trans_struct_field_pattens(&mut self, fields: &Vec<ast::Spanned<ast::FieldPat>>) -> Vec<StructFieldPatten> {
+    fn trans_struct_field_pattens(&mut self, fields: &Vec<ast::PatField>) -> Vec<StructFieldPatten> {
         trans_list!(self, fields, trans_struct_field_patten)
     }
 
 
-    fn trans_struct_field_patten(&mut self, field: &ast::Spanned<ast::FieldPat>) -> StructFieldPatten {
+    fn trans_struct_field_patten(&mut self, field: &ast::PatField) -> StructFieldPatten {
         let loc = self.loc(&field.span);
-        let name = ident_to_string(&field.node.ident);
-        let patten = self.trans_patten(&field.node.pat);
-        let shorthand = field.node.is_shorthand;
+        let name = ident_to_string(&field.ident);
+        let patten = self.trans_patten(&field.pat);
+        let shorthand = field.is_shorthand;
         self.set_loc(&loc);
 
         StructFieldPatten {
@@ -1592,25 +1592,25 @@ impl Translator {
         }
     }
 
-    fn trans_enum_patten(&mut self, path: &ast::Path, pats: &Vec<ast::P<ast::Pat>>) -> EnumPatten {
+    fn trans_enum_patten(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path, pattens: &Vec<ast::P<ast::Pat>>) -> EnumPatten {
         EnumPatten {
+            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
             path: self.trans_path(path),
-            pattens: self.trans_pattens(pats),
+            pattens: self.trans_pattens(pattens),
         }
     }
 
-    fn trans_tuple_patten(&mut self, pats: &Vec<ast::P<ast::Pat>>) -> TuplePatten {
+    fn trans_tuple_patten(&mut self, pattens: &Vec<ast::P<ast::Pat>>) -> TuplePatten {
         TuplePatten {
-            pattens: self.trans_pattens(pats),
+            pattens: self.trans_pattens(pattens),
         }
     }
 
-    fn trans_slice_patten(&mut self, pats: &Vec<ast::P<ast::Pat>>) -> SlicePatten {
+    fn trans_slice_patten(&mut self, pattens: &Vec<ast::P<ast::Pat>>) -> SlicePatten {
         SlicePatten {
-            pattens: self.trans_pattens(pats),
+            pattens: self.trans_pattens(pattens),
         }
     }
-    */
 
     fn trans_exprs(&mut self, exprs: &[ast::P<ast::Expr>]) -> Vec<Expr> {
         trans_list!(self, exprs, trans_expr)

@@ -1,5 +1,7 @@
 fn f() {
     match a {
+        ..1 => true,
+        0.. => true,
         0..1 => true,
         0...1 => true,
         0..=1 => true,
