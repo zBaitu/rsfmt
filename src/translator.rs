@@ -1483,12 +1483,12 @@ impl Translator {
         }
     }
 
-    fn trans_pattens(&mut self, pats: &Vec<ast::P<ast::Pat>>) -> Vec<Patten> {
+    fn trans_pattens(&mut self, pats: &Vec<ast::Pat>) -> Vec<Patten> {
         trans_list!(self, pats, trans_patten)
     }
 
 
-    fn trans_patten(&mut self, patten: &ast::P<ast::Pat>) -> Patten {
+    fn trans_patten(&mut self, patten: &ast::Pat) -> Patten {
         let loc = self.loc(&patten.span);
         let patten = match patten.kind {
             /*
@@ -1640,7 +1640,6 @@ impl Translator {
             ast::ExprKind::Paren(ref expr) => ExprKind::Tuple(Box::new(vec![self.trans_expr(expr)])),
             ast::ExprKind::Index(ref obj, ref index) => ExprKind::Index(Box::new(self.trans_index_expr(obj, index))),
             ast::ExprKind::Struct(ref expr) => ExprKind::Struct(Box::new(self.trans_struct_expr(expr))),
-            /*
             ast::ExprKind::Field(ref expr, ref ident) => ExprKind::Field(Box::new(self.trans_field_expr(expr, ident))),
             ast::ExprKind::Type(ref expr, ref ty) => ExprKind::Type(Box::new(self.trans_type_expr(expr, ty))),
             ast::ExprKind::Cast(ref expr, ref ty) => ExprKind::Cast(Box::new(self.trans_cast_expr(expr, ty))),
@@ -1655,8 +1654,8 @@ impl Translator {
             ast::ExprKind::While(ref expr, ref block, ref label) => {
                 ExprKind::While(Box::new(self.trans_while_expr(expr, block, label)))
             },
-            ast::ExprKind::Let(ref pattens, ref expr) => {
-                ExprKind::Let(Box::new(self.trans_let_expr(pattens, expr)))
+            ast::ExprKind::Let(ref patten, ref expr) => {
+                ExprKind::Let(Box::new(self.trans_let_expr(patten, expr)))
             },
             ast::ExprKind::ForLoop(ref patten, ref expr, ref block, ref label) => {
                 ExprKind::For(Box::new(self.trans_for_expr(patten, expr, block, label)))
@@ -1669,16 +1668,17 @@ impl Translator {
             ast::ExprKind::Match(ref expr, ref arms) => {
                 ExprKind::Match(Box::new(self.trans_match_expr(expr, arms)))
             },
-            ast::ExprKind::Call(ref fn_name, ref args) => {
-                ExprKind::FnCall(Box::new(self.trans_fn_call_expr(fn_name, args)))
-            },
-            ast::ExprKind::MethodCall(ref path, ref args) => {
+            ast::ExprKind::Call(ref fn_name, ref params) => {
+                ExprKind::FnCall(Box::new(self.trans_fn_call_expr(fn_name, params)))
+            }
+            ast::ExprKind::MethodCall(ref path, ref args, _) => {
                 ExprKind::MethodCall(Box::new(self.trans_method_call_expr(path, args)))
             },
             ast::ExprKind::Closure(capture, asyncness, movability, ref sig, ref expr, _) => {
                 ExprKind::Closure(Box::new(self.trans_closure_expr(capture, asyncness, movability, sig, expr)))
             },
             ast::ExprKind::Ret(ref expr) => ExprKind::Return(Box::new(self.trans_return_expr(expr))),
+            /*
             ast::ExprKind::Mac(ref mac) => ExprKind::Macro(self.trans_macro(mac)),
             ast::ExprKind::InlineAsm(..) => unimplemented!("ast::ExprKind::InlineAsm"),
             ast::ExprKind::Box(..) => unreachable!("ast::ExprKind::Box"),
@@ -1689,7 +1689,7 @@ impl Translator {
             ast::ExprKind::Err => unreachable!("ast::ExprKind::Err"),
 
              */
-            _ => unimplemented!()
+            _ => unimplemented!("{:#?}", expr.kind)
         };
         self.set_loc(&loc);
 
@@ -1813,7 +1813,6 @@ impl Translator {
         }
     }
 
-    /*
     fn trans_type_expr(&mut self, expr: &ast::Expr, ty: &ast::Ty) -> TypeExpr {
         TypeExpr {
             expr: self.trans_expr(expr),
@@ -1860,9 +1859,9 @@ impl Translator {
         }
     }
 
-    fn trans_let_expr(&mut self, pattens: &Vec<ast::P<ast::Pat>>, expr: &ast::Expr) -> LetExpr {
+    fn trans_let_expr(&mut self, patten: &ast::Pat, expr: &ast::Expr) -> LetExpr {
         LetExpr {
-            pattens: self.trans_pattens(pattens),
+            patten: self.trans_patten(patten),
             expr: self.trans_expr(expr),
         }
     }
@@ -1911,27 +1910,27 @@ impl Translator {
 
     fn trans_arm(&mut self, arm: &ast::Arm) -> Arm {
         let attrs = self.trans_thin_attrs(&arm.attrs);
-        let pattens = self.trans_pattens(&arm.pats);
+        let patten = self.trans_patten(&arm.pat);
         let guard = map_ref_mut(&arm.guard, |guard| self.trans_expr(guard));
         let body = self.trans_expr(&arm.body);
 
         Arm {
             loc: Loc {
-                start: pattens[0].loc.start,
+                start: patten.loc.start,
                 end: body.loc.end,
                 nl: false,
             },
             attrs,
-            pattens,
+            patten,
             guard,
             body,
         }
     }
 
-    fn trans_fn_call_expr(&mut self, fn_name: &ast::Expr, args: &Vec<ast::P<ast::Expr>>) -> FnCallExpr {
+    fn trans_fn_call_expr(&mut self, fn_name: &ast::Expr, params: &Vec<ast::P<ast::Expr>>) -> FnCallExpr {
         FnCallExpr {
             name: self.trans_expr(fn_name),
-            args: self.trans_exprs(args),
+            params: self.trans_exprs(params),
         }
     }
 
@@ -1942,7 +1941,7 @@ impl Translator {
         }
     }
 
-    fn trans_closure_expr(&mut self, capture: ast::CaptureBy, asyncness: ast::IsAsync, movability: ast::Movability,
+    fn trans_closure_expr(&mut self, capture: ast::CaptureBy, asyncness: ast::Async, movability: ast::Movability,
                           sig: &ast::FnDecl, expr: &ast::Expr) -> ClosureExpr {
         ClosureExpr {
             is_static: is_static(movability),
@@ -1959,6 +1958,7 @@ impl Translator {
         }
     }
 
+    /*
     fn trans_macro_def(&mut self, ident: String, mac_def: &ast::MacroDef) -> MacroDef {
         let tokens = mac_def.tokens.0.as_ref().unwrap();
         let start = &tokens.first().unwrap().0;

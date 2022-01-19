@@ -918,7 +918,7 @@ pub struct WhileExpr {
 
 #[derive(Debug)]
 pub struct LetExpr {
-    pub pattens: Vec<Patten>,
+    pub patten: Patten,
     pub expr: Expr,
 }
 
@@ -957,7 +957,7 @@ pub struct MatchExpr {
 pub struct Arm {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
-    pub pattens: Vec<Patten>,
+    pub patten: Patten,
     pub guard: Option<Expr>,
     pub body: Expr,
 }
@@ -965,7 +965,7 @@ pub struct Arm {
 #[derive(Debug)]
 pub struct FnCallExpr {
     pub name: Expr,
-    pub args: Vec<Expr>,
+    pub params: Vec<Expr>,
 }
 
 #[derive(Debug)]

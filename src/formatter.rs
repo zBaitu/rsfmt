@@ -1016,7 +1016,8 @@ impl Display for WhileExpr {
 
 impl Display for LetExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_pattens(f, &self.pattens)?;
+// TODO
+        //display_pattens(f, &self.pattens)?;
         write!(f, " = {}", self.expr)
     }
 }
@@ -1072,7 +1073,8 @@ impl Display for MatchExpr {
 
 impl Display for Arm {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_pattens(f, &self.pattens)?;
+        // TODO
+        //display_pattens(f, &self.pattens)?;
         if let Some(ref guard) = self.guard {
             write!(f, " if {}", guard)?;
         }
@@ -1083,7 +1085,7 @@ impl Display for Arm {
 impl Display for FnCallExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name)?;
-        display_lists!(f, "(", ", ", ")", &self.args)
+        display_lists!(f, "(", ", ", ")", &self.params)
     }
 }
 
@@ -3144,7 +3146,8 @@ impl Formatter {
 
     fn fmt_let_expr(&mut self, expr: &LetExpr) {
         self.raw_insert("let ");
-        self.fmt_pattens(&expr.pattens);
+        // TODO
+        //self.fmt_pattens(&expr.pattens);
         maybe_wrap!(self, " = ", "= ", expr.expr, fmt_expr);
     }
 
@@ -3202,7 +3205,8 @@ impl Formatter {
 
 
     fn fmt_arm(&mut self, arm: &Arm) {
-        fmt_lists!(self, " | ", "| ", &arm.pattens, fmt_patten);
+        // TODO
+        //fmt_lists!(self, " | ", "| ", &arm.pattens, fmt_patten);
         if let Some(ref guard) = arm.guard {
             maybe_wrap!(self, " if ", "if ", guard, fmt_expr);
         }
@@ -3223,7 +3227,7 @@ impl Formatter {
 
     fn fmt_fn_call_expr(&mut self, expr: &FnCallExpr) {
         self.fmt_expr(&expr.name);
-        fmt_comma_lists!(self, "(", ")", &expr.args, fmt_expr);
+        fmt_comma_lists!(self, "(", ")", &expr.params, fmt_expr);
     }
 
 
