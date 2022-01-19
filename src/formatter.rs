@@ -364,6 +364,7 @@ impl Display for ParenParam {
 impl Display for TypeAlias {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "type {}{}", self.name, self.generics)?;
+        try_display_type_param_bounds(f, &self.bounds)?;
         if let Some(ref ty) = self.ty {
             write!(f, " = {}", ty)?;
         }
@@ -594,8 +595,10 @@ impl Display for Fn {
         display_generics(f, &self.generics)?;
         Display::fmt(&self.sig, f)?;
         display_where(f, &self.generics)?;
-        // TODO
-        try_display_block_one_line(f, &self.block.as_ref().unwrap())
+        if let Some(ref block) = self.block {
+            try_display_block_one_line(f, block)?;
+        }
+        OK
     }
 }
 
@@ -614,43 +617,10 @@ impl Display for TraitItem {
         display_attrs(f, &self.attrs)?;
         match self.item {
             TraitItemKind::Const(ref item) => Display::fmt(item, f),
-            TraitItemKind::Type(ref item) => Display::fmt(item, f),
-            TraitItemKind::Method(ref item) => Display::fmt(item, f),
+            TraitItemKind::TypeAlias(ref item) => Display::fmt(item, f),
+            TraitItemKind::Fn(ref item) => Display::fmt(item, f),
             TraitItemKind::Macro(ref item) => Display::fmt(item, f),
         }
-    }
-}
-
-impl Display for ConstTraitItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "const {}: {}", self.name, self.ty)?;
-        if let Some(ref expr) = self.expr {
-            Display::fmt(expr, f)?;
-        }
-        OK
-    }
-}
-
-impl Display for TypeTraitItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "type {}", self.name)?;
-        display_generics(f, &self.generics)?;
-        try_display_type_param_bounds(f, &self.bounds)?;
-        display_where(f, &self.generics)?;
-        if let Some(ref ty) = self.ty {
-            write!(f, " = {}", ty)?;
-        }
-        OK
-    }
-}
-
-impl Display for MethodTraitItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.sig, f)?;
-        if let Some(ref block) = self.block {
-            try_display_block_one_line(f, block)?;
-        }
-        OK
     }
 }
 
@@ -2058,6 +2028,7 @@ impl Formatter {
                 true
             },
             ItemKind::Fn(ref item) => {
+                // TODO
                 self.fmt_fn(item);
                 true
             },
@@ -2098,6 +2069,7 @@ impl Formatter {
     fn fmt_type_alias(&mut self, item: &TypeAlias) {
         self.insert(&format!("type {}", &item.name));
         self.fmt_generics_and_where(&item.generics);
+        self.try_fmt_type_param_bounds(&item.bounds);
         if let Some(ref ty) = item.ty {
             maybe_wrap!(self, " = ", "= ", ty, fmt_type);
         }
@@ -2481,31 +2453,41 @@ impl Formatter {
     }
 
     fn fmt_foreign_items(&mut self, items: &Vec<ForeignItem>) {
-        fmt_items!(self, items, fmt_foreign_item);
+        fmt_items_maybe_nl!(self, items, fmt_foreign_item);
     }
 
 
-    fn fmt_foreign_item(&mut self, item: &ForeignItem) {
+    fn fmt_foreign_item(&mut self, item: &ForeignItem) -> bool {
         self.fmt_vis(&item.vis);
-        match item.item {
-            ForeignKind::TypeAlias(ref item) => self.fmt_type_alias(item),
-            ForeignKind::Static(ref item) => self.fmt_static(item),
+        let nl = match item.item {
+            ForeignKind::TypeAlias(ref item) => {
+                self.fmt_type_alias(item);
+                false
+            },
+            ForeignKind::Static(ref item) => {
+                self.fmt_static(item);
+                false
+            },
             ForeignKind::Fn(ref item) => self.fmt_fn(item),
-            ForeignKind::Macro(ref item) => self.fmt_macro(item),
-        }
+            ForeignKind::Macro(ref item) => {
+                self.fmt_macro(item);
+                false
+            }
+        };
         self.raw_insert(";");
+        nl
     }
 
-
-
-
-    fn fmt_fn(&mut self, item: &Fn) {
+    fn fmt_fn(&mut self, item: &Fn) -> bool {
         self.insert(&format!("{} {}", fn_head(&item.header), item.name));
         self.fmt_generics(&item.generics);
         self.fmt_fn_sig(&item.sig);
         self.fmt_where(&item.generics);
-        // TODO
-        self.try_fmt_block_one_line(&item.block.as_ref().unwrap());
+        if let Some(ref block) = item.block {
+            self.try_fmt_block_one_line(&item.block.as_ref().unwrap());
+            return true
+        }
+        false
     }
 
     fn fmt_trait(&mut self, item: &Trait) {
@@ -2525,14 +2507,16 @@ impl Formatter {
         self.fmt_attrs(&item.attrs);
         match item.item {
             TraitItemKind::Const(ref item) => {
-                self.fmt_const_trait_item(item);
+                self.fmt_const(item);
                 false
             },
-            TraitItemKind::Type(ref item) => {
-                self.fmt_type_trait_item(item);
+            TraitItemKind::TypeAlias(ref item) => {
+                self.fmt_type_alias(item);
                 false
             },
-            TraitItemKind::Method(ref item) => self.fmt_method_trait_item(item),
+            TraitItemKind::Fn(ref item) => {
+                self.fmt_fn(item)
+            },
             TraitItemKind::Macro(ref item) => {
                 self.fmt_macro(item);
                 false
@@ -2540,39 +2524,6 @@ impl Formatter {
         }
     }
 
-
-    fn fmt_const_trait_item(&mut self, item: &ConstTraitItem) {
-        self.insert(&format!("const {}", item.name));
-        insert_sep!(self, ":", item.ty);
-        self.fmt_type(&item.ty);
-        if let Some(ref expr) = item.expr {
-            maybe_wrap!(self, " = ", "= ", expr, fmt_expr);
-        }
-        self.raw_insert(";");
-    }
-
-
-    fn fmt_type_trait_item(&mut self, item: &TypeTraitItem) {
-        self.insert(&format!("type {}", item.name));
-        self.fmt_generics(&item.generics);
-        self.try_fmt_type_param_bounds(&item.bounds);
-        self.fmt_where(&item.generics);
-        if let Some(ref ty) = item.ty {
-            maybe_wrap!(self, " = ", "= ", ty, fmt_type);
-        }
-        self.raw_insert(";");
-    }
-
-
-    fn fmt_method_trait_item(&mut self, item: &MethodTraitItem) -> bool {
-        self.fmt_method_sig(&item.sig);
-        if let Some(ref block) = item.block {
-            !self.try_fmt_block_one_line(block)
-        } else {
-            self.raw_insert(";");
-            false
-        }
-    }
 
     fn fmt_impl(&mut self, item: &Impl) {
         self.insert(&impl_head(item.is_unsafe, item.is_default));

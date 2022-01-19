@@ -587,31 +587,10 @@ pub struct TraitItem {
 
 #[derive(Debug)]
 pub enum TraitItemKind {
-    Const(ConstTraitItem),
-    Type(TypeTraitItem),
-    Method(MethodTraitItem),
+    Const(Const),
+    TypeAlias(TypeAlias),
+    Fn(Fn),
     Macro(Macro),
-}
-
-#[derive(Debug)]
-pub struct ConstTraitItem {
-    pub name: String,
-    pub ty: Type,
-    pub expr: Option<Expr>,
-}
-
-#[derive(Debug)]
-pub struct TypeTraitItem {
-    pub name: String,
-    pub generics: Generics,
-    pub bounds: TypeParamBounds,
-    pub ty: Option<Type>,
-}
-
-#[derive(Debug)]
-pub struct MethodTraitItem {
-    pub sig: MethodSig,
-    pub block: Option<Block>,
 }
 
 #[derive(Debug)]

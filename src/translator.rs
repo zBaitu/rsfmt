@@ -132,11 +132,9 @@ fn is_const(constness: ast::Const) -> bool {
     }
 }
 
-/*
 fn is_auto(autoness: ast::IsAuto) -> bool {
     return autoness == ast::IsAuto::Yes;
 }
- */
 
 
 fn ext_to_string(ext: ast::Extern) -> Option<String> {
@@ -514,8 +512,8 @@ impl Translator {
             },
             ast::ItemKind::Fn(ref fn_kind) => ItemKind::Fn(self.trans_fn(ident, fn_kind)),
             ast::ItemKind::ForeignMod(ref module) => ItemKind::ForeignMod(self.trans_foreign_mod(module)),
-            /*
             ast::ItemKind::Trait(ref trait_kind) => ItemKind::Trait(self.trans_trait(ident, trait_kind)),
+            /*
             ast::ItemKind::Impl(ref impl_kind) => ItemKind::Impl(self.trans_impl(impl_kind)),
             ast::ItemKind::MacroDef(ref mac_def) => ItemKind::MacroDef(self.trans_macro_def(ident, mac_def)),
             ast::ItemKind::Mac(ref mac) => ItemKind::Macro(self.trans_macro(mac)),
@@ -1277,7 +1275,6 @@ impl Translator {
     }
 
 
-    /*
     fn trans_trait(&mut self, ident: String, trait_kind: &ast::TraitKind) -> Trait {
         Trait {
             is_auto: is_auto(trait_kind.0),
@@ -1298,17 +1295,18 @@ impl Translator {
         let loc = self.loc(&item.span);
         let attrs = self.trans_attrs(&item.attrs);
         let ident = ident_to_string(&item.ident);
-        let item = match item.node {
-            ast::TraitItemKind::Const(ref ty, ref expr) => {
-                TraitItemKind::Const(self.trans_const_trait_item(ident, ty, expr))
+        let item = match item.kind {
+            ast::AssocItemKind::Const(defaultness, ref ty, ref expr) => {
+                TraitItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
             },
-            ast::TraitItemKind::Type(ref bounds, ref ty) => {
-                TraitItemKind::Type(self.trans_type_trait_item(ident, &item.generics, bounds, ty))
+            ast::AssocItemKind::TyAlias(ref type_alias) => {
+                TraitItemKind::TypeAlias(self.trans_type_alias(ident, type_alias))
             },
-            ast::TraitItemKind::Method(ref sig, ref block) => {
-                TraitItemKind::Method(self.trans_method_trait_item(ident, &item.generics, sig, block))
+            ast::AssocItemKind::Fn(ref fn_kind) => {
+                TraitItemKind::Fn(self.trans_fn(ident, fn_kind))
             },
-            ast::TraitItemKind::Macro(ref mac) => TraitItemKind::Macro(self.trans_macro(mac)),
+            //ast::AssocItemKind::Macro(ref mac) => TraitItemKind::Macro(self.trans_macro(mac)),
+            _ => unimplemented!(),
         };
         self.set_loc(&loc);
 
@@ -1319,43 +1317,8 @@ impl Translator {
         }
     }
 
-    fn trans_const_trait_item(&mut self, ident: String, ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>)
-    -> ConstTraitItem {
-        ConstTraitItem {
-            name: ident,
-            ty: self.trans_type(ty),
-            expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
-        }
-    }
 
-    fn trans_type_trait_item(&mut self, ident: String, generics: &ast::Generics,
-                             bounds: &ast::GenericBounds, ty: &Option<ast::P<ast::Ty>>) -> TypeTraitItem {
-        TypeTraitItem {
-            name: ident,
-            generics: self.trans_generics(generics),
-            bounds: self.trans_type_param_bounds(bounds),
-            ty: map_ref_mut(ty, |ty| self.trans_type(ty)),
-        }
-    }
-
-    fn trans_method_trait_item(&mut self, ident: String, generics: &ast::Generics, sig: &ast::MethodSig,
-                               block: &Option<ast::P<ast::Block>>)
-    -> MethodTraitItem {
-        MethodTraitItem {
-            sig: self.trans_method_sig(ident, generics, sig),
-            block: map_ref_mut(block, |block| self.trans_block(block)),
-        }
-    }
-
-    fn trans_method_sig(&mut self, ident: String, generics: &ast::Generics, sig: &ast::MethodSig) -> MethodSig {
-        MethodSig {
-            header: self.trans_fn_header(&sig.header),
-            name: ident,
-            sig: self.trans_fn_sig(&sig.decl),
-            generics: self.trans_generics(generics),
-        }
-    }
-
+    /*
     fn trans_impl(&mut self, impl_kind: &ast::ImplKind) -> Impl {
         Impl {
             is_unsafe: is_unsafe(impl_kind.unsafety),
