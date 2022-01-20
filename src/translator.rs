@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use rustc_ap_rustc_ast::Async::No;
@@ -230,23 +231,15 @@ fn is_ref_mut(binding: ast::BindingMode) -> (bool, bool) {
     }
 }
 
-fn macro_start(token: &ast::TokenTree) -> u32 {
-    let span = match token {
-        ast::TokenTree::Token(ref token) => token.span,
-        ast::TokenTree::Delimited(ref span, ..) => span.open,
-    };
-    span.lo().0
+
+fn macro_style(style: ast::DelimToken) -> MacroStyle {
+    match style {
+        ast::DelimToken::Paren => MacroStyle::Paren,
+        ast::DelimToken::Bracket => MacroStyle::Bracket,
+        ast::DelimToken::Brace => MacroStyle::Brace,
+        _ => unreachable!("{:#?}", style),
+    }
 }
-
-
-fn macro_end(token: &ast::TokenTree) -> u32 {
-    let span = match token {
-        ast::TokenTree::Token(ref token) => token.span,
-        ast::TokenTree::Delimited(ref span, ..) => span.close,
-    };
-    span.hi().0
-}
-
 
 fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
     let (is_sep, s) = match token {
@@ -262,6 +255,7 @@ fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
         s,
     }
 }
+
 
 
 fn is_macro_semi(style: &ast::MacStmtStyle) -> bool {
@@ -514,9 +508,9 @@ impl Translator {
             ast::ItemKind::ForeignMod(ref module) => ItemKind::ForeignMod(self.trans_foreign_mod(module)),
             ast::ItemKind::Trait(ref trait_kind) => ItemKind::Trait(self.trans_trait(ident, trait_kind)),
             ast::ItemKind::Impl(ref impl_kind) => ItemKind::Impl(self.trans_impl(impl_kind)),
+            ast::ItemKind::MacroDef(ref macro_def) => ItemKind::MacroDef(self.trans_macro_def(ident, macro_def)),
+            ast::ItemKind::MacCall(ref macro_call) => ItemKind::MacroCall(self.trans_macro_call(macro_call)),
             /*
-            ast::ItemKind::MacroDef(ref mac_def) => ItemKind::MacroDef(self.trans_macro_def(ident, mac_def)),
-            ast::ItemKind::Mac(ref mac) => ItemKind::Macro(self.trans_macro(mac)),
             ast::ItemKind::GlobalAsm(..) => unimplemented!("ast::ItemKind::GlobalAsm"),
 
              */
@@ -1890,34 +1884,19 @@ impl Translator {
         }
     }
 
-    /*
-    fn trans_macro_def(&mut self, ident: String, mac_def: &ast::MacroDef) -> MacroDef {
-        let tokens = mac_def.tokens.0.as_ref().unwrap();
-        let start = &tokens.first().unwrap().0;
-        let end = &tokens.last().unwrap().0;
-        let span = span(macro_start(start), macro_end(end));
+    fn trans_macro_def(&mut self, ident: String, macro_def: &ast::MacroDef) -> MacroDef {
+        let def = match macro_def.body.span() {
+            Some(ref span) => self.span_to_snippet(&span).unwrap(),
+            None => "".to_string(),
+        };
 
         MacroDef {
             name: ident,
-            def: self.span_to_snippet(span).unwrap(),
+            def,
         }
     }
 
-    fn macro_style(&self, span: ast::Span) -> MacroStyle {
-        let s = self.span_to_snippet(span).unwrap();
-        let paren_pos = s.find('(').unwrap_or(usize::max_value());
-        let bracket_pos = s.find('[').unwrap_or(usize::max_value());
-        let brace_pos = s.find('{').unwrap_or(usize::max_value());
-
-        if paren_pos < bracket_pos && paren_pos < brace_pos {
-            MacroStyle::Paren
-        } else if bracket_pos < brace_pos {
-            MacroStyle::Bracket
-        } else {
-            MacroStyle::Brace
-        }
-    }
-
+    /*
     fn trans_macro_stmt(&mut self, attrs: &ThinVec<ast::Attribute>, mac: &ast::Mac, style: &ast::MacStmtStyle)
     -> MacroStmt {
         let loc = self.loc(&mac.span);
@@ -1933,14 +1912,15 @@ impl Translator {
             is_semi,
         }
     }
+     */
 
-    fn trans_macro(&mut self, mac: &ast::Mac) -> Macro {
-        let (exprs, seps) = self.trans_macro_exprs(&mac.node.tts);
-        let name = path_to_string(&mac.node.path);
-        let style = self.macro_style(mac.span);
+    fn trans_macro_call(&mut self, macro_call: &ast::MacCall) -> MacroCall {
+        let (exprs, seps) = self.trans_macro_exprs(&macro_call.args.inner_tokens());
+        let name = path_to_string(&macro_call.path);
+        let style = macro_style(macro_call.args.delim());
         let exprs = self.trans_exprs(&exprs);
 
-        Macro {
+        MacroCall {
             name,
             style,
             exprs,
@@ -1972,13 +1952,13 @@ impl Translator {
             }
 
             parser.bump();
-            if parser.token.kind == ast::parse::token::TokenKind::Eof {
+            if parser.token.kind == ast::TokenKind::Eof {
                 break;
             }
         }
         (exprs, seps)
     }
-     */
+
     fn loc(&mut self, sp: &ast::Span) -> Loc {
         self.trans_comments(sp.lo().0);
 

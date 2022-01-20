@@ -116,7 +116,7 @@ pub enum ItemKind {
     Trait(Trait),
     Impl(Impl),
     MacroDef(MacroDef),
-    Macro(Macro),
+    MacroCall(MacroCall),
 }
 
 #[derive(Debug)]
@@ -373,7 +373,7 @@ pub enum TypeKind {
     Array(Box<ArrayType>),
     Trait(Box<TraitType>),
     BareFn(Box<BareFnType>),
-    Macro(Macro),
+    Macro(MacroCall),
 }
 
 #[derive(Debug)]
@@ -539,7 +539,7 @@ pub enum ForeignKind {
     TypeAlias(TypeAlias),
     Static(Static),
     Fn(Fn),
-    Macro(Macro),
+    Macro(MacroCall),
 }
 
 #[derive(Debug, Default)]
@@ -590,7 +590,7 @@ pub enum TraitItemKind {
     Const(Const),
     TypeAlias(TypeAlias),
     Fn(Fn),
-    Macro(Macro),
+    Macro(MacroCall),
 }
 
 #[derive(Debug)]
@@ -617,7 +617,7 @@ pub enum ImplItemKind {
     Const(Const),
     TypeAlias(TypeAlias),
     Fn(Fn),
-    Macro(Macro),
+    Macro(MacroCall),
 }
 
 #[derive(Debug)]
@@ -694,7 +694,7 @@ pub enum PattenKind {
     Enum(EnumPatten),
     Tuple(TuplePatten),
     Slice(Box<SlicePatten>),
-    Macro(Macro),
+    Macro(MacroCall),
 }
 
 #[derive(Debug)]
@@ -790,7 +790,7 @@ pub enum ExprKind {
     MethodCall(Box<MethodCallExpr>),
     Closure(Box<ClosureExpr>),
     Return(Box<ReturnExpr>),
-    Macro(Macro),
+    Macro(MacroCall),
 }
 
 pub type PathExpr = PathType;
@@ -969,7 +969,7 @@ pub struct MacroDef {
 pub struct MacroStmt {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
-    pub mac: Macro,
+    pub mac: MacroCall,
     pub is_semi: bool,
 }
 
@@ -987,7 +987,7 @@ pub struct MacroSep {
 }
 
 #[derive(Debug)]
-pub struct Macro {
+pub struct MacroCall {
     pub name: String,
     pub style: MacroStyle,
     pub exprs: Vec<Expr>,

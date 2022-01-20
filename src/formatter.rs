@@ -189,7 +189,7 @@ impl Display for Item {
             ItemKind::Trait(ref item) => Display::fmt(item, f)?,
             ItemKind::Impl(ref item) => Display::fmt(item, f)?,
             ItemKind::MacroDef(ref item) => Display::fmt(item, f)?,
-            ItemKind::Macro(ref item) => Display::fmt(item, f)?,
+            ItemKind::MacroCall(ref item) => Display::fmt(item, f)?,
         }
         OK
     }
@@ -1080,7 +1080,7 @@ impl Display for ReturnExpr {
 
 impl Display for MacroDef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "macro_rules! {} {{\n    {}\n}}", self.name, self.def)
+        write!(f, "macro_rules! {} {}", self.name, self.def)
     }
 }
 
@@ -1095,7 +1095,7 @@ impl Display for MacroStmt {
     }
 }
 
-impl Display for Macro {
+impl Display for MacroCall {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (open, close) = match self.style {
             MacroStyle::Paren => ("(", ")"),
@@ -2022,7 +2022,7 @@ impl Formatter {
                 self.fmt_macro_def(item);
                 true
             },
-            ItemKind::Macro(ref item) => {
+            ItemKind::MacroCall(ref item) => {
                 self.fmt_macro_item(item);
                 false
             },
@@ -3215,16 +3215,12 @@ impl Formatter {
 
 
     fn fmt_macro_def(&mut self, item: &MacroDef) {
-        self.raw_insert(&format!("macro_rules! {}", item.name));
-        self.open_brace();
-        self.insert_indent();
+        self.raw_insert(&format!("macro_rules! {} ", item.name));
         self.force_insert(&item.def);
-        self.nl();
-        self.close_brace();
     }
 
 
-    fn fmt_macro_item(&mut self, item: &Macro) {
+    fn fmt_macro_item(&mut self, item: &MacroCall) {
         self.fmt_macro(item);
         self.raw_insert(";");
     }
@@ -3247,7 +3243,7 @@ impl Formatter {
     }
 
 
-    fn fmt_macro(&mut self, mac: &Macro) {
+    fn fmt_macro(&mut self, mac: &MacroCall) {
         let (open, close) = match mac.style {
             MacroStyle::Paren => ("(", ")"),
             MacroStyle::Bracket => ("[", "]"),

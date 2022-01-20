@@ -1,8 +1,6 @@
 mod a;
 
-mod b         {
-
-
-}
+mod b {}
 
 fn main() {}
+
