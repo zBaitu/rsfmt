@@ -687,12 +687,14 @@ pub enum PattenKind {
     Wildcard,
     Symbol(&'static str),
     Literal(Expr),
+    Box(Box<Patten>),
     Range(RangePatten),
     Ref(Box<RefPatten>),
     Path(PathPatten),
     Ident(Box<IdentPatten>),
     Struct(StructPatten),
     Enum(EnumPatten),
+    Or(OrPatten),
     Tuple(TuplePatten),
     Slice(Box<SlicePatten>),
     MacroCall(MacroCall),
@@ -741,6 +743,11 @@ pub struct StructFieldPatten {
 pub struct EnumPatten {
     pub qself: Option<QSelf>,
     pub path: Path,
+    pub pattens: Vec<Patten>,
+}
+
+#[derive(Debug)]
+pub struct OrPatten {
     pub pattens: Vec<Patten>,
 }
 

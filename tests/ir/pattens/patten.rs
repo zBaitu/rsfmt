@@ -1,8 +1,8 @@
 fn f() {
     match a {
-        //_ => true
+        _ => true
 
-        //a => true
+        a => true
 
         //ref mut a => true
 

@@ -682,12 +682,14 @@ impl Display for Patten {
             PattenKind::Wildcard => write!(f, "_"),
             PattenKind::Symbol(ref patten) => Display::fmt(patten, f),
             PattenKind::Literal(ref patten) => Display::fmt(patten, f),
+            PattenKind::Box(ref patten) => write!(f, "box {}", patten),
             PattenKind::Range(ref patten) => Display::fmt(patten, f),
             PattenKind::Ref(ref patten) => Display::fmt(patten, f),
             PattenKind::Path(ref patten) => Display::fmt(patten, f),
             PattenKind::Ident(ref patten) => Display::fmt(patten, f),
             PattenKind::Struct(ref patten) => Display::fmt(patten, f),
             PattenKind::Enum(ref patten) => Display::fmt(patten, f),
+            PattenKind::Or(ref patten) => Display::fmt(patten, f),
             PattenKind::Tuple(ref patten) => Display::fmt(patten, f),
             PattenKind::Slice(ref patten) => Display::fmt(patten, f),
             PattenKind::MacroCall(ref patten) => Display::fmt(patten, f),
@@ -759,6 +761,12 @@ impl Display for EnumPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         Display::fmt(&self.path, f)?;
         display_lists!(f, "(", ", ", ")", &self.pattens)
+    }
+}
+
+impl Display for OrPatten {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        display_lists!(f, "| ", &self.pattens)
     }
 }
 
@@ -2673,12 +2681,14 @@ impl Formatter {
             PattenKind::Wildcard => self.insert("_"),
             PattenKind::Symbol(ref patten) => self.insert(patten),
             PattenKind::Literal(ref patten) => self.fmt_expr(patten),
+            PattenKind::Box(ref patten) => self.fmt_box_patten(patten),
             PattenKind::Range(ref patten) => self.fmt_range_patten(patten),
             PattenKind::Ref(ref patten) => self.fmt_ref_patten(patten),
             PattenKind::Path(ref patten) => self.fmt_path_type(patten, true),
             PattenKind::Ident(ref patten) => self.fmt_ident_patten(patten),
             PattenKind::Struct(ref patten) => self.fmt_struct_patten(patten),
             PattenKind::Enum(ref patten) => self.fmt_enum_patten(patten),
+            PattenKind::Or(ref patten) => self.fmt_or_patten(patten),
             PattenKind::Tuple(ref patten) => self.fmt_tuple_patten(patten),
             PattenKind::Slice(ref patten) => self.fmt_slice_patten(patten),
             PattenKind::MacroCall(ref patten) => self.fmt_macro(patten),
@@ -2689,6 +2699,11 @@ impl Formatter {
         fmt_lists!(self, " | ", "| ", pattens, fmt_patten);
     }
 
+
+    fn fmt_box_patten(&mut self, patten: &Patten) {
+        self.insert("box ");
+        self.fmt_patten(patten);
+    }
 
     fn fmt_range_patten(&mut self, patten: &RangePatten) {
         if let Some(ref start) = patten.start {
@@ -2800,6 +2815,10 @@ impl Formatter {
         fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
     }
 
+
+    fn fmt_or_patten(&mut self, patten: &OrPatten) {
+        self.fmt_pattens(&patten.pattens);
+    }
 
     fn fmt_tuple_patten(&mut self, patten: &TuplePatten) {
         fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
@@ -3082,8 +3101,7 @@ impl Formatter {
 
     fn fmt_let_expr(&mut self, expr: &LetExpr) {
         self.raw_insert("let ");
-        // TODO
-        //self.fmt_pattens(&expr.pattens);
+        self.fmt_patten(&expr.patten);
         maybe_wrap!(self, " = ", "= ", expr.expr, fmt_expr);
     }
 

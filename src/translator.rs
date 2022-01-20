@@ -2,6 +2,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use rustc_ap_rustc_ast::Async::No;
+use rustc_ap_rustc_ast::PatKind;
 
 use rustc_ap_rustc_session::parse::ParseSess;
 
@@ -510,11 +511,7 @@ impl Translator {
             ast::ItemKind::Impl(ref impl_kind) => ItemKind::Impl(self.trans_impl(impl_kind)),
             ast::ItemKind::MacroDef(ref macro_def) => ItemKind::MacroDef(self.trans_macro_def(ident, macro_def)),
             ast::ItemKind::MacCall(ref macro_call) => ItemKind::MacroCall(self.trans_macro_call(macro_call)),
-            /*
-            ast::ItemKind::GlobalAsm(..) => unimplemented!("ast::ItemKind::GlobalAsm"),
-
-             */
-            _ => unimplemented!(),
+            ast::ItemKind::GlobalAsm(..) => unreachable!("{:#?}", item.kind),
         };
 
         self.set_loc(&loc);
@@ -893,7 +890,7 @@ impl Translator {
         match *predicate {
             ast::WherePredicate::RegionPredicate(ref region) => self.trans_where_lifetime(region),
             ast::WherePredicate::BoundPredicate(ref bound) => self.trans_where_bound(bound),
-            ast::WherePredicate::EqPredicate(..) => unimplemented!("ast::WherePredicate::EqPredicate"),
+            ast::WherePredicate::EqPredicate(..) => unreachable!("{:#?}", predicate),
         }
     }
 
@@ -960,12 +957,9 @@ impl Translator {
                 TypeKind::BareFn(Box::new(self.trans_bare_fn_type(bare_fn)))
             },
             ast::TyKind::MacCall(ref mac_call) => TypeKind::MacroCall(self.trans_macro_call(mac_call)),
-            /*
-            ast::TyKind::Typeof(..) => unimplemented!("ast::TyKind::Typeof"),
-            ast::TyKind::Err => unreachable!("ast::TyKind::Err"),
-
-             */
-            _ => unimplemented!("{:#?}", ty.kind),
+            ast::TyKind::Typeof(..) => unreachable!("{:#?}", ty.kind),
+            ast::TyKind::Err => unreachable!("{:#?}", ty.kind),
+            _ => unimplemented!()
         };
 
         self.set_loc(&loc);
@@ -1415,6 +1409,7 @@ impl Translator {
             ast::PatKind::Wild => PattenKind::Wildcard,
             ast::PatKind::Rest => PattenKind::Symbol(".."),
             ast::PatKind::Lit(ref expr) => PattenKind::Literal(self.trans_expr(expr)),
+            ast::PatKind::Box(ref patten) => PattenKind::Box(Box::new(self.trans_patten(patten))),
             ast::PatKind::Range(ref start, ref end, ref range_end) => {
                 PattenKind::Range(self.trans_range_patten(start, end, &range_end.node))
             },
@@ -1433,6 +1428,7 @@ impl Translator {
             ast::PatKind::TupleStruct(ref qself, ref path, ref pattens) => {
                 PattenKind::Enum(self.trans_enum_patten(qself, path, pattens))
             },
+            PatKind::Or(ref pattens) => PattenKind::Or(self.trans_or_patten(pattens)),
             ast::PatKind::Paren(ref patten) => {
                 PattenKind::Tuple(self.trans_tuple_patten(&vec![patten.clone()]))
             },
@@ -1443,11 +1439,6 @@ impl Translator {
                 PattenKind::Slice(Box::new(self.trans_slice_patten(pattens)))
             },
             ast::PatKind::MacCall(ref mac_call) => PattenKind::MacroCall(self.trans_macro_call(mac_call)),
-            /*
-            ast::PatKind::Box(..) => unreachable!("ast::PatKind::Box"),
-
-             */
-            _ => unimplemented!("{:#?}", patten),
         };
         self.set_loc(&loc);
 
@@ -1517,6 +1508,12 @@ impl Translator {
         EnumPatten {
             qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
             path: self.trans_path(path),
+            pattens: self.trans_pattens(pattens),
+        }
+    }
+
+    fn trans_or_patten(&mut self, pattens: &Vec<ast::P<ast::Pat>>) -> OrPatten {
+        OrPatten {
             pattens: self.trans_pattens(pattens),
         }
     }
