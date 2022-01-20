@@ -509,7 +509,7 @@ pub struct FnSig {
 #[derive(Debug)]
 pub struct Param {
     pub loc: Loc,
-    pub patten: Patten,
+    pub pattern: Pattern,
     pub ty: Type,
     pub has_patten: bool,
 }
@@ -671,15 +671,15 @@ pub enum StmtKind {
 pub struct Let {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
-    pub patten: Patten,
+    pub pattern: Pattern,
     pub ty: Option<Type>,
     pub init: Option<Expr>,
 }
 
 #[derive(Debug)]
-pub struct Patten {
+pub struct Pattern {
     pub loc: Loc,
-    pub patten: PattenKind,
+    pub pattern: PattenKind,
 }
 
 #[derive(Debug)]
@@ -687,7 +687,7 @@ pub enum PattenKind {
     Wildcard,
     Symbol(&'static str),
     Literal(Expr),
-    Box(Box<Patten>),
+    Box(Box<Pattern>),
     Range(RangePatten),
     Ref(Box<RefPatten>),
     Path(PathPatten),
@@ -710,7 +710,7 @@ pub struct RangePatten {
 #[derive(Debug)]
 pub struct RefPatten {
     pub is_mut: bool,
-    pub patten: Patten,
+    pub pattern: Pattern,
 }
 
 pub type PathPatten = PathType;
@@ -720,7 +720,7 @@ pub struct IdentPatten {
     pub is_ref: bool,
     pub is_mut: bool,
     pub name: String,
-    pub patten: Option<Patten>,
+    pub pattern: Option<Pattern>,
 }
 
 #[derive(Debug)]
@@ -735,7 +735,7 @@ pub struct StructPatten {
 pub struct StructFieldPatten {
     pub loc: Loc,
     pub name: String,
-    pub patten: Patten,
+    pub pattern: Pattern,
     pub shorthand: bool,
 }
 
@@ -743,22 +743,22 @@ pub struct StructFieldPatten {
 pub struct EnumPatten {
     pub qself: Option<QSelf>,
     pub path: Path,
-    pub pattens: Vec<Patten>,
+    pub patterns: Vec<Pattern>,
 }
 
 #[derive(Debug)]
 pub struct OrPatten {
-    pub pattens: Vec<Patten>,
+    pub patterns: Vec<Pattern>,
 }
 
 #[derive(Debug)]
 pub struct TuplePatten {
-    pub pattens: Vec<Patten>,
+    pub patterns: Vec<Pattern>,
 }
 
 #[derive(Debug)]
 pub struct SlicePatten {
-    pub pattens: Vec<Patten>,
+    pub patterns: Vec<Pattern>,
 }
 
 #[derive(Debug)]
@@ -897,14 +897,14 @@ pub struct WhileExpr {
 
 #[derive(Debug)]
 pub struct LetExpr {
-    pub patten: Patten,
+    pub pattern: Pattern,
     pub expr: Expr,
 }
 
 #[derive(Debug)]
 pub struct ForExpr {
     pub label: Option<String>,
-    pub patten: Patten,
+    pub pattern: Pattern,
     pub expr: Expr,
     pub block: Block,
 }
@@ -936,7 +936,7 @@ pub struct MatchExpr {
 pub struct Arm {
     pub loc: Loc,
     pub attrs: Vec<AttrKind>,
-    pub patten: Patten,
+    pub pattern: Pattern,
     pub guard: Option<Expr>,
     pub body: Expr,
 }

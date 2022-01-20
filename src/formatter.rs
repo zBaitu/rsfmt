@@ -455,14 +455,14 @@ impl Display for FnSig {
 impl Display for Param {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.has_patten {
-            write!(f, "{}", self.patten)?;
+            write!(f, "{}", self.pattern)?;
             match self.ty.ty {
                 TypeKind::Symbol(s) if s == "_" => OK,
                 _ => write!(f, ": {}", self.ty),
             }
         } else {
-            if let PattenKind::Ident(ref patten) = self.patten.patten {
-                write!(f, "{}{}", ident_patten_head(patten.is_ref, patten.is_mut), self.ty)
+            if let PattenKind::Ident(ref pattern) = self.pattern.pattern {
+                write!(f, "{}{}", ident_patten_head(pattern.is_ref, pattern.is_mut), self.ty)
             } else {
                 Display::fmt(&self.ty, f)
             }
@@ -676,23 +676,23 @@ impl Display for ImplItem {
     }
 }
 
-impl Display for Patten {
+impl Display for Pattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.patten {
+        match self.pattern {
             PattenKind::Wildcard => write!(f, "_"),
-            PattenKind::Symbol(ref patten) => Display::fmt(patten, f),
-            PattenKind::Literal(ref patten) => Display::fmt(patten, f),
-            PattenKind::Box(ref patten) => write!(f, "box {}", patten),
-            PattenKind::Range(ref patten) => Display::fmt(patten, f),
-            PattenKind::Ref(ref patten) => Display::fmt(patten, f),
-            PattenKind::Path(ref patten) => Display::fmt(patten, f),
-            PattenKind::Ident(ref patten) => Display::fmt(patten, f),
-            PattenKind::Struct(ref patten) => Display::fmt(patten, f),
-            PattenKind::Enum(ref patten) => Display::fmt(patten, f),
-            PattenKind::Or(ref patten) => Display::fmt(patten, f),
-            PattenKind::Tuple(ref patten) => Display::fmt(patten, f),
-            PattenKind::Slice(ref patten) => Display::fmt(patten, f),
-            PattenKind::MacroCall(ref patten) => Display::fmt(patten, f),
+            PattenKind::Symbol(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Literal(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Box(ref pattern) => write!(f, "box {}", pattern),
+            PattenKind::Range(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Ref(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Path(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Ident(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Struct(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Enum(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Or(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Tuple(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::Slice(ref pattern) => Display::fmt(pattern, f),
+            PattenKind::MacroCall(ref pattern) => Display::fmt(pattern, f),
         }
     }
 }
@@ -712,15 +712,15 @@ impl Display for RangePatten {
 
 impl Display for RefPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", ref_head(&None, false, self.is_mut), self.patten)
+        write!(f, "{}{}", ref_head(&None, false, self.is_mut), self.pattern)
     }
 }
 
 impl Display for IdentPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}{}", ident_patten_head(self.is_ref, self.is_mut), self.name)?;
-        if let Some(ref patten) = self.patten {
-            write!(f, " @ {}", patten)?;
+        if let Some(ref pattern) = self.pattern {
+            write!(f, " @ {}", pattern)?;
         }
         OK
     }
@@ -750,9 +750,9 @@ impl Display for StructPatten {
 impl Display for StructFieldPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.shorthand {
-            Display::fmt(&self.patten, f)
+            Display::fmt(&self.pattern, f)
         } else {
-            write!(f, "{}: {}", self.name, self.patten)
+            write!(f, "{}: {}", self.name, self.pattern)
         }
     }
 }
@@ -760,25 +760,25 @@ impl Display for StructFieldPatten {
 impl Display for EnumPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         Display::fmt(&self.path, f)?;
-        display_lists!(f, "(", ", ", ")", &self.pattens)
+        display_lists!(f, "(", ", ", ")", &self.patterns)
     }
 }
 
 impl Display for OrPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_lists!(f, "| ", &self.pattens)
+        display_lists!(f, "| ", &self.patterns)
     }
 }
 
 impl Display for TuplePatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_lists!(f, "(", ", ", ")", &self.pattens)
+        display_lists!(f, "(", ", ", ")", &self.patterns)
     }
 }
 
 impl Display for SlicePatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_lists!(f, "[", ", ", "]", &self.pattens)
+        display_lists!(f, "[", ", ", "]", &self.patterns)
     }
 }
 
@@ -804,7 +804,7 @@ impl Display for Stmt {
 impl Display for Let {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         display_attrs(f, &self.attrs)?;
-        write!(f, "let {}", self.patten)?;
+        write!(f, "let {}", self.pattern)?;
         if let Some(ref ty) = self.ty {
             write!(f, ":{}", ty)?;
         }
@@ -983,7 +983,7 @@ impl Display for WhileExpr {
 impl Display for LetExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 // TODO
-        //display_pattens(f, &self.pattens)?;
+        //display_patterns(f, &self.patterns)?;
         write!(f, " = {}", self.expr)
     }
 }
@@ -993,7 +993,7 @@ impl Display for ForExpr {
         if let Some(ref label) = self.label {
             writeln!(f, "{}:", label)?;
         }
-        write!(f, "for {} in {}", self.patten, self.expr)?;
+        write!(f, "for {} in {}", self.pattern, self.expr)?;
         Display::fmt(&self.block, f)
     }
 }
@@ -1039,7 +1039,7 @@ impl Display for MatchExpr {
 
 impl Display for Arm {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.patten, f)?;
+        Display::fmt(&self.pattern, f)?;
         if let Some(ref guard) = self.guard {
             write!(f, " if {}", guard)?;
         }
@@ -1233,8 +1233,8 @@ fn display_params(f: &mut fmt::Formatter, params: &Vec<Param>) -> fmt::Result {
 }
 
 
-fn display_pattens(f: &mut fmt::Formatter, pattens: &Vec<Patten>) -> fmt::Result {
-    display_lists!(f, " | ", pattens)
+fn display_patterns(f: &mut fmt::Formatter, patterns: &Vec<Pattern>) -> fmt::Result {
+    display_lists!(f, " | ", patterns)
 }
 
 
@@ -2577,11 +2577,11 @@ impl Formatter {
         maybe_wrap!(self, param);
 
         if param.has_patten {
-            self.fmt_patten(&param.patten);
+            self.fmt_patten(&param.pattern);
             self.raw_insert(": ");
         } else {
-            if let PattenKind::Ident(ref patten) = param.patten.patten {
-                self.insert(&ident_patten_head(patten.is_ref, patten.is_mut));
+            if let PattenKind::Ident(ref pattern) = param.pattern.pattern {
+                self.insert(&ident_patten_head(pattern.is_ref, pattern.is_mut));
             }
         }
         self.fmt_type(&param.ty);
@@ -2662,7 +2662,7 @@ impl Formatter {
         self.insert_indent();
 
         self.raw_insert("let ");
-        self.fmt_patten(&local.patten);
+        self.fmt_patten(&local.pattern);
         if let Some(ref ty) = local.ty {
             maybe_wrap!(self, ": ", ":", ty, fmt_type);
         }
@@ -2675,73 +2675,73 @@ impl Formatter {
         self.nl();
     }
 
-    fn fmt_patten(&mut self, patten: &Patten) {
-        maybe_nl!(self, patten);
-        match patten.patten {
+    fn fmt_patten(&mut self, pattern: &Pattern) {
+        maybe_nl!(self, pattern);
+        match pattern.pattern {
             PattenKind::Wildcard => self.insert("_"),
-            PattenKind::Symbol(ref patten) => self.insert(patten),
-            PattenKind::Literal(ref patten) => self.fmt_expr(patten),
-            PattenKind::Box(ref patten) => self.fmt_box_patten(patten),
-            PattenKind::Range(ref patten) => self.fmt_range_patten(patten),
-            PattenKind::Ref(ref patten) => self.fmt_ref_patten(patten),
-            PattenKind::Path(ref patten) => self.fmt_path_type(patten, true),
-            PattenKind::Ident(ref patten) => self.fmt_ident_patten(patten),
-            PattenKind::Struct(ref patten) => self.fmt_struct_patten(patten),
-            PattenKind::Enum(ref patten) => self.fmt_enum_patten(patten),
-            PattenKind::Or(ref patten) => self.fmt_or_patten(patten),
-            PattenKind::Tuple(ref patten) => self.fmt_tuple_patten(patten),
-            PattenKind::Slice(ref patten) => self.fmt_slice_patten(patten),
-            PattenKind::MacroCall(ref patten) => self.fmt_macro(patten),
+            PattenKind::Symbol(ref pattern) => self.insert(pattern),
+            PattenKind::Literal(ref pattern) => self.fmt_expr(pattern),
+            PattenKind::Box(ref pattern) => self.fmt_box_patten(pattern),
+            PattenKind::Range(ref pattern) => self.fmt_range_patten(pattern),
+            PattenKind::Ref(ref pattern) => self.fmt_ref_patten(pattern),
+            PattenKind::Path(ref pattern) => self.fmt_path_type(pattern, true),
+            PattenKind::Ident(ref pattern) => self.fmt_ident_patten(pattern),
+            PattenKind::Struct(ref pattern) => self.fmt_struct_patten(pattern),
+            PattenKind::Enum(ref pattern) => self.fmt_enum_patten(pattern),
+            PattenKind::Or(ref pattern) => self.fmt_or_patten(pattern),
+            PattenKind::Tuple(ref pattern) => self.fmt_tuple_patten(pattern),
+            PattenKind::Slice(ref pattern) => self.fmt_slice_patten(pattern),
+            PattenKind::MacroCall(ref pattern) => self.fmt_macro(pattern),
         }
     }
 
-    fn fmt_pattens(&mut self, pattens: &Vec<Patten>) {
-        fmt_lists!(self, " | ", "| ", pattens, fmt_patten);
+    fn fmt_patterns(&mut self, patterns: &Vec<Pattern>) {
+        fmt_lists!(self, " | ", "| ", patterns, fmt_patten);
     }
 
 
-    fn fmt_box_patten(&mut self, patten: &Patten) {
+    fn fmt_box_patten(&mut self, pattern: &Pattern) {
         self.insert("box ");
-        self.fmt_patten(patten);
+        self.fmt_patten(pattern);
     }
 
-    fn fmt_range_patten(&mut self, patten: &RangePatten) {
-        if let Some(ref start) = patten.start {
+    fn fmt_range_patten(&mut self, pattern: &RangePatten) {
+        if let Some(ref start) = pattern.start {
             self.fmt_expr(start);
         }
-        self.insert(range(patten.is_inclusive));
-        if let Some(ref end) = patten.end {
+        self.insert(range(pattern.is_inclusive));
+        if let Some(ref end) = pattern.end {
             self.fmt_expr(end);
         }
     }
 
 
-    fn fmt_ref_patten(&mut self, patten: &RefPatten) {
-        self.insert(&ref_head(&None, false, patten.is_mut));
-        self.fmt_patten(&patten.patten);
+    fn fmt_ref_patten(&mut self, pattern: &RefPatten) {
+        self.insert(&ref_head(&None, false, pattern.is_mut));
+        self.fmt_patten(&pattern.pattern);
     }
 
 
-    fn fmt_ident_patten(&mut self, patten: &IdentPatten) {
-        self.insert(&format!("{}{}", ident_patten_head(patten.is_ref, patten.is_mut), patten.name));
-        if let Some(ref patten) = patten.patten {
-            maybe_wrap!(self, " @ ", "@ ", patten, fmt_patten);
+    fn fmt_ident_patten(&mut self, pattern: &IdentPatten) {
+        self.insert(&format!("{}{}", ident_patten_head(pattern.is_ref, pattern.is_mut), pattern.name));
+        if let Some(ref pattern) = pattern.pattern {
+            maybe_wrap!(self, " @ ", "@ ", pattern, fmt_patten);
         }
     }
 
 
-    fn fmt_struct_patten(&mut self, patten: &StructPatten) {
+    fn fmt_struct_patten(&mut self, pattern: &StructPatten) {
         // TODO
-        match patten.qself {
+        match pattern.qself {
             Some(ref qself) => {
-                maybe_wrap!(self, patten);
-                self.fmt_qself_path(qself, &patten.path, false);
+                maybe_wrap!(self, pattern);
+                self.fmt_qself_path(qself, &pattern.path, false);
             },
-            None => self.fmt_path(&patten.path, false),
+            None => self.fmt_path(&pattern.path, false),
         }
 
-        if patten.fields.is_empty() {
-            if patten.omit {
+        if pattern.fields.is_empty() {
+            if pattern.omit {
                 self.raw_insert(" {..}");
             } else {
                 self.raw_insert(" {}");
@@ -2749,8 +2749,8 @@ impl Formatter {
             return;
         }
 
-        if can_one_line!(self, patten) {
-            self.fmt_struct_patten_one_line(patten);
+        if can_one_line!(self, pattern) {
+            self.fmt_struct_patten_one_line(pattern);
             return;
         }
 
@@ -2760,8 +2760,8 @@ impl Formatter {
             ..Default::default()
         };
 
-        self.fmt_struct_field_pattens(&patten.fields);
-        if patten.omit {
+        self.fmt_struct_field_patterns(&pattern.fields);
+        if pattern.omit {
             self.insert_indent();
             self.raw_insert("..");
             self.nl();
@@ -2771,17 +2771,17 @@ impl Formatter {
         self.close_brace();
     }
 
-    fn fmt_struct_patten_one_line(&mut self, patten: &StructPatten) {
+    fn fmt_struct_patten_one_line(&mut self, pattern: &StructPatten) {
         self.raw_insert(" { ");
-        fmt_lists!(self, &patten.fields, fmt_struct_field_patten);
-        if patten.omit {
+        fmt_lists!(self, &pattern.fields, fmt_struct_field_patten);
+        if pattern.omit {
             self.raw_insert(" ..");
         }
         self.raw_insert(" }");
     }
 
 
-    fn fmt_struct_field_pattens(&mut self, fields: &Vec<StructFieldPatten>) {
+    fn fmt_struct_field_patterns(&mut self, fields: &Vec<StructFieldPatten>) {
         for field in fields {
             self.try_fmt_leading_comments(&field.loc);
             self.insert_indent();
@@ -2794,39 +2794,39 @@ impl Formatter {
 
     fn fmt_struct_field_patten(&mut self, field: &StructFieldPatten) {
         if field.shorthand {
-            self.fmt_patten(&field.patten);
+            self.fmt_patten(&field.pattern);
         } else {
             self.insert(&field.name);
-            maybe_wrap!(self, ": ", ":", field.patten, fmt_patten);
+            maybe_wrap!(self, ": ", ":", field.pattern, fmt_patten);
         }
         self.raw_insert(",");
     }
 
 
-    fn fmt_enum_patten(&mut self, patten: &EnumPatten) {
-        match patten.qself {
+    fn fmt_enum_patten(&mut self, pattern: &EnumPatten) {
+        match pattern.qself {
             Some(ref qself) => {
-                maybe_wrap!(self, patten);
-                self.fmt_qself_path(qself, &patten.path, false);
+                maybe_wrap!(self, pattern);
+                self.fmt_qself_path(qself, &pattern.path, false);
             },
-            None => self.fmt_path(&patten.path, false),
+            None => self.fmt_path(&pattern.path, false),
         }
 
-        fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
+        fmt_comma_lists!(self, "(", ")", &pattern.patterns, fmt_patten);
     }
 
 
-    fn fmt_or_patten(&mut self, patten: &OrPatten) {
-        self.fmt_pattens(&patten.pattens);
+    fn fmt_or_patten(&mut self, pattern: &OrPatten) {
+        self.fmt_patterns(&pattern.patterns);
     }
 
-    fn fmt_tuple_patten(&mut self, patten: &TuplePatten) {
-        fmt_comma_lists!(self, "(", ")", &patten.pattens, fmt_patten);
+    fn fmt_tuple_patten(&mut self, pattern: &TuplePatten) {
+        fmt_comma_lists!(self, "(", ")", &pattern.patterns, fmt_patten);
     }
 
 
-    fn fmt_slice_patten(&mut self, patten: &SlicePatten) {
-        fmt_comma_lists!(self, "[", "]", &patten.pattens, fmt_patten);
+    fn fmt_slice_patten(&mut self, pattern: &SlicePatten) {
+        fmt_comma_lists!(self, "[", "]", &pattern.patterns, fmt_patten);
     }
 
 
@@ -3101,7 +3101,7 @@ impl Formatter {
 
     fn fmt_let_expr(&mut self, expr: &LetExpr) {
         self.raw_insert("let ");
-        self.fmt_patten(&expr.patten);
+        self.fmt_patten(&expr.pattern);
         maybe_wrap!(self, " = ", "= ", expr.expr, fmt_expr);
     }
 
@@ -3109,7 +3109,7 @@ impl Formatter {
     fn fmt_for_expr(&mut self, expr: &ForExpr) {
         self.fmt_label(&expr.label);
         self.raw_insert("for ");
-        self.fmt_patten(&expr.patten);
+        self.fmt_patten(&expr.pattern);
         maybe_wrap!(self, " in ", "in ", expr.expr, fmt_expr);
         self.fmt_block(&expr.block);
     }
@@ -3159,7 +3159,7 @@ impl Formatter {
 
 
     fn fmt_arm(&mut self, arm: &Arm) {
-        self.fmt_patten(&arm.patten);
+        self.fmt_patten(&arm.pattern);
         if let Some(ref guard) = arm.guard {
             maybe_wrap!(self, " if ", "if ", guard, fmt_expr);
         }
@@ -3217,7 +3217,7 @@ impl Formatter {
         maybe_nl!(self, arg);
         maybe_wrap!(self, arg);
 
-        self.fmt_patten(&arg.patten);
+        self.fmt_patten(&arg.pattern);
         match arg.ty.ty {
             TypeKind::Symbol(ref s) if s == &"_" => {},
             _ => {
