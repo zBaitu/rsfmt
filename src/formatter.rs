@@ -836,6 +836,7 @@ impl Display for Expr {
         match self.expr {
             ExprKind::Literal(ref expr) => Display::fmt(expr, f),
             ExprKind::Path(ref expr) => Display::fmt(expr, f),
+            ExprKind::Box(ref expr) => write!(f, "box {}", expr),
             ExprKind::Ref(ref expr) => Display::fmt(expr, f),
             ExprKind::UnaryOp(ref expr) => Display::fmt(expr, f),
             ExprKind::Try(ref expr) => Display::fmt(expr, f),
@@ -2882,6 +2883,7 @@ impl Formatter {
         match expr.expr {
             ExprKind::Literal(ref expr) => self.fmt_literal_expr(expr),
             ExprKind::Path(ref expr) => self.fmt_path_expr(expr),
+            ExprKind::Box(ref expr) => self.fmt_box_expr(expr),
             ExprKind::Ref(ref expr) => self.fmt_ref_expr(expr),
             ExprKind::UnaryOp(ref expr) => self.fmt_unary_op_expr(expr),
             ExprKind::Try(ref expr) => self.fmt_try_expr(expr),
@@ -2923,6 +2925,11 @@ impl Formatter {
         self.fmt_path_type(expr, true);
     }
 
+
+    fn fmt_box_expr(&mut self, expr: &Expr) {
+        self.insert("box ");
+        self.fmt_expr(expr);
+    }
 
     fn fmt_ref_expr(&mut self, expr: &RefExpr) {
         let head = &ref_head(&None, expr.is_raw, expr.is_mut);

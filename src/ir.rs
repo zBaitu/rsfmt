@@ -784,6 +784,7 @@ pub struct Expr {
 pub enum ExprKind {
     Literal(Chunk),
     Path(PathExpr),
+    Box(Box<Expr>),
     Ref(Box<RefExpr>),
     UnaryOp(Box<UnaryOpExpr>),
     Try(Box<Expr>),

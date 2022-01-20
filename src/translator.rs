@@ -1553,6 +1553,7 @@ impl Translator {
         let expr = match expr.kind {
             ast::ExprKind::Lit(ref lit) => ExprKind::Literal(self.trans_literal_expr(lit)),
             ast::ExprKind::Path(ref qself, ref path) => ExprKind::Path(self.trans_path_type(qself, path)),
+            ast::ExprKind::Box(ref expr) => ExprKind::Box(Box::new(self.trans_expr(expr))),
             ast::ExprKind::AddrOf(borrow, mutabilitye, ref expr) => ExprKind::Ref(Box::new(self.trans_ref_expr(borrow, mutabilitye, expr))),
             ast::ExprKind::Unary(op, ref expr) => ExprKind::UnaryOp(Box::new(self.trans_unary_expr(op, expr))),
             ast::ExprKind::Try(ref expr) => ExprKind::Try(Box::new(self.trans_expr(expr))),
@@ -1610,14 +1611,13 @@ impl Translator {
             },
             ast::ExprKind::Ret(ref expr) => ExprKind::Return(Box::new(self.trans_return_expr(expr))),
             ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
+            ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
+            ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
             /*
-            ast::ExprKind::InlineAsm(..) => unimplemented!("ast::ExprKind::InlineAsm"),
-            ast::ExprKind::Box(..) => unreachable!("ast::ExprKind::Box"),
             ast::ExprKind::Async(..) => unimplemented!("ast::ExprKind::Async"),
             ast::ExprKind::Await(..) => unimplemented!("ast::ExprKind::Await"),
             ast::ExprKind::TryBlock(..) => unimplemented!("ast::ExprKind::TryBlock"),
             ast::ExprKind::Yield(..) => unimplemented!("ast::ExprKind::Yield"),
-            ast::ExprKind::Err => unreachable!("ast::ExprKind::Err"),
 
              */
             _ => unimplemented!("{:#?}", expr.kind)
