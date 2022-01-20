@@ -812,6 +812,7 @@ pub enum ExprKind {
     Closure(Box<ClosureExpr>),
     Return(Box<ReturnExpr>),
     MacroCall(MacroCall),
+    Async(AsyncExpr),
 }
 
 pub type PathExpr = PathType;
@@ -978,6 +979,12 @@ pub struct ClosureExpr {
 #[derive(Debug)]
 pub struct ReturnExpr {
     pub ret: Option<Expr>,
+}
+
+#[derive(Debug)]
+pub struct AsyncExpr {
+    pub is_move: bool,
+    pub block: Block,
 }
 
 #[derive(Debug)]

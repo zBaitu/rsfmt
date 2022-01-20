@@ -5,6 +5,7 @@ use rustc_ap_rustc_ast::Async::No;
 use rustc_ap_rustc_ast::PatKind;
 
 use rustc_ap_rustc_session::parse::ParseSess;
+use rustc_ap_rustc_target::asm::X86InlineAsmReg::bl;
 
 use crate::ast;
 use crate::ir::*;
@@ -1611,10 +1612,10 @@ impl Translator {
             },
             ast::ExprKind::Ret(ref expr) => ExprKind::Return(Box::new(self.trans_return_expr(expr))),
             ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
+            ast::ExprKind::Async(capture, _, ref block) => ExprKind::Async(self.trans_async_expr(capture, block)),
+            ast::ExprKind::Await(..) => unimplemented!("ast::ExprKind::Await"),
             ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
             ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
-            ast::ExprKind::Async(..) => unimplemented!("ast::ExprKind::Async"),
-            ast::ExprKind::Await(..) => unimplemented!("ast::ExprKind::Await"),
             /*
             ast::ExprKind::TryBlock(..) => unimplemented!("ast::ExprKind::TryBlock"),
             ast::ExprKind::Yield(..) => unimplemented!("ast::ExprKind::Yield"),
@@ -1886,6 +1887,13 @@ impl Translator {
     fn trans_return_expr(&mut self, expr: &Option<ast::P<ast::Expr>>) -> ReturnExpr {
         ReturnExpr {
             ret: map_ref_mut(expr, |expr| self.trans_expr(expr)),
+        }
+    }
+
+    fn trans_async_expr(&mut self, capture: ast::CaptureBy, block: &ast::Block) -> AsyncExpr {
+        AsyncExpr {
+            is_move: is_move(capture),
+            block: self.trans_block(block),
         }
     }
 

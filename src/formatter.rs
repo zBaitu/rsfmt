@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Display};
+use rustc_ap_rustc_ast::Async;
 
 use ir::*;
 use typesetter::*;
@@ -863,6 +864,7 @@ impl Display for Expr {
             ExprKind::MethodCall(ref expr) => Display::fmt(expr, f),
             ExprKind::Closure(ref expr) => Display::fmt(expr, f),
             ExprKind::Return(ref expr) => Display::fmt(expr, f),
+            ExprKind::Async(ref expr) => Display::fmt(expr, f),
             ExprKind::MacroCall(ref expr) => Display::fmt(expr, f),
         }
     }
@@ -1101,6 +1103,13 @@ impl Display for ReturnExpr {
             write!(f, " {}", expr)?;
         }
         OK
+    }
+}
+
+impl Display for AsyncExpr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", async_head(self.is_move))?;
+        try_display_block_one_line(f, &self.block)
     }
 }
 
@@ -1405,6 +1414,15 @@ fn closure_head(is_static: bool, is_async: bool, is_move: bool) -> String {
     }
     if is_move {
         head.push_str("move ");
+    }
+    head
+}
+
+fn async_head(is_move: bool) -> String {
+    let mut head = String::new();
+    head.push_str("async");
+    if is_move {
+        head.push_str(" move");
     }
     head
 }
@@ -2909,6 +2927,7 @@ impl Formatter {
             ExprKind::MethodCall(ref expr) => self.fmt_method_call_expr(expr),
             ExprKind::Closure(ref expr) => self.fmt_closure_expr(expr),
             ExprKind::Return(ref expr) => self.fmt_return_expr(expr),
+            ExprKind::Async(ref expr) => self.fmt_async_expr(expr),
             ExprKind::MacroCall(ref expr) => self.fmt_macro(expr),
         }
         self.block_locs.pop();
@@ -3267,6 +3286,11 @@ impl Formatter {
         if let Some(ref expr) = expr.ret {
             maybe_wrap!(self, " ", "", expr, fmt_expr);
         }
+    }
+
+    fn fmt_async_expr(&mut self, expr: &AsyncExpr) {
+        self.raw_insert(&async_head(expr.is_move));
+        self.try_fmt_block_one_line(&expr.block);
     }
 
 
