@@ -384,7 +384,7 @@ impl Display for Type {
             TypeKind::Array(ref ty) => Display::fmt(ty, f),
             TypeKind::Trait(ref ty) => Display::fmt(ty, f),
             TypeKind::BareFn(ref ty) => Display::fmt(ty, f),
-            TypeKind::Macro(ref ty) => Display::fmt(ty, f),
+            TypeKind::MacroCall(ref ty) => Display::fmt(ty, f),
         }
     }
 }
@@ -584,7 +584,7 @@ impl Display for ForeignKind {
             ForeignKind::TypeAlias(ref item) => write!(f, "type {}", item),
             ForeignKind::Static(ref item) => Display::fmt(item, f),
             ForeignKind::Fn(ref item) => Display::fmt(item, f),
-            ForeignKind::Macro(ref item) => Display::fmt(item, f),
+            ForeignKind::MacroCall(ref item) => Display::fmt(item, f),
         }
     }
 }
@@ -619,7 +619,7 @@ impl Display for TraitItem {
             TraitItemKind::Const(ref item) => Display::fmt(item, f),
             TraitItemKind::TypeAlias(ref item) => Display::fmt(item, f),
             TraitItemKind::Fn(ref item) => Display::fmt(item, f),
-            TraitItemKind::Macro(ref item) => Display::fmt(item, f),
+            TraitItemKind::MacroCall(ref item) => Display::fmt(item, f),
         }
     }
 }
@@ -667,7 +667,7 @@ impl Display for ImplItem {
                 is_fn = true;
                 Display::fmt(item, f)?
             },
-            ImplItemKind::Macro(ref item) => Display::fmt(item, f)?,
+            ImplItemKind::MacroCall(ref item) => Display::fmt(item, f)?,
         }
         if !is_fn {
             write!(f, ";")?;
@@ -690,7 +690,7 @@ impl Display for Patten {
             PattenKind::Enum(ref patten) => Display::fmt(patten, f),
             PattenKind::Tuple(ref patten) => Display::fmt(patten, f),
             PattenKind::Slice(ref patten) => Display::fmt(patten, f),
-            PattenKind::Macro(ref patten) => Display::fmt(patten, f),
+            PattenKind::MacroCall(ref patten) => Display::fmt(patten, f),
         }
     }
 }
@@ -788,6 +788,7 @@ impl Display for Stmt {
             StmtKind::Let(ref item) => Display::fmt(item, f),
             StmtKind::Expr(ref item, is_semi) => display_expr(f, item, is_semi),
             StmtKind::Macro(ref item) => Display::fmt(item, f),
+            StmtKind::None => OK,
         }
     }
 }
@@ -837,7 +838,7 @@ impl Display for Expr {
             ExprKind::MethodCall(ref expr) => Display::fmt(expr, f),
             ExprKind::Closure(ref expr) => Display::fmt(expr, f),
             ExprKind::Return(ref expr) => Display::fmt(expr, f),
-            ExprKind::Macro(ref expr) => Display::fmt(expr, f),
+            ExprKind::MacroCall(ref expr) => Display::fmt(expr, f),
         }
     }
 }
@@ -2260,7 +2261,7 @@ impl Formatter {
             TypeKind::Array(ref ty) => self.fmt_array_type(ty),
             TypeKind::Trait(ref ty) => self.fmt_trait_type(ty),
             TypeKind::BareFn(ref ty) => self.fmt_bare_fn_type(ty),
-            TypeKind::Macro(ref ty) => self.fmt_macro(ty),
+            TypeKind::MacroCall(ref ty) => self.fmt_macro(ty),
         }
     }
 
@@ -2448,7 +2449,7 @@ impl Formatter {
                 false
             },
             ForeignKind::Fn(ref item) => self.fmt_fn(item),
-            ForeignKind::Macro(ref item) => {
+            ForeignKind::MacroCall(ref item) => {
                 self.fmt_macro(item);
                 false
             }
@@ -2465,8 +2466,10 @@ impl Formatter {
         if let Some(ref block) = item.block {
             self.try_fmt_block_one_line(&item.block.as_ref().unwrap());
             return true
+        } else {
+            self.raw_insert(";");
+            return false
         }
-        false
     }
 
     fn fmt_trait(&mut self, item: &Trait) {
@@ -2496,7 +2499,7 @@ impl Formatter {
             TraitItemKind::Fn(ref item) => {
                 self.fmt_fn(item)
             },
-            TraitItemKind::Macro(ref item) => {
+            TraitItemKind::MacroCall(ref item) => {
                 self.fmt_macro(item);
                 false
             },
@@ -2538,7 +2541,7 @@ impl Formatter {
                 is_method = true;
                 self.fmt_fn(item);
             },
-            ImplItemKind::Macro(ref item) => self.fmt_macro(item),
+            ImplItemKind::MacroCall(ref item) => self.fmt_macro(item),
         }
         if !is_method {
             self.raw_insert(";");
@@ -2640,6 +2643,7 @@ impl Formatter {
             StmtKind::Let(ref local) => self.fmt_let(local),
             StmtKind::Expr(ref expr, is_semi) => self.fmt_expr_stmt(expr, is_semi),
             StmtKind::Macro(ref mac) => self.fmt_macro_stmt(mac),
+            StmtKind::None => (),
         }
         self.block_locs.pop();
     }
@@ -2677,7 +2681,7 @@ impl Formatter {
             PattenKind::Enum(ref patten) => self.fmt_enum_patten(patten),
             PattenKind::Tuple(ref patten) => self.fmt_tuple_patten(patten),
             PattenKind::Slice(ref patten) => self.fmt_slice_patten(patten),
-            PattenKind::Macro(ref patten) => self.fmt_macro(patten),
+            PattenKind::MacroCall(ref patten) => self.fmt_macro(patten),
         }
     }
 
@@ -2857,7 +2861,7 @@ impl Formatter {
             ExprKind::MethodCall(ref expr) => self.fmt_method_call_expr(expr),
             ExprKind::Closure(ref expr) => self.fmt_closure_expr(expr),
             ExprKind::Return(ref expr) => self.fmt_return_expr(expr),
-            ExprKind::Macro(ref expr) => self.fmt_macro(expr),
+            ExprKind::MacroCall(ref expr) => self.fmt_macro(expr),
         }
         self.block_locs.pop();
     }

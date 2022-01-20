@@ -373,7 +373,7 @@ pub enum TypeKind {
     Array(Box<ArrayType>),
     Trait(Box<TraitType>),
     BareFn(Box<BareFnType>),
-    Macro(MacroCall),
+    MacroCall(MacroCall),
 }
 
 #[derive(Debug)]
@@ -539,7 +539,7 @@ pub enum ForeignKind {
     TypeAlias(TypeAlias),
     Static(Static),
     Fn(Fn),
-    Macro(MacroCall),
+    MacroCall(MacroCall),
 }
 
 #[derive(Debug, Default)]
@@ -590,7 +590,7 @@ pub enum TraitItemKind {
     Const(Const),
     TypeAlias(TypeAlias),
     Fn(Fn),
-    Macro(MacroCall),
+    MacroCall(MacroCall),
 }
 
 #[derive(Debug)]
@@ -617,7 +617,7 @@ pub enum ImplItemKind {
     Const(Const),
     TypeAlias(TypeAlias),
     Fn(Fn),
-    Macro(MacroCall),
+    MacroCall(MacroCall),
 }
 
 #[derive(Debug)]
@@ -660,6 +660,7 @@ pub struct Stmt {
 
 #[derive(Debug)]
 pub enum StmtKind {
+    None,
     Item(Item),
     Let(Let),
     Expr(Expr, bool),
@@ -694,7 +695,7 @@ pub enum PattenKind {
     Enum(EnumPatten),
     Tuple(TuplePatten),
     Slice(Box<SlicePatten>),
-    Macro(MacroCall),
+    MacroCall(MacroCall),
 }
 
 #[derive(Debug)]
@@ -790,7 +791,7 @@ pub enum ExprKind {
     MethodCall(Box<MethodCallExpr>),
     Closure(Box<ClosureExpr>),
     Return(Box<ReturnExpr>),
-    Macro(MacroCall),
+    MacroCall(MacroCall),
 }
 
 pub type PathExpr = PathType;

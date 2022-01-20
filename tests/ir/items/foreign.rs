@@ -1,6 +1,7 @@
 extern { type bool; type a = result::Result;}
 
-extern { //a!(true); 
+extern { 
+    a!(true); 
 }
 
 extern "C" {

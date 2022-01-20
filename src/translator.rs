@@ -258,8 +258,8 @@ fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
 
 
 
-fn is_macro_semi(style: &ast::MacStmtStyle) -> bool {
-    match *style {
+fn is_macro_semi(style: ast::MacStmtStyle) -> bool {
+    match style {
         ast::MacStmtStyle::Semicolon => true,
         _ => false,
     }
@@ -956,12 +956,11 @@ impl Translator {
             ast::TyKind::ImplTrait(_, ref bounds) => {
                 TypeKind::Trait(Box::new(self.trans_trait_type(false, true, bounds)))
             },
-            // TODO
             ast::TyKind::BareFn(ref bare_fn) => {
                 TypeKind::BareFn(Box::new(self.trans_bare_fn_type(bare_fn)))
             },
+            ast::TyKind::MacCall(ref mac_call) => TypeKind::MacroCall(self.trans_macro_call(mac_call)),
             /*
-            ast::TyKind::Mac(ref mac) => TypeKind::Macro(self.trans_macro(mac)),
             ast::TyKind::Typeof(..) => unimplemented!("ast::TyKind::Typeof"),
             ast::TyKind::Err => unreachable!("ast::TyKind::Err"),
 
@@ -1254,9 +1253,7 @@ impl Translator {
             ast::ForeignItemKind::Fn(ref fn_kind) => {
                 ForeignKind::Fn(self.trans_fn(ident, fn_kind))
             },
-            //ast::ForeignItemKind::Macro(ref mac) => ForeignKind::Macro(self.trans_macro(mac)),
-            // TODO
-            _ => unimplemented!("{:#?}", item)
+            ast::ForeignItemKind::MacCall(ref mac_call) => ForeignKind::MacroCall(self.trans_macro_call(mac_call)),
         };
         self.set_loc(&loc);
 
@@ -1299,8 +1296,7 @@ impl Translator {
             ast::AssocItemKind::Fn(ref fn_kind) => {
                 TraitItemKind::Fn(self.trans_fn(ident, fn_kind))
             },
-            //ast::AssocItemKind::Macro(ref mac) => TraitItemKind::Macro(self.trans_macro(mac)),
-            _ => unimplemented!(),
+            ast::AssocItemKind::MacCall(ref mac_call) => TraitItemKind::MacroCall(self.trans_macro_call(mac_call)),
         };
         self.set_loc(&loc);
 
@@ -1344,8 +1340,7 @@ impl Translator {
             ast::AssocItemKind::Fn(ref fn_kind) => {
                 ImplItemKind::Fn(self.trans_fn(ident, &fn_kind))
             },
-            //ast::AssocItemKind::Macro(ref mac) => ImplItemKind::Macro(self.trans_macro(mac)),
-            _ => unimplemented!(),
+            ast::AssocItemKind::MacCall(ref mac_call) => ImplItemKind::MacroCall(self.trans_macro_call(mac_call)),
         };
         self.set_loc(&loc);
 
@@ -1381,8 +1376,8 @@ impl Translator {
             ast::StmtKind::Local(ref local) => StmtKind::Let(self.trans_let(local)),
             ast::StmtKind::Semi(ref expr) => StmtKind::Expr(self.trans_expr(expr), true),
             ast::StmtKind::Expr(ref expr) => StmtKind::Expr(self.trans_expr(expr), false),
-            //ast::StmtKind::Mac(ref p) => StmtKind::Macro(self.trans_macro_stmt(&p.2, &p.0, &p.1)),
-            _ => unimplemented!(),
+            ast::StmtKind::MacCall(ref mac_call) => StmtKind::Macro(self.trans_macro_stmt(mac_call)),
+            ast::StmtKind::Empty => StmtKind::None,
         };
         self.set_loc(&loc);
 
@@ -1447,8 +1442,8 @@ impl Translator {
             ast::PatKind::Slice(ref pattens) => {
                 PattenKind::Slice(Box::new(self.trans_slice_patten(pattens)))
             },
+            ast::PatKind::MacCall(ref mac_call) => PattenKind::MacroCall(self.trans_macro_call(mac_call)),
             /*
-            ast::PatKind::Mac(ref mac) => PattenKind::Macro(self.trans_macro(mac)),
             ast::PatKind::Box(..) => unreachable!("ast::PatKind::Box"),
 
              */
@@ -1604,8 +1599,8 @@ impl Translator {
                 ExprKind::Closure(Box::new(self.trans_closure_expr(capture, asyncness, movability, sig, expr)))
             },
             ast::ExprKind::Ret(ref expr) => ExprKind::Return(Box::new(self.trans_return_expr(expr))),
+            ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
             /*
-            ast::ExprKind::Mac(ref mac) => ExprKind::Macro(self.trans_macro(mac)),
             ast::ExprKind::InlineAsm(..) => unimplemented!("ast::ExprKind::InlineAsm"),
             ast::ExprKind::Box(..) => unreachable!("ast::ExprKind::Box"),
             ast::ExprKind::Async(..) => unimplemented!("ast::ExprKind::Async"),
@@ -1896,13 +1891,11 @@ impl Translator {
         }
     }
 
-    /*
-    fn trans_macro_stmt(&mut self, attrs: &ThinVec<ast::Attribute>, mac: &ast::Mac, style: &ast::MacStmtStyle)
-    -> MacroStmt {
-        let loc = self.loc(&mac.span);
-        let attrs = self.trans_thin_attrs(attrs);
-        let mac = self.trans_macro(mac);
-        let is_semi = is_macro_semi(style);
+    fn trans_macro_stmt(&mut self, mac_call: &ast::MacCallStmt) -> MacroStmt {
+        let loc = self.loc(&mac_call.mac.span());
+        let attrs = self.trans_thin_attrs(&mac_call.attrs);
+        let mac = self.trans_macro_call(&mac_call.mac);
+        let is_semi = is_macro_semi(mac_call.style);
         self.set_loc(&loc);
 
         MacroStmt {
@@ -1912,7 +1905,6 @@ impl Translator {
             is_semi,
         }
     }
-     */
 
     fn trans_macro_call(&mut self, macro_call: &ast::MacCall) -> MacroCall {
         let (exprs, seps) = self.trans_macro_exprs(&macro_call.args.inner_tokens());
