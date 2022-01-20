@@ -1613,9 +1613,9 @@ impl Translator {
             ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
             ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
             ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
-            /*
             ast::ExprKind::Async(..) => unimplemented!("ast::ExprKind::Async"),
             ast::ExprKind::Await(..) => unimplemented!("ast::ExprKind::Await"),
+            /*
             ast::ExprKind::TryBlock(..) => unimplemented!("ast::ExprKind::TryBlock"),
             ast::ExprKind::Yield(..) => unimplemented!("ast::ExprKind::Yield"),
 

@@ -2491,7 +2491,6 @@ impl Formatter {
                 false
             }
         };
-        self.raw_insert(";");
         nl
     }
 

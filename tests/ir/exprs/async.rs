@@ -1,3 +1,5 @@
 fn f() {
-    let a = async || {};
+    async {
+        true
+    }
 }
