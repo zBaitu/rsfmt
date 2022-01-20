@@ -371,6 +371,8 @@ pub enum TypeKind {
     Tuple(Box<TupleType>),
     Slice(Box<SliceType>),
     Array(Box<ArrayType>),
+    Struct(StructType),
+    Union(UnionType),
     Trait(Box<TraitType>),
     BareFn(Box<BareFnType>),
     MacroCall(MacroCall),
@@ -409,6 +411,16 @@ pub struct SliceType {
 pub struct ArrayType {
     pub ty: Type,
     pub expr: Expr,
+}
+
+#[derive(Debug)]
+pub struct StructType {
+    pub fields: Vec<StructField>,
+}
+
+#[derive(Debug)]
+pub struct UnionType {
+    pub fields: Vec<StructField>,
 }
 
 #[derive(Debug)]

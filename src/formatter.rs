@@ -382,6 +382,8 @@ impl Display for Type {
             TypeKind::Tuple(ref ty) => Display::fmt(ty, f),
             TypeKind::Slice(ref ty) => Display::fmt(ty, f),
             TypeKind::Array(ref ty) => Display::fmt(ty, f),
+            TypeKind::Struct(ref ty) => Display::fmt(ty, f),
+            TypeKind::Union(ref ty) => Display::fmt(ty, f),
             TypeKind::Trait(ref ty) => Display::fmt(ty, f),
             TypeKind::BareFn(ref ty) => Display::fmt(ty, f),
             TypeKind::MacroCall(ref ty) => Display::fmt(ty, f),
@@ -422,6 +424,20 @@ impl Display for SliceType {
 impl Display for ArrayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "[{}; {}]", self.ty, self.expr)
+    }
+}
+
+impl Display for StructType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "struct")?;
+        display_fields_block!(f, &self.fields)
+    }
+}
+
+impl Display for UnionType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "union")?;
+        display_fields_block!(f, &self.fields)
     }
 }
 
@@ -2267,6 +2283,8 @@ impl Formatter {
             TypeKind::Tuple(ref ty) => self.fmt_tuple_type(ty),
             TypeKind::Slice(ref ty) => self.fmt_slice_type(ty),
             TypeKind::Array(ref ty) => self.fmt_array_type(ty),
+            TypeKind::Struct(ref ty) => self.fmt_struct_type(ty),
+            TypeKind::Union(ref ty) => self.fmt_union_type(ty),
             TypeKind::Trait(ref ty) => self.fmt_trait_type(ty),
             TypeKind::BareFn(ref ty) => self.fmt_bare_fn_type(ty),
             TypeKind::MacroCall(ref ty) => self.fmt_macro(ty),
@@ -2320,6 +2338,16 @@ impl Formatter {
         insert_sep!(self, ";", ty.expr);
         self.fmt_expr(&ty.expr);
         self.insert_unmark_align("]");
+    }
+
+    fn fmt_struct_type(&mut self, ty: &StructType) {
+        self.insert("struct");
+        fmt_block!(self, &ty.fields, fmt_struct_fields);
+    }
+
+    fn fmt_union_type(&mut self, ty: &UnionType) {
+        self.insert("union");
+        fmt_block!(self, &ty.fields, fmt_struct_fields);
     }
 
 

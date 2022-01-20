@@ -947,6 +947,8 @@ impl Translator {
             ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&vec![ty.clone()]))),
             ast::TyKind::Slice(ref ty) => TypeKind::Slice(Box::new(self.trans_slice_type(ty))),
             ast::TyKind::Array(ref ty, ref ac) => TypeKind::Array(Box::new(self.trans_array_type(ty, &ac.value))),
+            ast::TyKind::AnonymousStruct(ref fields, _) => TypeKind::Struct(self.trans_struct_type(fields)),
+            ast::TyKind::AnonymousUnion(ref fields, _) => TypeKind::Union(self.trans_union_type(fields)),
             ast::TyKind::TraitObject(ref bounds, syntax) => {
                 TypeKind::Trait(Box::new(self.trans_trait_type(is_dyn(syntax), false, bounds)))
             },
@@ -959,7 +961,6 @@ impl Translator {
             ast::TyKind::MacCall(ref mac_call) => TypeKind::MacroCall(self.trans_macro_call(mac_call)),
             ast::TyKind::Typeof(..) => unreachable!("{:#?}", ty.kind),
             ast::TyKind::Err => unreachable!("{:#?}", ty.kind),
-            _ => unimplemented!()
         };
 
         self.set_loc(&loc);
@@ -1007,6 +1008,18 @@ impl Translator {
         ArrayType {
             ty: self.trans_type(ty),
             expr: self.trans_expr(expr),
+        }
+    }
+
+    fn trans_struct_type(&mut self, fields: &Vec<ast::FieldDef>) -> StructType {
+        StructType {
+            fields: self.trans_struct_fields(fields),
+        }
+    }
+
+    fn trans_union_type(&mut self, fields: &Vec<ast::FieldDef>) -> UnionType {
+        UnionType {
+            fields: self.trans_struct_fields(fields),
         }
     }
 
