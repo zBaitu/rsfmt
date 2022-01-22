@@ -1,11 +1,7 @@
-use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use rustc_ap_rustc_ast::Async::No;
-use rustc_ap_rustc_ast::PatKind;
 
 use rustc_ap_rustc_session::parse::ParseSess;
-use rustc_ap_rustc_target::asm::X86InlineAsmReg::bl;
 
 use crate::ast;
 use crate::ir::*;
@@ -65,10 +61,6 @@ fn is_inner(style: ast::AttrStyle) -> bool {
     style == ast::AttrStyle::Inner
 }
 
-
-fn token_lit_to_string(lit: &ast::TokenLit) -> String {
-    lit.symbol.to_string()
-}
 
 
 fn ident_to_string(ident: &ast::Ident) -> String {
@@ -1442,7 +1434,7 @@ impl Translator {
             ast::PatKind::TupleStruct(ref qself, ref path, ref patterns) => {
                 PattenKind::Enum(self.trans_enum_patten(qself, path, patterns))
             },
-            PatKind::Or(ref patterns) => PattenKind::Or(self.trans_or_patten(patterns)),
+            ast::PatKind::Or(ref patterns) => PattenKind::Or(self.trans_or_patten(patterns)),
             ast::PatKind::Paren(ref pattern) => {
                 PattenKind::Tuple(self.trans_tuple_patten(&vec![pattern.clone()]))
             },

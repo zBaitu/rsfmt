@@ -1,11 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Display};
-use rustc_ap_rustc_ast::Async;
 
 use ir::*;
 use typesetter::*;
 
-use crate::{ir, Opt};
+use crate::{ir};
 use crate::typesetter;
 use crate::{need_nl_indent, need_wrap};
 
@@ -783,7 +782,7 @@ impl Display for EnumPatten {
 
 impl Display for OrPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_lists!(f, "| ", &self.patterns)
+        display_lists!(f, " | ", &self.patterns)
     }
 }
 
@@ -1006,8 +1005,7 @@ impl Display for WhileExpr {
 
 impl Display for LetExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-// TODO
-        //display_patterns(f, &self.patterns)?;
+        Display::fmt(&self.pattern, f)?;
         write!(f, " = {}", self.expr)
     }
 }
@@ -1273,10 +1271,6 @@ fn display_params(f: &mut fmt::Formatter, params: &Vec<Param>) -> fmt::Result {
     display_lists!(f, "(", ", ", ")", params)
 }
 
-
-fn display_patterns(f: &mut fmt::Formatter, patterns: &Vec<Pattern>) -> fmt::Result {
-    display_lists!(f, " | ", patterns)
-}
 
 
 fn try_display_block_one_line(f: &mut fmt::Formatter, block: &Block) -> fmt::Result {
@@ -2533,7 +2527,7 @@ impl Formatter {
         self.fmt_fn_sig(&item.sig);
         self.fmt_where(&item.generics);
         if let Some(ref block) = item.block {
-            self.try_fmt_block_one_line(&item.block.as_ref().unwrap());
+            self.try_fmt_block_one_line(block);
             return true
         } else {
             self.raw_insert(";");
@@ -2661,13 +2655,6 @@ impl Formatter {
         }
     }
 
-
-    fn fmt_method_sig(&mut self, sig: &MethodSig) {
-        self.insert(&format!("{} {}", fn_head(&sig.header), sig.name));
-        self.fmt_generics(&sig.generics);
-        self.fmt_fn_sig(&sig.sig);
-        self.fmt_where(&sig.generics);
-    }
 
     fn try_fmt_block_one_line(&mut self, block: &Block) -> bool {
         if block.is_one_literal_expr() {

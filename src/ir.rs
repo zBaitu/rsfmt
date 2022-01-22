@@ -1,5 +1,4 @@
 use std::fmt::{self, Debug, Display};
-use crate::Opt;
 
 pub type Pos = u32;
 
