@@ -110,13 +110,16 @@ fn fmt_str(src: String, path: &PathBuf, overwrite: bool) {
         p!(ft_result.s);
     }
 
-    if !ft_result.exceed_lines.is_empty() || !ft_result.trailing_ws_lines.is_empty() {
-        if !ft_result.exceed_lines.is_empty() {
-            eprintln!("exceed_lines: {:?}", ft_result.exceed_lines);
-        }
-        if !ft_result.trailing_ws_lines.is_empty() {
-            eprintln!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
-        }
+    let mut exit = false;
+    if !ft_result.exceed_lines.is_empty() {
+        eprintln!("exceed_lines: {:?}", ft_result.exceed_lines);
+        exit = true;
+    }
+    if !ft_result.trailing_ws_lines.is_empty() {
+        eprintln!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
+        exit = true;
+    }
+    if exit {
         std::process::exit(1);
     }
 }

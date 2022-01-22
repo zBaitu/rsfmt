@@ -1,0 +1,15 @@
+
+// aaaaa
+/// aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+/// bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+mod a {
+    /* ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+     * cccccccccccccccccccccccccccccc */
+    struct a {
+        a: i32,
+        // dddddddddddddddd
+        c: i32,
+        b: bool, // eeeeeeeeeeeeeeeeeeeeee
+    }
+}
+
