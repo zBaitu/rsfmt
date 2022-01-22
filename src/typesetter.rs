@@ -197,6 +197,10 @@ impl Typesetter {
         (minus_novf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_left())
     }
 
+    fn need_nl_indent_len(&self, prefix_len: usize, len: usize) -> bool {
+        (minus_novf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_indent_left())
+    }
+
     fn nl_left(&self) -> usize {
         if self.should_align() {
             self.nl_align_left()
@@ -220,25 +224,21 @@ impl Typesetter {
         minus_novf!(MAX_WIDTH, self.indent.len() + WRAP_INDENT.len())
     }
 
-    fn need_nl_indent_len(&self, prefix_len: usize, len: usize) -> bool {
-        (minus_novf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_indent_left())
+    fn nl_indent_left(&self) -> usize {
+        minus_novf!(MAX_WIDTH, self.indent.len())
     }
 
     fn left(&self) -> usize {
         minus_novf!(MAX_WIDTH, self.col)
     }
 
-    fn nl_indent_left(&self) -> usize {
-        minus_novf!(MAX_WIDTH, self.indent.len())
+    fn insert_align(&mut self) {
+        let blank = " ".repeat(*self.align_stack.last().unwrap());
+        self.raw_insert(&blank);
     }
 
     fn insert_wrap_indent(&mut self) {
         self.raw_insert(WRAP_INDENT);
-    }
-
-    fn insert_align(&mut self) {
-        let blank = " ".repeat(*self.align_stack.last().unwrap());
-        self.raw_insert(&blank);
     }
 
     fn mark_align(&mut self) {
