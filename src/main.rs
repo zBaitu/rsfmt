@@ -38,7 +38,7 @@ fn main() {
     let opt = Opt::from_args();
     if opt.input.is_none() {
         rsfmt::fmt_from_stdin();
-        return ;
+        return;
     }
 
     let path = opt.input.as_ref().unwrap();
