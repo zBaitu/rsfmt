@@ -8,7 +8,9 @@ const MAX_WIDTH: usize = EXCEED_WIDTH - 1;
 const MAX_ALIGN_COL: usize = EXCEED_WIDTH / 3;
 
 const INDENT: &'static str = "    ";
+const INDENT_LEN: usize = INDENT.len();
 const WRAP_INDENT: &'static str = "        ";
+const WRAP_INDENT_LEN: usize = WRAP_INDENT.len();
 
 #[macro_export]
 macro_rules! need_wrap {
@@ -129,7 +131,7 @@ impl Typesetter {
 
     pub fn outdent(&mut self) {
         let len = self.indent.len();
-        self.indent.truncate(len - INDENT.len());
+        self.indent.truncate(len - INDENT_LEN);
     }
 
     pub fn insert_indent(&mut self) {
@@ -221,7 +223,7 @@ impl Typesetter {
     }
 
     fn nl_wrap_left(&self) -> usize {
-        minus_novf!(MAX_WIDTH, self.indent.len() + WRAP_INDENT.len())
+        minus_novf!(MAX_WIDTH, self.indent.len() + WRAP_INDENT_LEN)
     }
 
     fn nl_indent_left(&self) -> usize {
