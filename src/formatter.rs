@@ -1175,19 +1175,19 @@ impl Display for MacroCall {
 
 
 
-fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<Attr>) -> fmt::Result {
-    for attr in attrs {
-        writeln!(f, "{}", attr)?;
-    }
-    OK
-}
-
 fn display_doc_symbol(f: &mut fmt::Formatter, is_block: bool) -> fmt::Result {
     if is_block {
         write!(f, "*")
     } else {
         write!(f, "/")
     }
+}
+
+fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<Attr>) -> fmt::Result {
+    for attr in attrs {
+        writeln!(f, "{}", attr)?;
+    }
+    OK
 }
 
 
@@ -1848,7 +1848,6 @@ impl Formatter {
         let mut group: Vec<(bool, &MetaAttr)> = Vec::new();
 
         for attr in attrs {
-            let loc = attr.loc;
             let is_inner = attr.is_inner;
             match attr.attr {
                 AttrKind::Doc(ref doc) => {
@@ -1857,15 +1856,15 @@ impl Formatter {
 
                     self.fmt_doc_attr(&attr.loc, is_inner, doc);
                 },
-                AttrKind::Attr(ref attr) => {
-                    if self.has_leading_comments(&loc) {
+                AttrKind::Attr(ref meta) => {
+                    if self.has_leading_comments(&attr.loc) {
                         self.fmt_meta_attr_group(&group);
                         group.clear();
 
-                        self.fmt_leading_comments(&loc);
+                        self.fmt_leading_comments(&attr.loc);
                     }
-                    group.push((is_inner, attr));
-                },
+                    group.push((is_inner, meta));
+                }
             }
         }
 
@@ -1901,8 +1900,8 @@ impl Formatter {
         }
     }
 
-    fn fmt_meta_attr_group(&mut self, attr_group: &Vec<(bool, &MetaAttr)>) {
-        let sorted_attrs: BTreeMap<_, _> = attr_group.into_iter().map(|e| (e.1.to_string(), *e)).collect();
+    fn fmt_meta_attr_group(&mut self, group: &Vec<(bool, &MetaAttr)>) {
+        let sorted_attrs: BTreeMap<_, _> = group.into_iter().map(|e| (e.1.to_string(), *e)).collect();
         for attr in sorted_attrs.values() {
             self.insert_indent();
             self.fmt_meta_attr(attr.0, attr.1);
@@ -1912,14 +1911,14 @@ impl Formatter {
     }
 
 
-    fn fmt_meta_attr(&mut self, is_inner: bool, attr: &MetaAttr) {
+    fn fmt_meta_attr(&mut self, is_inner: bool, meta: &MetaAttr) {
         self.raw_insert("#");
         if is_inner {
             self.raw_insert("!");
         }
         self.raw_insert("[");
-        self.insert(&attr.name);
-        if let Some(ref metas) = attr.metas {
+        self.insert(&meta.name);
+        if let Some(ref metas) = meta.metas {
             self.fmt_nested_metas(metas);
         }
         self.raw_insert("]");
