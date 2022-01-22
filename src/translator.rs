@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use rustc_ap_rustc_session::parse::ParseSess;
+use rustc_ap_rustc_parse::{self as parse};
 
 use crate::ast;
 use crate::ir::*;
@@ -1943,7 +1944,7 @@ impl Translator {
             return (exprs, seps);
         }
 
-        let mut parser = ast::parse::stream_to_parser(&self.sess, ts.clone(), None);
+        let mut parser = parse::stream_to_parser(&self.sess, ts.clone(), None);
         loop {
             exprs.push(match parser.parse_expr() {
                 Ok(expr) => expr,
