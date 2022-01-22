@@ -1619,8 +1619,8 @@ impl Translator {
             ast::ExprKind::ConstBlock(ref expr) => ExprKind::Const(Box::new(self.trans_expr(&expr.value))),
             ast::ExprKind::Yield(ref expr) => ExprKind::Yield(Box::new(self.trans_yield_expr(expr))),
             ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
+            ast::ExprKind::LlvmInlineAsm(..) => unreachable!("{:#?}", expr.kind),
             ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
-            _ => unreachable!("{:#?}", expr.kind),
         };
         self.set_loc(&loc);
 
