@@ -864,8 +864,9 @@ impl Display for Expr {
             ExprKind::MethodCall(ref expr) => Display::fmt(expr, f),
             ExprKind::Closure(ref expr) => Display::fmt(expr, f),
             ExprKind::Return(ref expr) => Display::fmt(expr, f),
-            ExprKind::Async(ref expr) => Display::fmt(expr, f),
             ExprKind::MacroCall(ref expr) => Display::fmt(expr, f),
+            ExprKind::Async(ref expr) => Display::fmt(expr, f),
+            ExprKind::Await(ref expr) => write!(f, "{}.await", expr),
         }
     }
 }
@@ -2927,8 +2928,9 @@ impl Formatter {
             ExprKind::MethodCall(ref expr) => self.fmt_method_call_expr(expr),
             ExprKind::Closure(ref expr) => self.fmt_closure_expr(expr),
             ExprKind::Return(ref expr) => self.fmt_return_expr(expr),
-            ExprKind::Async(ref expr) => self.fmt_async_expr(expr),
             ExprKind::MacroCall(ref expr) => self.fmt_macro(expr),
+            ExprKind::Async(ref expr) => self.fmt_async_expr(expr),
+            ExprKind::Await(ref expr) => self.fmt_await_expr(expr),
         }
         self.block_locs.pop();
     }
@@ -3293,6 +3295,10 @@ impl Formatter {
         self.try_fmt_block_one_line(&expr.block);
     }
 
+    fn fmt_await_expr(&mut self, expr: &Expr) {
+        self.fmt_expr(expr);
+        self.insert(".await");
+    }
 
     fn fmt_macro_def(&mut self, item: &MacroDef) {
         self.raw_insert(&format!("macro_rules! {} ", item.name));

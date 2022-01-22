@@ -813,6 +813,7 @@ pub enum ExprKind {
     Return(Box<ReturnExpr>),
     MacroCall(MacroCall),
     Async(AsyncExpr),
+    Await(Box<Expr>),
 }
 
 pub type PathExpr = PathType;

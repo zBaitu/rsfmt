@@ -1613,7 +1613,7 @@ impl Translator {
             ast::ExprKind::Ret(ref expr) => ExprKind::Return(Box::new(self.trans_return_expr(expr))),
             ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
             ast::ExprKind::Async(capture, _, ref block) => ExprKind::Async(self.trans_async_expr(capture, block)),
-            ast::ExprKind::Await(..) => unimplemented!("ast::ExprKind::Await"),
+            ast::ExprKind::Await(ref expr) => ExprKind::Await(Box::new(self.trans_expr(expr))),
             ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
             ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
             /*
