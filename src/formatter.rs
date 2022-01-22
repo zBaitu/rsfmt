@@ -1845,30 +1845,31 @@ impl Formatter {
     }
 
     fn fmt_attrs(&mut self, attrs: &Vec<Attr>) {
-        let mut attr_group: Vec<(bool, &MetaAttr)> = Vec::new();
+        let mut group: Vec<(bool, &MetaAttr)> = Vec::new();
 
         for attr in attrs {
+            let loc = attr.loc;
             let is_inner = attr.is_inner;
             match attr.attr {
                 AttrKind::Doc(ref doc) => {
-                    self.fmt_meta_attr_group(&attr_group);
-                    attr_group.clear();
+                    self.fmt_meta_attr_group(&group);
+                    group.clear();
 
                     self.fmt_doc_attr(&attr.loc, is_inner, doc);
                 },
                 AttrKind::Attr(ref attr) => {
-                    if self.has_leading_comments(&attr.loc) {
-                        self.fmt_meta_attr_group(&attr_group);
-                        attr_group.clear();
+                    if self.has_leading_comments(&loc) {
+                        self.fmt_meta_attr_group(&group);
+                        group.clear();
 
-                        self.fmt_leading_comments(&attr.loc);
+                        self.fmt_leading_comments(&loc);
                     }
-                    attr_group.push((is_inner, attr));
+                    group.push((is_inner, attr));
                 },
             }
         }
 
-        self.fmt_meta_attr_group(&attr_group);
+        self.fmt_meta_attr_group(&group);
     }
 
 
