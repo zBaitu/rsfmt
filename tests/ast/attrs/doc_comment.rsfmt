@@ -62,5 +62,3 @@ fn main() {
     }
 }
 
-"doc_comment.rs"
-trailing_ws_lines: {9, 10, 20, 29, 31}

@@ -19,13 +19,6 @@ macro_rules! p {
     ($($arg:tt)+) => ({println!("{}", $($arg)+)});
 }
 
-macro_rules! ep {
-    () => ({eprintln!()});
-    ($arg:expr) => ({eprintln!("{}", $arg)});
-    ($fmt:expr, $($arg:tt)*) => ({eprintln!($fmt, $($arg)*)});
-    ($($arg:tt)+) => ({eprintln!("{}", $($arg)+)});
-}
-
 macro_rules! d {
     ($arg:expr) => ({println!("{:#?}", $arg)});
 }
@@ -110,21 +103,21 @@ fn fmt_str(src: String, path: &PathBuf, overwrite: bool) {
     let tr_result = trans(src, path);
     let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
 
-    if !ft_result.exceed_lines.is_empty() || !ft_result.trailing_ws_lines.is_empty() {
-        if !ft_result.exceed_lines.is_empty() {
-            ep!("exceed_lines: {:?}", ft_result.exceed_lines);
-        }
-        if !ft_result.trailing_ws_lines.is_empty() {
-            ep!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
-        }
-        std::process::exit(1);
-    }
-
     if overwrite {
         let mut file = File::create(path).unwrap();
         file.write_all(ft_result.s.as_bytes()).unwrap();
     } else {
         p!(ft_result.s);
+    }
+
+    if !ft_result.exceed_lines.is_empty() || !ft_result.trailing_ws_lines.is_empty() {
+        if !ft_result.exceed_lines.is_empty() {
+            eprintln!("exceed_lines: {:?}", ft_result.exceed_lines);
+        }
+        if !ft_result.trailing_ws_lines.is_empty() {
+            eprintln!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
+        }
+        std::process::exit(1);
     }
 }
 
