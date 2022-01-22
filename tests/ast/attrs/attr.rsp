@@ -1,0 +1,20 @@
+#![allow(unused_variables)]
+#![crate_type = "lib"]
+#![crate_type = "lib"]
+fn main() {
+#[test]
+fn test_foo() {
+}
+#[cfg(target_os = "linux")]
+mod bar {
+}
+#[allow(non_camel_case_types)]
+type int8_t = i8
+#![allow(unused_variables)]
+fn some_unused_variables() {
+let x = ()
+let y = ()
+let z = ()
+}
+}
+

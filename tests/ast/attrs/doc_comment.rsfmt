@@ -1,0 +1,66 @@
+#![allow(unused_variables)]
+
+//! A doc comment that applies to the implicit anonymous module of this crate
+fn main() {
+
+    //!  - Inner line doc
+    //!! - Still an inner line doc (but with a bang at the beginning)
+
+    //!  - Inner block doc 
+    //!! - Still an inner block doc (but with a bang at the beginning) 
+    pub mod outer_module {
+
+        //   - Only a comment
+        //// - Only a comment
+
+        /*   - Only a comment */
+        /*** - Only a comment */
+
+        ///  - Outer line doc (exactly 3 slashes)
+        ///  - Outer block doc (exactly) 2 asterisks 
+        pub mod inner_module {}
+
+        /* In Rust /* we can /* nest comments */ */ */
+
+        // All three types of block comments can contain or be nested inside
+        // any other type:
+
+        /*   /* */  /** */  /*! */  */
+        //!  /* */  /** */  /*! */  
+        pub mod nested_comments {
+            ///  /* */  /** */  /*! */  
+            pub mod dummy_item {}
+        }
+
+        // empty inner line doc
+        //!
+
+        // empty inner block doc
+        //!
+        pub mod degenerate_cases {
+
+            // empty line comment
+            //
+
+            // empty outer line doc
+
+            // empty block comment
+            /**/
+
+            ///
+            pub mod dummy_item {}
+
+            // empty 2-asterisk block isn't a doc block, it is a block comment
+            /***/
+        }
+
+        /* The next one isn't allowed because outer doc comments
+           require an item that will receive the doc */
+
+        /// Where is my item?
+        mod boo {}
+    }
+}
+
+"doc_comment.rs"
+trailing_ws_lines: {9, 10, 20, 29, 31}

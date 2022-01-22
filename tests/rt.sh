@@ -15,9 +15,8 @@ function test_rsfmt() {
     fi
 
     if [[ ! -f ${expected_file} ]]; then
-        #echo "[${expected_file}] not found"
-        #exit 1
-        continue
+        echo "[${expected_file}] not found"
+        exit 1
     fi
 
     if [[ "${ty}" == "${PRINT}" ]]; then

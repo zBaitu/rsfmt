@@ -19,6 +19,13 @@ macro_rules! p {
     ($($arg:tt)+) => ({println!("{}", $($arg)+)});
 }
 
+macro_rules! ep {
+    () => ({eprintln!()});
+    ($arg:expr) => ({eprintln!("{}", $arg)});
+    ($fmt:expr, $($arg:tt)*) => ({eprintln!($fmt, $($arg)*)});
+    ($($arg:tt)+) => ({eprintln!("{}", $($arg)+)});
+}
+
 macro_rules! d {
     ($arg:expr) => ({println!("{:#?}", $arg)});
 }
@@ -104,12 +111,11 @@ fn fmt_str(src: String, path: &PathBuf, overwrite: bool) {
     let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
 
     if !ft_result.exceed_lines.is_empty() || !ft_result.trailing_ws_lines.is_empty() {
-        p!("{:?}", path);
         if !ft_result.exceed_lines.is_empty() {
-            p!("exceed_lines: {:?}", ft_result.exceed_lines);
+            ep!("exceed_lines: {:?}", ft_result.exceed_lines);
         }
         if !ft_result.trailing_ws_lines.is_empty() {
-            p!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
+            ep!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
         }
         std::process::exit(1);
     }
