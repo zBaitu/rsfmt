@@ -16,10 +16,6 @@ pub struct Opt {
     ast: bool,
 
     #[structopt(long, short)]
-    /// Check exceed lines and trailing white space lines
-    check: bool,
-
-    #[structopt(long, short)]
     /// Print the rsfmt ir debug info
     debug: bool,
 
@@ -41,14 +37,18 @@ pub struct Opt {
 fn main() {
     let opt = Opt::from_args();
     if opt.input.is_none() {
-        rsfmt::fmt_from_stdin(opt);
-    } else if opt.ast {
-        rsfmt::dump_ast(&opt.input.unwrap());
+        rsfmt::fmt_from_stdin();
+        return ;
+    }
+
+    let path = opt.input.as_ref().unwrap();
+    if opt.ast {
+        rsfmt::dump_ast(path);
     } else if opt.debug {
-        rsfmt::debug(&opt.input.unwrap());
+        rsfmt::debug(path);
     } else if opt.print {
-        rsfmt::print(&opt.input.unwrap());
+        rsfmt::print(path);
     } else {
-        rsfmt::fmt(opt);
+        rsfmt::fmt(path, opt.overwrite);
     }
 }
