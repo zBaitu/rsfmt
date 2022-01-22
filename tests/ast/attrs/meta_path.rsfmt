@@ -1,0 +1,2 @@
+#![clippy::inline_always]
+

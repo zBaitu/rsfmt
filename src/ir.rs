@@ -53,46 +53,45 @@ impl Chunk {
     }
 }
 
-pub type Vis = String;
-
 #[derive(Debug)]
 pub struct Crate {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub items: Vec<Item>,
-}
-
-#[derive(Debug)]
-pub enum AttrKind {
-    Doc(Doc),
-    Attr(Attr),
-}
-
-#[derive(Debug)]
-pub struct Doc {
-    pub loc: Loc,
-    pub is_inner: bool,
-    pub doc: String,
 }
 
 #[derive(Debug)]
 pub struct Attr {
     pub loc: Loc,
     pub is_inner: bool,
-    pub item: MetaItem,
+    pub attr: AttrKind,
 }
 
 #[derive(Debug)]
-pub struct MetaItem {
+pub enum AttrKind {
+    Doc(DocAttr),
+    Attr(MetaAttr),
+}
+
+#[derive(Debug)]
+pub struct DocAttr {
+    pub is_block: bool,
+    pub doc: String,
+}
+
+#[derive(Debug)]
+pub struct MetaAttr {
     pub loc: Loc,
     pub name: String,
-    pub items: Option<Vec<MetaItem>>,
+    pub metas: Option<Vec<MetaAttr>>,
 }
+
+pub type Vis = String;
 
 #[derive(Debug)]
 pub struct Item {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub vis: Vis,
     pub item: ItemKind,
 }
@@ -468,7 +467,7 @@ pub enum StructBody {
 #[derive(Debug)]
 pub struct StructField {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub vis: Vis,
     pub name: String,
     pub ty: Type,
@@ -477,7 +476,7 @@ pub struct StructField {
 #[derive(Debug)]
 pub struct TupleField {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub vis: Vis,
     pub ty: Type,
 }
@@ -504,7 +503,7 @@ pub struct EnumBody {
 #[derive(Debug)]
 pub struct EnumField {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub name: String,
     pub body: StructBody,
     pub expr: Option<Expr>,
@@ -539,7 +538,7 @@ pub struct ForeignMod {
 #[derive(Debug)]
 pub struct ForeignItem {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub vis: Vis,
     pub item: ForeignKind,
 }
@@ -591,7 +590,7 @@ pub struct Trait {
 #[derive(Debug)]
 pub struct TraitItem {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub item: TraitItemKind,
 }
 
@@ -617,7 +616,7 @@ pub struct Impl {
 #[derive(Debug)]
 pub struct ImplItem {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub vis: Vis,
     pub item: ImplItemKind,
 }
@@ -680,7 +679,7 @@ pub enum StmtKind {
 #[derive(Debug)]
 pub struct Let {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub pattern: Pattern,
     pub ty: Option<Type>,
     pub init: Option<Expr>,
@@ -774,7 +773,7 @@ pub struct SlicePatten {
 #[derive(Debug)]
 pub struct Expr {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub expr: ExprKind,
 }
 
@@ -952,7 +951,7 @@ pub struct MatchExpr {
 #[derive(Debug)]
 pub struct Arm {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub pattern: Pattern,
     pub guard: Option<Expr>,
     pub body: Expr,
@@ -1004,7 +1003,7 @@ pub struct MacroDef {
 #[derive(Debug)]
 pub struct MacroStmt {
     pub loc: Loc,
-    pub attrs: Vec<AttrKind>,
+    pub attrs: Vec<Attr>,
     pub mac: MacroCall,
     pub is_semi: bool,
 }

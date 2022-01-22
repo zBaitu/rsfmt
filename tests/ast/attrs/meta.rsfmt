@@ -1,0 +1,10 @@
+#![allow(clippy::inline_always, unused)]
+#![clippy::inline_always]
+#![doc = "example"]
+#![link(kind = "framework", name = "CoreFoundation")]
+#![macro_use(bar, foo)]
+#![no_std]
+
+#![cfg(all(b = "a",
+           target_pointer_width = "32", unix))]
+

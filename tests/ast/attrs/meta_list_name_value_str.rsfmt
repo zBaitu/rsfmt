@@ -1,0 +1,2 @@
+#![link(kind = "framework", name = "CoreFoundation")]
+

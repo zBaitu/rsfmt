@@ -1,14 +1,14 @@
 #![doc(html_favicon_url = "https://example.com/favicon.ico")]
 //!aaaaaaaaaaaaaa
 //!bbbbbbbbbbbbbb
-//!cccccccccc
+/*!cccccccccc
  * ddddddddd
- !
+ !*/
 //!
 
 /// aaaaaaaaaaa
 /// bbbbbbbbbb
-/// cccccccccc *
+/** cccccccccc **/
 const a: bool = true;
 
 // abcde

@@ -1,7 +1,7 @@
 pub use rustc_ap_rustc_ast::{
     ast::*,
     ptr::P,
-    token::{DelimToken, Token, TokenKind},
+    token::{DelimToken, Token, TokenKind, CommentKind},
     tokenstream::TokenStream,
     util::comments::{Comment, CommentStyle}
 };

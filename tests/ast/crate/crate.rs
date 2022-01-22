@@ -6,3 +6,5 @@ mod b         {
 }
 
 fn main() {}
+
+// aaaaa

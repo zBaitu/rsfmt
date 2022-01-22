@@ -58,8 +58,12 @@ fn span(s: u32, e: u32) -> ast::Span {
 }
 
 
-fn is_inner(style: ast::AttrStyle) -> bool {
-    style == ast::AttrStyle::Inner
+fn is_inner(style: &ast::AttrStyle) -> bool {
+    *style == ast::AttrStyle::Inner
+}
+
+fn is_block(kind: &ast::CommentKind) -> bool {
+     *kind == ast::CommentKind::Block
 }
 
 
@@ -288,6 +292,7 @@ struct Translator {
     src: String,
     sess: ParseSess,
     cmnts: Vec<Comment>,
+
     cmnt_idx: usize,
     last_loc: Loc,
     leading_cmnts: HashMap<Pos, Vec<String>>,
@@ -300,6 +305,7 @@ impl Translator {
             src,
             sess,
             cmnts,
+
             cmnt_idx: 0,
             last_loc: Default::default(),
             leading_cmnts: HashMap::new(),
@@ -373,96 +379,92 @@ impl Translator {
         }
     }
 
-    fn trans_attrs(&mut self, attrs: &Vec<ast::Attribute>) -> Vec<AttrKind> {
-        trans_list!(self, attrs, trans_attr_kind)
+    fn trans_attrs(&mut self, attrs: &Vec<ast::Attribute>) -> Vec<Attr> {
+        trans_list!(self, attrs, trans_attr)
     }
 
-    fn trans_thin_attrs(&mut self, attrs: &ast::AttrVec) -> Vec<AttrKind> {
-        trans_list!(self, attrs, trans_attr_kind)
+    fn trans_thin_attrs(&mut self, attrs: &ast::AttrVec) -> Vec<Attr> {
+        trans_list!(self, attrs, trans_attr)
     }
 
-
-    fn trans_attr_kind(&mut self, attr: &ast::Attribute) -> AttrKind {
-        if attr.is_doc_comment() {
-            AttrKind::Doc(self.trans_doc(attr))
-        } else {
-            AttrKind::Attr(self.trans_attr(attr))
-        }
-    }
-
-    fn trans_doc(&mut self, attr: &ast::Attribute) -> Doc {
-        Doc {
-            loc: self.leaf_loc(&attr.span),
-            is_inner: is_inner(attr.style),
-            doc: attr.doc_str().unwrap().to_ident_string(),
-        }
-    }
 
     fn trans_attr(&mut self, attr: &ast::Attribute) -> Attr {
-        let loc = self.loc(&attr.span);
-        let is_inner = is_inner(attr.style);
-        let span_forward = if is_inner { 2 } else { 1 };
-        let item = self.trans_meta_item(&attr.meta().unwrap(), span_forward);
-        self.set_loc(&loc);
+        let is_inner = is_inner(&attr.style);
+        let (loc, attr) = match attr.kind {
+            ast::AttrKind::DocComment(ref cmnt_kind, ref sym) => {
+                (self.leaf_loc(&attr.span), AttrKind::Doc(self.trans_doc_attr(cmnt_kind, sym)))
+            },
+            ast::AttrKind::Normal(..) => {
+                let span_forward = if is_inner { 2 } else { 1 };
+                (self.loc(&attr.span), AttrKind::Attr(self.trans_meta_attr(attr.meta().as_ref().unwrap(), span_forward)))
+            },
+        };
 
         Attr {
             loc,
             is_inner,
-            item,
+            attr,
         }
     }
 
-    fn trans_meta_item(&mut self, meta_item: &ast::MetaItem, span_forward: u32) -> MetaItem {
+    fn trans_doc_attr(&mut self, cmnt_kind: &ast::CommentKind, sym: &ast::Symbol) -> DocAttr {
+        DocAttr {
+            is_block: is_block(cmnt_kind),
+            doc: sym.to_string(),
+        }
+    }
+
+    fn trans_meta_attr(&mut self, meta_item: &ast::MetaItem, span_forward: u32) -> MetaAttr {
         let name = path_to_string(&meta_item.path);
         let span = span(meta_item.span.lo().0 + span_forward, meta_item.span.hi().0);
         match meta_item.kind {
             ast::MetaItemKind::Word => {
-                MetaItem {
+                MetaAttr {
                     loc: self.leaf_loc(&span),
                     name,
-                    items: None,
+                    metas: None,
                 }
             },
             ast::MetaItemKind::NameValue(ref lit) => {
                 let s = format!("{} = {}", name, self.literal_to_string(lit));
-                MetaItem {
+                MetaAttr {
                     loc: self.leaf_loc(&span),
                     name: s,
-                    items: None,
+                    metas: None,
                 }
             },
-            ast::MetaItemKind::List(ref meta_items) => {
+            ast::MetaItemKind::List(ref nested_meta_items) => {
                 let loc = self.loc(&span);
-                let items = self.trans_nested_meta_items(meta_items);
+                let metas = self.trans_nested_metas(nested_meta_items);
                 self.set_loc(&loc);
 
-                MetaItem {
+                MetaAttr {
                     loc,
                     name,
-                    items: Some(items),
+                    metas: Some(metas),
                 }
             },
         }
     }
 
-    fn trans_nested_meta_items(&mut self, nested_meta_items: &Vec<ast::NestedMetaItem>) -> Vec<MetaItem> {
-        let mut items: Vec<MetaItem> = trans_list!(self, nested_meta_items, trans_nested_meta_item);
-        items.sort_by(|a, b| a.name.cmp(&b.name));
-        items
+    fn trans_nested_metas(&mut self, nested_meta_items: &Vec<ast::NestedMetaItem>) -> Vec<MetaAttr> {
+        let mut metas: Vec<MetaAttr> = trans_list!(self, nested_meta_items, trans_nested_meta);
+        metas.sort_by(|a, b| a.name.cmp(&b.name));
+        metas
     }
 
 
-    fn trans_nested_meta_item(&mut self, nested_meta_item: &ast::NestedMetaItem) -> MetaItem {
+    fn trans_nested_meta(&mut self, nested_meta_item: &ast::NestedMetaItem) -> MetaAttr {
         match nested_meta_item {
             ast::NestedMetaItem::Literal(ref lit) => {
-                MetaItem {
+                MetaAttr {
                     loc: self.leaf_loc(&nested_meta_item.span()),
                     name: self.literal_to_string(lit),
-                    items: None,
+                    metas: None,
                 }
             },
             ast::NestedMetaItem::MetaItem(ref meta_iten) => {
-                self.trans_meta_item(meta_iten, 0)
+                self.trans_meta_attr(meta_iten, 0)
             },
         }
     }

@@ -1,0 +1,3 @@
+#[inline]
+type a = bool;
+

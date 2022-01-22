@@ -1,0 +1,4 @@
+
+#![cfg(all(b = "a",
+           target_pointer_width = "32", unix))]
+

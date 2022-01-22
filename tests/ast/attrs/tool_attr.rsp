@@ -1,0 +1,10 @@
+#![allow(unused_variables)]
+fn main() {
+#[rustfmt::skip]
+struct S {
+}
+#[clippy::cyclomatic_complexity = "100"]
+pub fn f() {
+}
+}
+

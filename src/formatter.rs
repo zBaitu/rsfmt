@@ -123,42 +123,45 @@ impl Display for Chunk {
     }
 }
 
-impl Display for AttrKind {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            AttrKind::Doc(ref doc) => Display::fmt(doc, f),
-            AttrKind::Attr(ref attr) => Display::fmt(attr, f),
-        }
-    }
-}
-
-impl Display for Doc {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "//")?;
-        if self.is_inner {
-            write!(f, "!")?;
-        } else {
-            write!(f, "/")?;
-        }
-        write!(f, "{}", self.doc)
-    }
-}
-
 impl Display for Attr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "#")?;
-        if self.is_inner {
-            write!(f, "!")?;
+        match self.attr {
+            AttrKind::Doc(ref doc) => {
+                write!(f, "/")?;
+                display_doc_symbol(f, doc.is_block)?;
+                if self.is_inner {
+                    write!(f, "!")?;
+                } else {
+                    display_doc_symbol(f, doc.is_block)?;
+               }
+                write!(f, "{}", doc.doc)?;
+                if doc.is_block {
+                    write!(f, "*/")?;
+                }
+                OK
+            },
+            AttrKind::Attr(ref meta) => {
+                write!(f, "#")?;
+                if self.is_inner {
+                    write!(f, "!")?;
+                }
+                write!(f, "[")?;
+                write!(f, "{}", meta.name)?;
+                if let Some(ref metas) = meta.metas {
+                    display_lists!(f, "(", ", ", ")", &**metas)?;
+                }
+                write!(f, "]")?;
+                OK
+            },
         }
-        write!(f, "[{}]", self.item)
     }
 }
 
-impl Display for MetaItem {
+impl Display for MetaAttr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name)?;
-        if let Some(ref items) = self.items {
-            display_lists!(f, "(", ", ", ")", &**items)?;
+        if let Some(ref metas) = self.metas {
+            display_lists!(f, "(", ", ", ")", &**metas)?;
         }
         OK
     }
@@ -1172,11 +1175,19 @@ impl Display for MacroCall {
 
 
 
-fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<AttrKind>) -> fmt::Result {
+fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<Attr>) -> fmt::Result {
     for attr in attrs {
         writeln!(f, "{}", attr)?;
     }
     OK
+}
+
+fn display_doc_symbol(f: &mut fmt::Formatter, is_block: bool) -> fmt::Result {
+    if is_block {
+        write!(f, "*")
+    } else {
+        write!(f, "/")
+    }
 }
 
 
@@ -1566,7 +1577,7 @@ macro_rules! fmt_comma_lists {
 
 macro_rules! fmt_item_groups {
     ($sf:expr, $items:expr, $item_kind:path, $item_type:ty, $fmt_item:ident) => ({
-        let mut group: Vec<(&Loc, &String, &Vec<AttrKind>, $item_type)> = Vec::new();
+        let mut group: Vec<(&Loc, &String, &Vec<Attr>, $item_type)> = Vec::new();
 
         for item in $items {
             match item.item {
@@ -1592,7 +1603,7 @@ macro_rules! fmt_item_groups {
 
 macro_rules! fmt_item_group {
     ($sf:expr, $group:expr, $ty:ty, $fmt_item:ident) => ({
-        let map: BTreeMap<String, (&Loc, &String, &Vec<AttrKind>, $ty)>
+        let map: BTreeMap<String, (&Loc, &String, &Vec<Attr>, $ty)>
                 = $group.into_iter().map(|e| (e.3.to_string(), *e)).collect();
 
         for (_, e) in map {
@@ -1821,51 +1832,6 @@ impl Formatter {
         self.fmt_long_str(&chunk.s);
     }
 
-    fn fmt_attrs(&mut self, attrs: &Vec<AttrKind>) {
-        let mut attr_group: Vec<&Attr> = Vec::new();
-
-        for attr in attrs {
-            match *attr {
-                AttrKind::Doc(ref doc) => {
-                    self.fmt_attr_group(&attr_group);
-                    attr_group.clear();
-
-                    self.fmt_doc(doc);
-                },
-                AttrKind::Attr(ref attr) => {
-                    if self.has_leading_comments(&attr.loc) {
-                        self.fmt_attr_group(&attr_group);
-                        attr_group.clear();
-
-                        self.fmt_leading_comments(&attr.loc);
-                    }
-                    attr_group.push(attr);
-                },
-            }
-        }
-
-        self.fmt_attr_group(&attr_group);
-    }
-
-
-    fn fmt_doc(&mut self, doc: &Doc) {
-        self.try_fmt_leading_comments(&doc.loc);
-        self.insert_indent();
-
-        self.raw_insert("//");
-        if doc.is_inner {
-            self.raw_insert("!");
-        } else {
-            self.raw_insert("/");
-        }
-        self.raw_insert(&doc.doc);
-
-        self.try_fmt_trailing_comment(&doc.loc);
-        self.nl();
-    }
-
-
-
     fn fmt_long_str(&mut self, s: &str) {
         let mut first = true;
         for line in s.split('\n') {
@@ -1878,38 +1844,97 @@ impl Formatter {
         }
     }
 
-    fn fmt_attr_group(&mut self, attr_group: &Vec<&Attr>) {
-        let sorted_attrs: BTreeMap<_, _> = attr_group.into_iter().map(|e| (e.to_string(), *e)).collect();
+    fn fmt_attrs(&mut self, attrs: &Vec<Attr>) {
+        let mut attr_group: Vec<(bool, &MetaAttr)> = Vec::new();
+
+        for attr in attrs {
+            let is_inner = attr.is_inner;
+            match attr.attr {
+                AttrKind::Doc(ref doc) => {
+                    self.fmt_meta_attr_group(&attr_group);
+                    attr_group.clear();
+
+                    self.fmt_doc_attr(&attr.loc, is_inner, doc);
+                },
+                AttrKind::Attr(ref attr) => {
+                    if self.has_leading_comments(&attr.loc) {
+                        self.fmt_meta_attr_group(&attr_group);
+                        attr_group.clear();
+
+                        self.fmt_leading_comments(&attr.loc);
+                    }
+                    attr_group.push((is_inner, attr));
+                },
+            }
+        }
+
+        self.fmt_meta_attr_group(&attr_group);
+    }
+
+
+    fn fmt_doc_attr(&mut self, loc: &Loc, is_inner: bool, doc: &DocAttr) {
+        self.try_fmt_leading_comments(loc);
+        self.insert_indent();
+
+        self.raw_insert("/");
+        self.fmt_doc_symbol(doc.is_block);
+        if is_inner {
+            self.raw_insert("!");
+        } else {
+            self.fmt_doc_symbol(doc.is_block);
+        }
+        self.raw_insert(&doc.doc);
+        if doc.is_block {
+            self.raw_insert("*/");
+        }
+
+        self.try_fmt_trailing_comment(&loc);
+        self.nl();
+    }
+
+    fn fmt_doc_symbol(&mut self, is_block: bool) {
+        if is_block {
+            self.raw_insert("*");
+        } else {
+            self.raw_insert("/");
+        }
+    }
+
+    fn fmt_meta_attr_group(&mut self, attr_group: &Vec<(bool, &MetaAttr)>) {
+        let sorted_attrs: BTreeMap<_, _> = attr_group.into_iter().map(|e| (e.1.to_string(), *e)).collect();
         for attr in sorted_attrs.values() {
             self.insert_indent();
-            self.fmt_attr(attr);
-            self.try_fmt_trailing_comment(&attr.loc);
+            self.fmt_meta_attr(attr.0, attr.1);
+            self.try_fmt_trailing_comment(&attr.1.loc);
             self.nl();
         }
     }
 
 
-    fn fmt_attr(&mut self, attr: &Attr) {
+    fn fmt_meta_attr(&mut self, is_inner: bool, attr: &MetaAttr) {
         self.raw_insert("#");
-        if attr.is_inner {
+        if is_inner {
             self.raw_insert("!");
         }
         self.raw_insert("[");
-        self.fmt_meta_item(&attr.item);
+        self.insert(&attr.name);
+        if let Some(ref metas) = attr.metas {
+            self.fmt_nested_metas(metas);
+        }
         self.raw_insert("]");
     }
 
-    fn fmt_meta_items(&mut self, items: &Vec<MetaItem>) {
-        fmt_comma_lists!(self, "(", ")", items, fmt_meta_item);
+    fn fmt_nested_metas(&mut self, metas: &Vec<MetaAttr>) {
+        fmt_comma_lists!(self, "(", ")", metas, fmt_nested_meta);
     }
 
 
-    fn fmt_meta_item(&mut self, item: &MetaItem) {
-        maybe_nl!(self, item);
-        self.fmt_long_str(&item.name);
+    fn fmt_nested_meta(&mut self, meta: &MetaAttr) {
+        maybe_nl!(self, meta);
+        self.insert(&meta.name);
 
-        if let Some(ref items) = item.items {
-            self.fmt_meta_items(items);
+        if let Some(ref metas) = meta.metas {
+            self.fmt_nested_metas(metas);
         }
     }
 

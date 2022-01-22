@@ -6,8 +6,8 @@ fn main() {
     //!  - Inner line doc
     //!! - Still an inner line doc (but with a bang at the beginning)
 
-    //!  - Inner block doc 
-    //!! - Still an inner block doc (but with a bang at the beginning) 
+    /*!  - Inner block doc */
+    /*!! - Still an inner block doc (but with a bang at the beginning) */
     pub mod outer_module {
 
         //   - Only a comment
@@ -17,7 +17,7 @@ fn main() {
         /*** - Only a comment */
 
         ///  - Outer line doc (exactly 3 slashes)
-        ///  - Outer block doc (exactly) 2 asterisks 
+        /**  - Outer block doc (exactly) 2 asterisks */
         pub mod inner_module {}
 
         /* In Rust /* we can /* nest comments */ */ */
@@ -26,9 +26,9 @@ fn main() {
         // any other type:
 
         /*   /* */  /** */  /*! */  */
-        //!  /* */  /** */  /*! */  
+        /*!  /* */  /** */  /*! */  */
         pub mod nested_comments {
-            ///  /* */  /** */  /*! */  
+            /**  /* */  /** */  /*! */  */
             pub mod dummy_item {}
         }
 
@@ -36,7 +36,7 @@ fn main() {
         //!
 
         // empty inner block doc
-        //!
+        /*!*/
         pub mod degenerate_cases {
 
             // empty line comment
