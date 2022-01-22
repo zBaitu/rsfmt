@@ -1,8 +1,8 @@
 fn f() {
     match a {
-        _ => true
+        Some(_) => true
 
-        a => true
+        //a => true
 
         //ref mut a => true
 
@@ -11,7 +11,7 @@ fn f() {
         //Some(b) => true
         //Some(..) => true
 
-        <T as Trait>::CONST => true
+        //<T as Trait>::CONST => true
         //a::CONST => true
 
         //A { x: bool, y : B { y1, y2 }, ref mut z, .. } => true

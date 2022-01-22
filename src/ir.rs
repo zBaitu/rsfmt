@@ -782,6 +782,7 @@ pub struct Expr {
 
 #[derive(Debug)]
 pub enum ExprKind {
+    Symbol(&'static str),
     Literal(Chunk),
     Path(PathExpr),
     Box(Box<Expr>),
@@ -814,6 +815,9 @@ pub enum ExprKind {
     MacroCall(MacroCall),
     Async(AsyncExpr),
     Await(Box<Expr>),
+    TryBlock(Block),
+    Const(Box<Expr>),
+    Yield(Box<YieldExpr>),
 }
 
 pub type PathExpr = PathType;
@@ -986,6 +990,11 @@ pub struct ReturnExpr {
 pub struct AsyncExpr {
     pub is_move: bool,
     pub block: Block,
+}
+
+#[derive(Debug)]
+pub struct YieldExpr {
+    pub expr: Option<Expr>,
 }
 
 #[derive(Debug)]

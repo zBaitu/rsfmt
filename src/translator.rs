@@ -1552,6 +1552,7 @@ impl Translator {
         let loc = self.loc(&expr.span);
         let attrs = self.trans_thin_attrs(&expr.attrs);
         let expr = match expr.kind {
+            ast::ExprKind::Underscore => ExprKind::Symbol("_"),
             ast::ExprKind::Lit(ref lit) => ExprKind::Literal(self.trans_literal_expr(lit)),
             ast::ExprKind::Path(ref qself, ref path) => ExprKind::Path(self.trans_path_type(qself, path)),
             ast::ExprKind::Box(ref expr) => ExprKind::Box(Box::new(self.trans_expr(expr))),
@@ -1614,14 +1615,12 @@ impl Translator {
             ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
             ast::ExprKind::Async(capture, _, ref block) => ExprKind::Async(self.trans_async_expr(capture, block)),
             ast::ExprKind::Await(ref expr) => ExprKind::Await(Box::new(self.trans_expr(expr))),
+            ast::ExprKind::TryBlock(ref block) => ExprKind::TryBlock(self.trans_block(block)),
+            ast::ExprKind::ConstBlock(ref expr) => ExprKind::Const(Box::new(self.trans_expr(&expr.value))),
+            ast::ExprKind::Yield(ref expr) => ExprKind::Yield(Box::new(self.trans_yield_expr(expr))),
             ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
             ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
-            /*
-            ast::ExprKind::TryBlock(..) => unimplemented!("ast::ExprKind::TryBlock"),
-            ast::ExprKind::Yield(..) => unimplemented!("ast::ExprKind::Yield"),
-
-             */
-            _ => unimplemented!("{:#?}", expr.kind)
+            _ => unreachable!("{:#?}", expr.kind),
         };
         self.set_loc(&loc);
 
@@ -1894,6 +1893,12 @@ impl Translator {
         AsyncExpr {
             is_move: is_move(capture),
             block: self.trans_block(block),
+        }
+    }
+
+    fn trans_yield_expr(&mut self, expr: &Option<ast::P<ast::Expr>>) -> YieldExpr {
+        YieldExpr {
+            expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
         }
     }
 

@@ -835,6 +835,7 @@ impl Display for Let {
 impl Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.expr {
+            ExprKind::Symbol(ref sym) => Display::fmt(sym, f),
             ExprKind::Literal(ref expr) => Display::fmt(expr, f),
             ExprKind::Path(ref expr) => Display::fmt(expr, f),
             ExprKind::Box(ref expr) => write!(f, "box {}", expr),
@@ -867,6 +868,9 @@ impl Display for Expr {
             ExprKind::MacroCall(ref expr) => Display::fmt(expr, f),
             ExprKind::Async(ref expr) => Display::fmt(expr, f),
             ExprKind::Await(ref expr) => write!(f, "{}.await", expr),
+            ExprKind::TryBlock(ref block) => write!(f, "try{}", block),
+            ExprKind::Const(ref expr) => write!(f, "const{}", expr),
+            ExprKind::Yield(ref expr) => Display::fmt(expr, f),
         }
     }
 }
@@ -1111,6 +1115,16 @@ impl Display for AsyncExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", async_head(self.is_move))?;
         try_display_block_one_line(f, &self.block)
+    }
+}
+
+impl Display for YieldExpr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "yield")?;
+        if let Some(ref expr) = self.expr {
+            write!(f, " {}", expr)?;
+        }
+        OK
     }
 }
 
@@ -2899,6 +2913,7 @@ impl Formatter {
         self.block_locs.push(expr.loc);
         maybe_nl!(self, expr);
         match expr.expr {
+            ExprKind::Symbol(ref sym) => self.fmt_symbol_expr(sym),
             ExprKind::Literal(ref expr) => self.fmt_literal_expr(expr),
             ExprKind::Path(ref expr) => self.fmt_path_expr(expr),
             ExprKind::Box(ref expr) => self.fmt_box_expr(expr),
@@ -2931,10 +2946,17 @@ impl Formatter {
             ExprKind::MacroCall(ref expr) => self.fmt_macro(expr),
             ExprKind::Async(ref expr) => self.fmt_async_expr(expr),
             ExprKind::Await(ref expr) => self.fmt_await_expr(expr),
+            ExprKind::TryBlock(ref block) => self.fmt_try_block_expr(block),
+            ExprKind::Const(ref expr) => self.fmt_const_expr(expr),
+            ExprKind::Yield(ref expr) => self.fmt_yield_expr(expr),
         }
         self.block_locs.pop();
     }
 
+
+    fn fmt_symbol_expr(&mut self, sym: &str) {
+        self.raw_insert(sym)
+    }
 
     fn fmt_literal_expr(&mut self, expr: &Chunk) {
         self.fmt_chunk(expr);
@@ -3298,6 +3320,23 @@ impl Formatter {
     fn fmt_await_expr(&mut self, expr: &Expr) {
         self.fmt_expr(expr);
         self.insert(".await");
+    }
+
+    fn fmt_try_block_expr(&mut self, block: &Block) {
+        self.raw_insert("try");
+        self.fmt_block(block);
+    }
+
+    fn fmt_const_expr(&mut self, expr: &Expr) {
+        self.raw_insert("const ");
+        self.fmt_expr(expr);
+    }
+
+    fn fmt_yield_expr(&mut self, expr: &YieldExpr) {
+        self.raw_insert("yield");
+        if let Some(ref expr) = expr.expr {
+            maybe_wrap!(self, " ", "", expr, fmt_expr);
+        }
     }
 
     fn fmt_macro_def(&mut self, item: &MacroDef) {
