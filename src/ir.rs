@@ -293,7 +293,6 @@ impl PathSegment {
         }
     }
 
-
     pub fn is_empty(&self) -> bool {
         match self.param {
             PathParam::Angle(ref param) => param.is_empty(),
