@@ -3,15 +3,15 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
+use rustc_ap_rustc_ast::util::comments;
 use rustc_ap_rustc_parse::{self as parse};
 use rustc_ap_rustc_session::parse::ParseSess;
-use rustc_ap_rustc_span::{self as span, FileName, source_map::FilePathMapping, edition::Edition};
-use rustc_ap_rustc_ast::util::comments;
+use rustc_ap_rustc_span::{self as span, FileName, edition::Edition, source_map::FilePathMapping};
 use walkdir::WalkDir;
 
 use crate::Opt;
-use crate::translator::{self, TrResult};
 use crate::formatter;
+use crate::translator::{self, TrResult};
 
 macro_rules! p {
     () => ({println!()});
@@ -37,7 +37,7 @@ pub fn dump_ast(path: &PathBuf) {
             Err(mut e) => {
                 e.emit();
                 return;
-            }
+            },
         };
         d!(krate);
 
@@ -124,7 +124,7 @@ fn fmt_str(src: String, path: &PathBuf, opt: &Opt) {
 }
 
 fn trans(src: String, path: &PathBuf) -> TrResult {
-    span::with_session_globals(Edition::Edition2021,|| {
+    span::with_session_globals(Edition::Edition2021, || {
         let sess = ParseSess::new(FilePathMapping::empty());
         let krate = parse::parse_crate_from_source_str(FileName::from(path.to_path_buf()), src.clone(), &sess).unwrap();
         let cmnts = comments::gather_comments(&sess.source_map(), FileName::from(path.to_path_buf()), src.clone());
