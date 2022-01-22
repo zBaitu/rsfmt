@@ -2,6 +2,7 @@ use *;
 use ::*;
 use ::f;
 use a::b::*;
+use a::b::c;
 use a::b::c::d::e::f::g;
 use a::b::{c, d, e::f,
            g::h::i};

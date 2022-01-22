@@ -1191,7 +1191,7 @@ fn display_use_trees(f: &mut fmt::Formatter, trees: &Option<Vec<UseTree>>) -> fm
 
     let trees: &Vec<UseTree> = &trees.as_ref().unwrap();
     write!(f, "::")?;
-    if trees.len() == 1 {
+    if trees.len() == 1 && !trees[0].path.starts_with("self") {
         write!(f, "{}", trees[0])
     } else {
         display_lists!(f, "{{", ", ", "}}", trees)
@@ -1946,7 +1946,7 @@ impl Formatter {
 
         self.insert("::");
         let trees: &Vec<UseTree> = trees.as_ref().unwrap();
-        if trees.len() == 1 {
+        if trees.len() == 1 && !trees[0].path.starts_with("self") {
             self.fmt_use_one_tree(&trees[0]);
         } else {
             self.fmt_use_more_trees(trees, wrap);
