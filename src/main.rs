@@ -43,7 +43,7 @@ fn main() {
 
     let path = opt.input.as_ref().unwrap();
     if opt.ast {
-        rsfmt::dump_ast(path);
+        rsfmt::ast(path);
     } else if opt.debug {
         rsfmt::debug(path);
     } else if opt.print {

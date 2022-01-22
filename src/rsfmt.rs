@@ -27,7 +27,7 @@ const SEP: &str = r#"
 ------------------------------------------------------------------------------------------------------------------------
 "#;
 
-pub fn dump_ast(path: &PathBuf) {
+pub fn ast(path: &PathBuf) {
     let src = fs::read_to_string(path).unwrap();
     span::with_session_globals(Edition::Edition2021, || {
         let sess = ParseSess::new(FilePathMapping::empty());
