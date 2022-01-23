@@ -89,6 +89,12 @@ fn path_to_string(path: &ast::Path) -> String {
     })
 }
 
+fn is_default(defaultness: ast::Defaultness) -> bool {
+    match defaultness {
+        ast::Defaultness::Default(..) => true,
+        ast::Defaultness::Final   => false,
+    }
+}
 
 fn is_sized(modifier: ast::TraitBoundModifier) -> bool {
     modifier == ast::TraitBoundModifier::Maybe
@@ -172,13 +178,6 @@ fn is_neg(polarity: ast::ImplPolarity) -> bool {
     }
 }
 
-
-fn is_default(defaultness: ast::Defaultness) -> bool {
-    match defaultness {
-        ast::Defaultness::Default(..) => true,
-        ast::Defaultness::Final   => false,
-    }
-}
 
 
 fn is_block_unsafe(rules: ast::BlockCheckMode) -> bool {
@@ -481,7 +480,7 @@ impl Translator {
                     ast::ModKind::Loaded(ref items, ..) => ItemKind::Mod(self.trans_mod(is_unsafe, ident, items)),
                 }
             },
-            ast::ItemKind::TyAlias(ref type_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, type_alias)),
+            ast::ItemKind::TyAlias(ref ty_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_alias)),
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
@@ -719,8 +718,7 @@ impl Translator {
         }
     }
 
-    fn trans_poly_trait_ref(&mut self, poly_trait_ref: &ast::PolyTraitRef, modifier: ast::TraitBoundModifier)
-                            -> PolyTraitRef {
+    fn trans_poly_trait_ref(&mut self, poly_trait_ref: &ast::PolyTraitRef, modifier: ast::TraitBoundModifier) -> PolyTraitRef {
         if is_sized(modifier) {
             return PolyTraitRef::new_sized(self.leaf_loc(&poly_trait_ref.span));
         }

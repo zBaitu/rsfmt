@@ -172,7 +172,6 @@ pub struct Generics {
 }
 
 impl Generics {
-
     pub fn is_empty(&self) -> bool {
         self.lifetime_defs.is_empty() && self.type_params.is_empty()
     }
@@ -205,7 +204,6 @@ pub enum TypeParamBound {
 pub struct TypeParamBounds(pub Vec<TypeParamBound>);
 
 impl TypeParamBounds {
-
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -236,7 +234,6 @@ pub struct Where {
 }
 
 impl Where {
-
     pub fn is_empty(&self) -> bool {
         self.clauses.is_empty()
     }
@@ -314,7 +311,6 @@ pub struct AngleParam {
 }
 
 impl AngleParam {
-
     pub fn is_empty(&self) -> bool {
         self.lifetimes.is_empty() && self.types.is_empty() && self.bindings.is_empty()
     }
@@ -341,7 +337,6 @@ pub struct ParenParam {
 }
 
 impl ParenParam {
-
     pub fn is_empty(&self) -> bool {
         self.inputs.is_empty()
     }

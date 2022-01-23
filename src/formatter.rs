@@ -228,6 +228,23 @@ impl Display for Mod {
     }
 }
 
+impl Display for TypeAlias {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "type {}{}", self.name, self.generics)?;
+        try_display_type_param_bounds(f, &self.bounds)?;
+        if let Some(ref ty) = self.ty {
+            write!(f, " = {}", ty)?;
+        }
+        OK
+    }
+}
+
+impl Display for TraitAlias {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "trait {}{} = {}", self.name, self.generics, self.bounds)
+    }
+}
+
 impl Display for Generics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if !self.is_empty() {
@@ -359,17 +376,6 @@ impl Display for ParenParam {
     }
 }
 
-impl Display for TypeAlias {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "type {}{}", self.name, self.generics)?;
-        try_display_type_param_bounds(f, &self.bounds)?;
-        if let Some(ref ty) = self.ty {
-            write!(f, " = {}", ty)?;
-        }
-        OK
-    }
-}
-
 impl Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.ty {
@@ -488,12 +494,6 @@ impl Display for Return {
             Some(ref ty) => write!(f, " -> {}", ty),
             None => OK,
         }
-    }
-}
-
-impl Display for TraitAlias {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "trait {}{} = {}", self.name, self.generics, self.bounds)
     }
 }
 
@@ -2048,10 +2048,7 @@ impl Formatter {
         let nl = match item.item {
             ItemKind::ExternCrate(..) | ItemKind::Use(..) | ItemKind::ModDecl(..) => unreachable!("{:?}", item.item),
             ItemKind::Mod(ref item) => { self.fmt_mod(item); true },
-            ItemKind::TypeAlias(ref item) => {
-                self.fmt_type_alias(item);
-                false
-            },
+            ItemKind::TypeAlias(ref item) => { self.fmt_type_alias(item); false },
             ItemKind::TraitAlias(ref item) => {
                 self.fmt_trait_alias(item);
                 false
@@ -2276,13 +2273,15 @@ impl Formatter {
     }
 
     fn fmt_angle_param(&mut self, param: &AngleParam, from_expr: bool) {
-        if !param.is_empty() {
-            if from_expr {
-                self.insert("::");
-            }
-            fmt_comma_lists!(self, "<", ">", &param.lifetimes, fmt_lifetime, &param.types,
-                             fmt_type, &param.bindings, fmt_type_binding);
+        if param.is_empty() {
+            return;
         }
+
+        if from_expr {
+            self.insert("::");
+        }
+        fmt_comma_lists!(self, "<", ">", &param.lifetimes, fmt_lifetime, &param.types,
+                         fmt_type, &param.bindings, fmt_type_binding);
     }
 
     fn fmt_type_binding(&mut self, binding: &TypeBinding) {
