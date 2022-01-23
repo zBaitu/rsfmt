@@ -143,7 +143,6 @@ pub struct ModDecl {
 
 #[derive(Debug)]
 pub struct Mod {
-    pub loc: Loc,
     pub is_unsafe: bool,
     pub name: String,
     pub items: Vec<Item>,

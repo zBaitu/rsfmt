@@ -478,7 +478,7 @@ impl Translator {
                 let is_unsafe = is_unsafe(unsafety);
                 match module {
                     ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(is_unsafe, ident)),
-                    ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(is_unsafe, ident, items, span)),
+                    ast::ModKind::Loaded(ref items, ..) => ItemKind::Mod(self.trans_mod(is_unsafe, ident, items)),
                 }
             },
             ast::ItemKind::TyAlias(ref type_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, type_alias)),
@@ -608,16 +608,11 @@ impl Translator {
         }
     }
 
-    fn trans_mod(&mut self, is_unsafe: bool, ident: String, items: &[ast::P<ast::Item>], span: &ast::Span) -> Mod {
-        let loc = self.loc(span);
-        let items = self.trans_items(items);
-        self.set_loc(&loc);
-
+    fn trans_mod(&mut self, is_unsafe: bool, ident: String, items: &[ast::P<ast::Item>]) -> Mod {
         Mod {
-            loc,
             is_unsafe,
             name: ident,
-            items,
+            items: self.trans_items(items),
         }
     }
 

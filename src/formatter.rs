@@ -2047,10 +2047,7 @@ impl Formatter {
         self.block_locs.push(item.loc);
         let nl = match item.item {
             ItemKind::ExternCrate(..) | ItemKind::Use(..) | ItemKind::ModDecl(..) => unreachable!("{:?}", item.item),
-            ItemKind::Mod(ref item) => {
-                self.fmt_mod(item);
-                true
-            },
+            ItemKind::Mod(ref item) => { self.fmt_mod(item); true },
             ItemKind::TypeAlias(ref item) => {
                 self.fmt_type_alias(item);
                 false
