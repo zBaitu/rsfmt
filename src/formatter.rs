@@ -2528,7 +2528,7 @@ impl Formatter {
 
     fn fmt_foreign_item(&mut self, item: &ForeignItem) -> bool {
         self.fmt_vis(&item.vis);
-        let nl = match item.item {
+        match item.item {
             ForeignKind::TypeAlias(ref item) => {
                 self.fmt_type_alias(item);
                 false
@@ -2542,8 +2542,7 @@ impl Formatter {
                 self.fmt_macro(item);
                 false
             }
-        };
-        nl
+        }
     }
 
     fn fmt_fn(&mut self, item: &Fn) -> bool {
@@ -2553,10 +2552,10 @@ impl Formatter {
         self.fmt_where(&item.generics);
         if let Some(ref block) = item.block {
             self.try_fmt_block_one_line(block);
-            return true
+            true
         } else {
             self.raw_insert(";");
-            return false
+            false
         }
     }
 
@@ -2659,10 +2658,8 @@ impl Formatter {
         if param.has_patten {
             self.fmt_patten(&param.pattern);
             self.raw_insert(": ");
-        } else {
-            if let PattenKind::Ident(ref pattern) = param.pattern.pattern {
-                self.insert(&ident_patten_head(pattern.is_ref, pattern.is_mut));
-            }
+        } else if let PattenKind::Ident(ref pattern) = param.pattern.pattern {
+            self.insert(&ident_patten_head(pattern.is_ref, pattern.is_mut));
         }
         self.fmt_type(&param.ty);
     }

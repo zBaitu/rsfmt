@@ -927,7 +927,7 @@ impl Translator {
             ast::TyKind::Ptr(ref mut_type) => TypeKind::Ptr(Box::new(self.trans_ptr_type(mut_type))),
             ast::TyKind::Rptr(ref lifetime, ref mut_type) => TypeKind::Ref(Box::new(self.trans_ref_type(lifetime, mut_type))),
             ast::TyKind::Tup(ref types) => TypeKind::Tuple(Box::new(self.trans_tuple_type(types))),
-            ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&vec![ty.clone()]))),
+            ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&[ty.clone()]))),
             ast::TyKind::Slice(ref ty) => TypeKind::Slice(Box::new(self.trans_slice_type(ty))),
             ast::TyKind::Array(ref ty, ref ac) => TypeKind::Array(Box::new(self.trans_array_type(ty, &ac.value))),
             ast::TyKind::AnonymousStruct(ref fields, _) => TypeKind::Struct(self.trans_struct_type(fields)),
@@ -1426,7 +1426,7 @@ impl Translator {
             },
             ast::PatKind::Or(ref patterns) => PattenKind::Or(self.trans_or_patten(patterns)),
             ast::PatKind::Paren(ref pattern) => {
-                PattenKind::Tuple(self.trans_tuple_patten(&vec![pattern.clone()]))
+                PattenKind::Tuple(self.trans_tuple_patten(&[pattern.clone()]))
             },
             ast::PatKind::Tuple(ref patterns) => {
                 PattenKind::Tuple(self.trans_tuple_patten(patterns))
