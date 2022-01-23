@@ -137,6 +137,7 @@ pub struct UseTree {
 
 #[derive(Debug)]
 pub struct ModDecl {
+    pub is_unsafe: bool,
     pub name: String,
 }
 

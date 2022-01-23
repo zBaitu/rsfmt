@@ -475,9 +475,10 @@ impl Translator {
             ast::ItemKind::ExternCrate(ref rename) => ItemKind::ExternCrate(self.trans_extren_crate(ident, rename)),
             ast::ItemKind::Use(ref tree) => ItemKind::Use(self.trans_use(tree)),
             ast::ItemKind::Mod(unsafety, ref module) => {
+                let is_unsafe = is_unsafe(unsafety);
                 match module {
-                    ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(ident)),
-                    ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(ident, unsafety, items, span)),
+                    ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(is_unsafe, ident)),
+                    ast::ModKind::Loaded(ref items, _, ref span) => ItemKind::Mod(self.trans_mod(is_unsafe, ident, items, span)),
                 }
             },
             ast::ItemKind::TyAlias(ref type_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, type_alias)),
@@ -600,21 +601,22 @@ impl Translator {
         trees
     }
 
-    fn trans_mod_decl(&mut self, ident: String) -> ModDecl {
+    fn trans_mod_decl(&mut self, is_unsafe: bool, ident: String) -> ModDecl {
         ModDecl {
+            is_unsafe,
             name: ident,
         }
     }
 
-    fn trans_mod(&mut self, name: String, unsafety: ast::Unsafe, items: &[ast::P<ast::Item>], span: &ast::Span) -> Mod {
+    fn trans_mod(&mut self, is_unsafe: bool, ident: String, items: &[ast::P<ast::Item>], span: &ast::Span) -> Mod {
         let loc = self.loc(span);
         let items = self.trans_items(items);
         self.set_loc(&loc);
 
         Mod {
             loc,
-            is_unsafe: is_unsafe(unsafety),
-            name,
+            is_unsafe,
+            name: ident,
             items,
         }
     }

@@ -1,4 +1,4 @@
-mod a;
+unsafe mod a;
 
 pub mod b;
 

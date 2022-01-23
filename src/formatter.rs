@@ -220,7 +220,7 @@ impl Display for UseTree {
 
 impl Display for ModDecl {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "mod {}", self.name)
+        write!(f, "{}mod {}", unsafe_head(self.is_unsafe), self.name)
     }
 }
 
@@ -801,7 +801,7 @@ impl Display for SlicePatten {
 
 impl Display for Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", block_head(self.is_unsafe))?;
+        write!(f, "{}", unsafe_head(self.is_unsafe))?;
         display_block!(f, &self.stmts)
     }
 }
@@ -1309,6 +1309,14 @@ fn vis_head(vis: &Vis) -> String {
 }
 
 
+fn unsafe_head(is_unsafe: bool) -> String {
+    let mut head = String::new();
+    if is_unsafe {
+        head.push_str("unsafe ");
+    }
+    head
+}
+
 fn ref_head(lifetime: &Option<Lifetime>, is_raw: bool, is_mut: bool) -> String {
     let mut head = String::new();
     head.push('&');
@@ -1400,14 +1408,6 @@ fn foreign_head(abi: &Option<String>) -> String {
     head
 }
 
-
-fn block_head(is_unsafe: bool) -> String {
-    let mut head = String::new();
-    if is_unsafe {
-        head.push_str("unsafe ");
-    }
-    head
-}
 
 
 fn ident_patten_head(is_ref: bool, is_mut: bool) -> String {
@@ -1936,6 +1936,12 @@ impl Formatter {
         }
     }
 
+    fn fmt_vis(&mut self, vis: &Vis) {
+        if !vis.is_empty() {
+            self.raw_insert(vis);
+            self.raw_insert(" ");
+        }
+    }
 
     fn fmt_group_items(&mut self, items: &[Item]) {
         self.fmt_extern_crate_items(items);
@@ -2022,7 +2028,7 @@ impl Formatter {
     }
 
     fn fmt_mod_decl(&mut self, item: &ModDecl) {
-        self.insert(&format!("mod {};", &item.name));
+        self.insert(&format!("{}mod {};", unsafe_head(item.is_unsafe), &item.name));
     }
 
     fn fmt_items(&mut self, items: &[Item]) {
@@ -2697,7 +2703,7 @@ impl Formatter {
 
     fn fmt_block(&mut self, block: &Block) {
         self.block_locs.push(block.loc);
-        self.insert(&block_head(block.is_unsafe));
+        self.insert(&unsafe_head(block.is_unsafe));
         fmt_block!(self, &block.stmts, fmt_stmts);
         self.block_locs.pop();
     }
@@ -3478,13 +3484,6 @@ impl Formatter {
         self.ts.outdent();
     }
 
-
-    fn fmt_vis(&mut self, vis: &Vis) {
-        if !vis.is_empty() {
-            self.raw_insert(vis);
-            self.raw_insert(" ");
-        }
-    }
 
 
     fn open_brace(&mut self) {

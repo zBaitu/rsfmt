@@ -5,4 +5,4 @@ mod aa {
     type a = bool;
 }
 
-mod bb {}
+pub unsafe mod bb {}
