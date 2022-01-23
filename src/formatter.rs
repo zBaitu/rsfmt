@@ -4,11 +4,26 @@ use std::fmt::{self, Display};
 use ir::*;
 use typesetter::*;
 
-use crate::{ir};
+use crate::ir;
 use crate::typesetter;
 use crate::{need_nl_indent, need_wrap};
 
 const OK: fmt::Result = Ok(());
+
+macro_rules! display_lines {
+    ($f:expr, $lines:expr, $sep:expr) => ({
+        for line in $lines {
+            writeln!($f, "{}{}", line, $sep)?;
+        }
+        OK
+    });
+}
+
+macro_rules! display_items {
+    ($f:expr, $items: expr) => ({
+        display_lines!($f, $items, "")
+    })
+}
 
 macro_rules! display_lists {
     ($f:expr, $open:expr, $sep:expr, $close:expr, $($lists:expr),+) => ({
@@ -67,21 +82,6 @@ macro_rules! display_decls {
     });
 }
 
-macro_rules! display_items {
-    ($f:expr, $items: expr) => ({
-        display_lines!($f, $items, "")
-    })
-}
-
-macro_rules! display_lines {
-    ($f:expr, $lines:expr, $sep:expr) => ({
-        for line in $lines {
-            writeln!($f, "{}{}", line, $sep)?;
-        }
-        OK
-    });
-}
-
 macro_rules! select_str {
     ($fn_name:ident, $flag:ident, $true_value:expr, $false_value:expr) => (
         fn $fn_name($flag: bool) -> &'static str {
@@ -101,13 +101,6 @@ select_str!(ptr_head, is_mut, "*mut ", "*const ");
 select_str!(static_head, is_mut, "static mut ", "static ");
 select_str!(range, is_inclusive, "..=", "..");
 
-impl Display for Crate {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_attrs(f, &self.attrs)?;
-        display_items!(f, &self.items)
-    }
-}
-
 impl Display for Chunk {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut first = true;
@@ -120,6 +113,13 @@ impl Display for Chunk {
             first = false;
         }
         OK
+    }
+}
+
+impl Display for Crate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        display_attrs(f, &self.attrs)?;
+        display_items!(f, &self.items)
     }
 }
 
@@ -1299,6 +1299,15 @@ fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Resu
     OK
 }
 
+fn vis_head(vis: &Vis) -> String {
+    let mut head = String::new();
+    if !vis.is_empty() {
+        head.push_str(vis);
+        head.push(' ');
+    }
+    head
+}
+
 
 fn ref_head(lifetime: &Option<Lifetime>, is_raw: bool, is_mut: bool) -> String {
     let mut head = String::new();
@@ -1379,15 +1388,6 @@ fn impl_head(is_unsafe: bool, is_default: bool) -> String {
 }
 
 
-
-fn vis_head(vis: &Vis) -> String {
-    let mut head = String::new();
-    if !vis.is_empty() {
-        head.push_str(vis);
-        head.push(' ');
-    }
-    head
-}
 
 
 fn foreign_head(abi: &Option<String>) -> String {
@@ -1899,11 +1899,11 @@ impl Formatter {
     }
 
     fn fmt_meta_attr_group(&mut self, group: &[(bool, &MetaAttr)]) {
-        let sorted_attrs: BTreeMap<_, _> = group.iter().map(|e| (e.1.to_string(), *e)).collect();
-        for attr in sorted_attrs.values() {
+        let sorted_metas: BTreeMap<_, _> = group.iter().map(|e| (e.1.to_string(), *e)).collect();
+        for meta in sorted_metas.values() {
             self.insert_indent();
-            self.fmt_meta_attr(attr.0, attr.1);
-            self.try_fmt_trailing_comment(&attr.1.loc);
+            self.fmt_meta_attr(meta.0, meta.1);
+            self.try_fmt_trailing_comment(&meta.1.loc);
             self.nl();
         }
     }
