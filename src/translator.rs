@@ -147,7 +147,7 @@ fn ext_to_string(ext: ast::Extern) -> Option<String> {
     match ext {
         ast::Extern::None => None,
         ast::Extern::Implicit => Some("extern".to_string()),
-        ast::Extern::Explicit(ref str_lit) => Some(format!("extern {}", str_lit.symbol_unescaped)),
+        ast::Extern::Explicit(ref str_lit) => Some(format!("extern \"{}\"", str_lit.symbol_unescaped)),
     }
 }
 
