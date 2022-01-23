@@ -370,7 +370,7 @@ impl Translator {
         }
     }
 
-    fn trans_attrs(&mut self, attrs: &Vec<ast::Attribute>) -> Vec<Attr> {
+    fn trans_attrs(&mut self, attrs: &[ast::Attribute]) -> Vec<Attr> {
         trans_list!(self, attrs, trans_attr)
     }
 
@@ -438,7 +438,7 @@ impl Translator {
         }
     }
 
-    fn trans_nested_metas(&mut self, nested_meta_items: &Vec<ast::NestedMetaItem>) -> Vec<MetaAttr> {
+    fn trans_nested_metas(&mut self, nested_meta_items: &[ast::NestedMetaItem]) -> Vec<MetaAttr> {
         let mut metas: Vec<MetaAttr> = trans_list!(self, nested_meta_items, trans_nested_meta);
         metas.sort_by(|a, b| a.name.cmp(&b.name));
         metas
@@ -460,7 +460,7 @@ impl Translator {
         }
     }
 
-    fn trans_items(&mut self, items: &Vec<ast::P<ast::Item>>) -> Vec<Item> {
+    fn trans_items(&mut self, items: &[ast::P<ast::Item>]) -> Vec<Item> {
         trans_list!(self, items, trans_item)
     }
 
@@ -585,7 +585,7 @@ impl Translator {
         }
     }
 
-    fn trans_use_trees(&mut self, trees: &Vec<(ast::UseTree, ast::NodeId)>) -> Vec<UseTree> {
+    fn trans_use_trees(&mut self, trees: &[(ast::UseTree, ast::NodeId)]) -> Vec<UseTree> {
         let mut trees: Vec<UseTree> = trees.iter().map(|e| self.trans_use_tree(&e.0)).collect();
         trees.sort_by(|a, b| {
             if a.path.starts_with("self") {
@@ -605,7 +605,7 @@ impl Translator {
         }
     }
 
-    fn trans_mod(&mut self, name: String, unsafety: ast::Unsafe, items: &Vec<ast::P<ast::Item>>, span: &ast::Span) -> Mod {
+    fn trans_mod(&mut self, name: String, unsafety: ast::Unsafe, items: &[ast::P<ast::Item>], span: &ast::Span) -> Mod {
         let loc = self.loc(span);
         let items = self.trans_items(items);
         self.set_loc(&loc);
@@ -644,7 +644,7 @@ impl Translator {
         }
     }
 
-    fn trans_lifetime_defs(&mut self, params: &Vec<ast::GenericParam>) -> Vec<LifetimeDef> {
+    fn trans_lifetime_defs(&mut self, params: &[ast::GenericParam]) -> Vec<LifetimeDef> {
         params.iter().fold(Vec::new(), |mut lifetime_defs, param| {
             if let ast::GenericParamKind::Lifetime = param.kind {
                 lifetime_defs.push(self.trans_lifetime_def(param));
@@ -678,7 +678,7 @@ impl Translator {
         })
     }
 
-    fn trans_type_params(&mut self, params: &Vec<ast::GenericParam>) -> Vec<TypeParam> {
+    fn trans_type_params(&mut self, params: &[ast::GenericParam]) -> Vec<TypeParam> {
         params.iter().fold(Vec::new(), |mut type_params, param| {
             if let ast::GenericParamKind::Type {..} = param.kind {
                 type_params.push(self.trans_type_param(param));
@@ -754,7 +754,7 @@ impl Translator {
         }
     }
 
-    fn trans_path_segments(&mut self, segments: &Vec<ast::PathSegment>) -> Vec<PathSegment> {
+    fn trans_path_segments(&mut self, segments: &[ast::PathSegment]) -> Vec<PathSegment> {
         trans_list!(self, segments, trans_path_segment)
     }
 
@@ -789,7 +789,7 @@ impl Translator {
         }
     }
 
-    fn trans_generic_args_to_lifetime(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Lifetime> {
+    fn trans_generic_args_to_lifetime(&mut self, args: &[ast::AngleBracketedArg]) -> Vec<Lifetime> {
         args.iter().fold(Vec::new(), |mut lifetimes, arg| {
             if let ast::AngleBracketedArg::Arg(ast::GenericArg::Lifetime(ref lifetime)) = arg {
                 lifetimes.push(self.trans_lifetime(&lifetime.ident));
@@ -798,8 +798,8 @@ impl Translator {
         })
     }
 
-    fn trans_generic_args_to_types(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Type> {
-        args.into_iter().fold(Vec::new(), |mut types, arg| {
+    fn trans_generic_args_to_types(&mut self, args: &[ast::AngleBracketedArg]) -> Vec<Type> {
+        args.iter().fold(Vec::new(), |mut types, arg| {
             if let ast::AngleBracketedArg::Arg(ast::GenericArg::Type(ref ty)) = arg {
                 types.push(self.trans_type(ty));
             }
@@ -807,8 +807,8 @@ impl Translator {
         })
     }
 
-    fn trans_type_constraints(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<TypeBinding> {
-        args.into_iter().fold(Vec::new(), |mut constraints, arg| {
+    fn trans_type_constraints(&mut self, args: &[ast::AngleBracketedArg]) -> Vec<TypeBinding> {
+        args.iter().fold(Vec::new(), |mut constraints, arg| {
             if let ast::AngleBracketedArg::Constraint(ref constraint) = arg {
                 constraints.push(self.trans_type_constraint(constraint));
             }
@@ -858,13 +858,13 @@ impl Translator {
     }
 
 
-    fn trans_where(&mut self, predicates: &Vec<ast::WherePredicate>) -> Where {
+    fn trans_where(&mut self, predicates: &[ast::WherePredicate]) -> Where {
         Where {
             clauses: self.trans_where_clauses(predicates),
         }
     }
 
-    fn trans_where_clauses(&mut self, predicates: &Vec<ast::WherePredicate>) -> Vec<WhereClause> {
+    fn trans_where_clauses(&mut self, predicates: &[ast::WherePredicate]) -> Vec<WhereClause> {
         trans_list!(self, predicates, trans_where_clause)
     }
 
@@ -910,7 +910,7 @@ impl Translator {
         }
     }
 
-    fn trans_types(&mut self, types: &Vec<ast::P<ast::Ty>>) -> Vec<Type> {
+    fn trans_types(&mut self, types: &[ast::P<ast::Ty>]) -> Vec<Type> {
         trans_list!(self, types, trans_type)
     }
 
@@ -975,7 +975,7 @@ impl Translator {
         }
     }
 
-    fn trans_tuple_type(&mut self, types: &Vec<ast::P<ast::Ty>>) -> TupleType {
+    fn trans_tuple_type(&mut self, types: &[ast::P<ast::Ty>]) -> TupleType {
         TupleType {
             types: self.trans_types(types),
         }
@@ -994,13 +994,13 @@ impl Translator {
         }
     }
 
-    fn trans_struct_type(&mut self, fields: &Vec<ast::FieldDef>) -> StructType {
+    fn trans_struct_type(&mut self, fields: &[ast::FieldDef]) -> StructType {
         StructType {
             fields: self.trans_struct_fields(fields),
         }
     }
 
-    fn trans_union_type(&mut self, fields: &Vec<ast::FieldDef>) -> UnionType {
+    fn trans_union_type(&mut self, fields: &[ast::FieldDef]) -> UnionType {
         UnionType {
             fields: self.trans_struct_fields(fields),
         }
@@ -1065,7 +1065,7 @@ impl Translator {
         }
     }
 
-    fn trans_struct_fields(&mut self, fields: &Vec<ast::FieldDef>) -> Vec<StructField> {
+    fn trans_struct_fields(&mut self, fields: &[ast::FieldDef]) -> Vec<StructField> {
         trans_list!(self, fields, trans_struct_field)
     }
 
@@ -1087,7 +1087,7 @@ impl Translator {
         }
     }
 
-    fn trans_tuple_fields(&mut self, fields: &Vec<ast::FieldDef>) -> Vec<TupleField> {
+    fn trans_tuple_fields(&mut self, fields: &[ast::FieldDef]) -> Vec<TupleField> {
         trans_list!(self, fields, trans_tuple_field)
     }
 
@@ -1136,7 +1136,7 @@ impl Translator {
         }
     }
 
-    fn trans_enum_fields(&mut self, vars: &Vec<ast::Variant>) -> Vec<EnumField> {
+    fn trans_enum_fields(&mut self, vars: &[ast::Variant]) -> Vec<EnumField> {
         trans_list!(self, vars, trans_enum_field)
     }
 
@@ -1165,7 +1165,7 @@ impl Translator {
         }
     }
 
-    fn trans_params(&mut self, params: &Vec<ast::Param>) -> Vec<Param> {
+    fn trans_params(&mut self, params: &[ast::Param]) -> Vec<Param> {
         trans_list!(self, params, trans_param)
     }
 
@@ -1226,7 +1226,7 @@ impl Translator {
         }
     }
 
-    fn trans_foreign_items(&mut self, items: &Vec<ast::P<ast::ForeignItem>>) -> Vec<ForeignItem> {
+    fn trans_foreign_items(&mut self, items: &[ast::P<ast::ForeignItem>]) -> Vec<ForeignItem> {
         trans_list!(self, items, trans_foreign_item)
     }
 
@@ -1267,7 +1267,7 @@ impl Translator {
         }
     }
 
-    fn trans_trait_items(&mut self, items: &Vec<ast::P<ast::AssocItem>>) -> Vec<TraitItem> {
+    fn trans_trait_items(&mut self, items: &[ast::P<ast::AssocItem>]) -> Vec<TraitItem> {
         trans_list!(self, items, trans_trait_item)
     }
 
@@ -1310,7 +1310,7 @@ impl Translator {
         }
     }
 
-    fn trans_impl_items(&mut self, items: &Vec<ast::P<ast::AssocItem>>) -> Vec<ImplItem> {
+    fn trans_impl_items(&mut self, items: &[ast::P<ast::AssocItem>]) -> Vec<ImplItem> {
         trans_list!(self, items, trans_impl_item)
     }
 
@@ -1354,7 +1354,7 @@ impl Translator {
         }
     }
 
-    fn trans_stmts(&mut self, stmts: &Vec<ast::Stmt>) -> Vec<Stmt> {
+    fn trans_stmts(&mut self, stmts: &[ast::Stmt]) -> Vec<Stmt> {
         trans_list!(self, stmts, trans_stmt)
     }
 
@@ -1394,7 +1394,7 @@ impl Translator {
         }
     }
 
-    fn trans_patterns(&mut self, patterns: &Vec<ast::P<ast::Pat>>) -> Vec<Pattern> {
+    fn trans_patterns(&mut self, patterns: &[ast::P<ast::Pat>]) -> Vec<Pattern> {
         trans_list!(self, patterns, trans_patten)
     }
 
@@ -1470,7 +1470,7 @@ impl Translator {
         }
     }
 
-    fn trans_struct_patten(&mut self, qself: &Option<ast::QSelf>,  path: &ast::Path, fields: &Vec<ast::PatField>, omit: bool)
+    fn trans_struct_patten(&mut self, qself: &Option<ast::QSelf>,  path: &ast::Path, fields: &[ast::PatField], omit: bool)
     -> StructPatten {
         StructPatten {
             qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
@@ -1480,7 +1480,7 @@ impl Translator {
         }
     }
 
-    fn trans_struct_field_patterns(&mut self, fields: &Vec<ast::PatField>) -> Vec<StructFieldPatten> {
+    fn trans_struct_field_patterns(&mut self, fields: &[ast::PatField]) -> Vec<StructFieldPatten> {
         trans_list!(self, fields, trans_struct_field_patten)
     }
 
@@ -1500,7 +1500,7 @@ impl Translator {
         }
     }
 
-    fn trans_enum_patten(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path, patterns: &Vec<ast::P<ast::Pat>>) -> EnumPatten {
+    fn trans_enum_patten(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path, patterns: &[ast::P<ast::Pat>]) -> EnumPatten {
         EnumPatten {
             qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
             path: self.trans_path(path),
@@ -1508,19 +1508,19 @@ impl Translator {
         }
     }
 
-    fn trans_or_patten(&mut self, patterns: &Vec<ast::P<ast::Pat>>) -> OrPatten {
+    fn trans_or_patten(&mut self, patterns: &[ast::P<ast::Pat>]) -> OrPatten {
         OrPatten {
             patterns: self.trans_patterns(patterns),
         }
     }
 
-    fn trans_tuple_patten(&mut self, patterns: &Vec<ast::P<ast::Pat>>) -> TuplePatten {
+    fn trans_tuple_patten(&mut self, patterns: &[ast::P<ast::Pat>]) -> TuplePatten {
         TuplePatten {
             patterns: self.trans_patterns(patterns),
         }
     }
 
-    fn trans_slice_patten(&mut self, patterns: &Vec<ast::P<ast::Pat>>) -> SlicePatten {
+    fn trans_slice_patten(&mut self, patterns: &[ast::P<ast::Pat>]) -> SlicePatten {
         SlicePatten {
             patterns: self.trans_patterns(patterns),
         }
@@ -1701,7 +1701,7 @@ impl Translator {
         }
     }
 
-    fn trans_struct_field_exprs(&mut self, fields: &Vec<ast::ExprField>) -> Vec<StructFieldExpr> {
+    fn trans_struct_field_exprs(&mut self, fields: &[ast::ExprField]) -> Vec<StructFieldExpr> {
         trans_list!(self, fields, trans_struct_field_expr)
     }
 
@@ -1809,14 +1809,14 @@ impl Translator {
         }
     }
 
-    fn trans_match_expr(&mut self, expr: &ast::Expr, arms: &Vec<ast::Arm>) -> MatchExpr {
+    fn trans_match_expr(&mut self, expr: &ast::Expr, arms: &[ast::Arm]) -> MatchExpr {
         MatchExpr {
             expr: self.trans_expr(expr),
             arms: self.trans_arms(arms),
         }
     }
 
-    fn trans_arms(&mut self, arms: &Vec<ast::Arm>) -> Vec<Arm> {
+    fn trans_arms(&mut self, arms: &[ast::Arm]) -> Vec<Arm> {
         trans_list!(self, arms, trans_arm)
     }
 
@@ -1840,14 +1840,14 @@ impl Translator {
         }
     }
 
-    fn trans_fn_call_expr(&mut self, fn_name: &ast::Expr, params: &Vec<ast::P<ast::Expr>>) -> FnCallExpr {
+    fn trans_fn_call_expr(&mut self, fn_name: &ast::Expr, params: &[ast::P<ast::Expr>]) -> FnCallExpr {
         FnCallExpr {
             name: self.trans_expr(fn_name),
             params: self.trans_exprs(params),
         }
     }
 
-    fn trans_method_call_expr(&mut self, path: &ast::PathSegment, args: &Vec<ast::P<ast::Expr>>) -> MethodCallExpr {
+    fn trans_method_call_expr(&mut self, path: &ast::PathSegment, args: &[ast::P<ast::Expr>]) -> MethodCallExpr {
         MethodCallExpr {
             path: self.trans_path_segment(path),
             args: self.trans_exprs(args),
