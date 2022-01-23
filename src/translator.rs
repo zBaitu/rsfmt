@@ -58,16 +58,6 @@ fn span(s: u32, e: u32) -> ast::Span {
 }
 
 
-fn is_inner(style: &ast::AttrStyle) -> bool {
-    *style == ast::AttrStyle::Inner
-}
-
-fn is_block(kind: &ast::CommentKind) -> bool {
-     *kind == ast::CommentKind::Block
-}
-
-
-
 fn ident_to_string(ident: &ast::Ident) -> String {
     if (*ident).name != ast::kw::PathRoot {
         ident.name.to_string()
@@ -87,6 +77,66 @@ fn path_to_string(path: &ast::Path) -> String {
         s.push_str(&ident_to_string(&e.ident));
         s
     })
+}
+
+
+fn ext_to_string(ext: ast::Extern) -> Option<String> {
+    match ext {
+        ast::Extern::None => None,
+        ast::Extern::Implicit => Some("extern".to_string()),
+        ast::Extern::Explicit(ref str_lit) => Some(format!("extern \"{}\"", str_lit.symbol_unescaped)),
+    }
+}
+
+fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
+    abi.as_ref().map(|abi| abi.symbol_unescaped.to_string())
+}
+
+
+fn uop_to_string(op: ast::UnOp) -> &'static str {
+    ast::UnOp::to_string(op)
+}
+fn macro_style(style: ast::DelimToken) -> MacroStyle {
+    match style {
+        ast::DelimToken::Paren => MacroStyle::Paren,
+        ast::DelimToken::Bracket => MacroStyle::Bracket,
+        ast::DelimToken::Brace => MacroStyle::Brace,
+        _ => unreachable!("{:#?}", style),
+    }
+}
+
+fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
+    let (is_sep, s) = match token {
+        ast::TokenKind::Comma => (true, ",".to_string()),
+        ast::TokenKind::Semi => (true, ";".to_string()),
+        ast::TokenKind::FatArrow => (true, " =>".to_string()),
+        ast::TokenKind::DotDotDot => (false, "...".to_string()),
+        ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
+        _ => unreachable!("{:?}", token),
+    };
+
+    MacroSep {
+        is_sep,
+        s,
+    }
+}
+
+
+fn is_inner(style: &ast::AttrStyle) -> bool {
+    *style == ast::AttrStyle::Inner
+}
+
+fn is_block(kind: &ast::CommentKind) -> bool {
+     *kind == ast::CommentKind::Block
+}
+
+
+
+fn is_unsafe(unsafety: ast::Unsafe) -> bool {
+    match unsafety {
+        ast::Unsafe::Yes(..) => true,
+        ast::Unsafe::No => false,
+    }
 }
 
 fn is_default(defaultness: ast::Defaultness) -> bool {
@@ -115,13 +165,6 @@ fn is_dyn(syntax: ast::TraitObjectSyntax) -> bool {
 }
 
 
-fn is_unsafe(unsafety: ast::Unsafe) -> bool {
-    match unsafety {
-        ast::Unsafe::Yes(..) => true,
-        ast::Unsafe::No => false,
-    }
-}
-
 
 fn is_async(asyncness: ast::Async) -> bool {
     match asyncness {
@@ -142,18 +185,6 @@ fn is_auto(autoness: ast::IsAuto) -> bool {
     autoness == ast::IsAuto::Yes
 }
 
-
-fn ext_to_string(ext: ast::Extern) -> Option<String> {
-    match ext {
-        ast::Extern::None => None,
-        ast::Extern::Implicit => Some("extern".to_string()),
-        ast::Extern::Explicit(ref str_lit) => Some(format!("extern \"{}\"", str_lit.symbol_unescaped)),
-    }
-}
-
-fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
-    abi.as_ref().map(|abi| abi.symbol_unescaped.to_string())
-}
 
 
 fn has_patten(param: &ast::Param, pattern: &Pattern) -> bool {
@@ -188,10 +219,6 @@ fn is_block_unsafe(rules: ast::BlockCheckMode) -> bool {
 }
 
 
-fn uop_to_string(op: ast::UnOp) -> &'static str {
-    ast::UnOp::to_string(op)
-}
-
 
 fn is_inclusive(limit: ast::RangeLimits) -> bool {
     limit == ast::RangeLimits::Closed
@@ -221,36 +248,10 @@ fn is_ref_mut(binding: ast::BindingMode) -> (bool, bool) {
 }
 
 
-fn macro_style(style: ast::DelimToken) -> MacroStyle {
-    match style {
-        ast::DelimToken::Paren => MacroStyle::Paren,
-        ast::DelimToken::Bracket => MacroStyle::Bracket,
-        ast::DelimToken::Brace => MacroStyle::Brace,
-        _ => unreachable!("{:#?}", style),
-    }
-}
-
-fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
-    let (is_sep, s) = match token {
-        ast::TokenKind::Comma => (true, ",".to_string()),
-        ast::TokenKind::Semi => (true, ";".to_string()),
-        ast::TokenKind::FatArrow => (true, " =>".to_string()),
-        ast::TokenKind::DotDotDot => (false, "...".to_string()),
-        ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
-        _ => unreachable!("{:?}", token),
-    };
-
-    MacroSep {
-        is_sep,
-        s,
-    }
-}
-
-
-
 fn is_macro_semi(style: ast::MacStmtStyle) -> bool {
     matches!(style, ast::MacStmtStyle::Semicolon)
 }
+
 
 
 fn map_ref_mut<T, F, R>(opt: &Option<T>, f: F) -> Option<R> where F: FnMut(&T) -> R {

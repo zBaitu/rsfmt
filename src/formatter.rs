@@ -54,12 +54,24 @@ macro_rules! display_fields_block {
     })
 }
 
+macro_rules! display_fields {
+    ($f:expr, $fields:expr) => ({
+        display_lines!($f, $fields, ",")
+    });
+}
+
 macro_rules! display_decls_block {
     ($f:expr, $items: expr) => ({
         writeln!($f, " {{")?;
         display_decls!($f, $items)?;
         write!($f, "}}")
     })
+}
+
+macro_rules! display_decls {
+    ($f:expr, $items:expr) => ({
+        display_lines!($f, $items, ";")
+    });
 }
 
 macro_rules! display_block {
@@ -70,23 +82,11 @@ macro_rules! display_block {
     })
 }
 
-macro_rules! display_fields {
-    ($f:expr, $fields:expr) => ({
-        display_lines!($f, $fields, ",")
-    });
-}
-
-macro_rules! display_decls {
-    ($f:expr, $items:expr) => ({
-        display_lines!($f, $items, ";")
-    });
-}
-
 macro_rules! select_str {
     ($fn_name:ident, $flag:ident, $true_value:expr, $false_value:expr) => (
         fn $fn_name($flag: bool) -> &'static str {
-            static TRUE_HEAD: &'static str = $true_value;
-            static FALSE_HEAD: &'static str = $false_value;
+            const TRUE_HEAD: &str = $true_value;
+            const FALSE_HEAD: &str = $false_value;
 
             if $flag {
                 TRUE_HEAD
