@@ -1183,7 +1183,7 @@ fn display_doc_symbol(f: &mut fmt::Formatter, is_block: bool) -> fmt::Result {
     }
 }
 
-fn display_attrs(f: &mut fmt::Formatter, attrs: &Vec<Attr>) -> fmt::Result {
+fn display_attrs(f: &mut fmt::Formatter, attrs: &[Attr]) -> fmt::Result {
     for attr in attrs {
         writeln!(f, "{}", attr)?;
     }
@@ -1200,7 +1200,7 @@ fn display_use_trees(f: &mut fmt::Formatter, trees: &Option<Vec<UseTree>>) -> fm
         return OK;
     }
 
-    let trees: &Vec<UseTree> = &trees.as_ref().unwrap();
+    let trees: &Vec<UseTree> = trees.as_ref().unwrap();
     write!(f, "::")?;
     if trees.len() == 1 && !trees[0].path.starts_with("self") {
         write!(f, "{}", trees[0])
@@ -1224,7 +1224,7 @@ fn display_type_param_bounds(f: &mut fmt::Formatter, bounds: &TypeParamBounds) -
 }
 
 
-fn display_for_liftime_defs(f: &mut fmt::Formatter, lifetime_defs: &Vec<LifetimeDef>) -> fmt::Result {
+fn display_for_liftime_defs(f: &mut fmt::Formatter, lifetime_defs: &[LifetimeDef]) -> fmt::Result {
     if !lifetime_defs.is_empty() {
         display_lists!(f, "for<", ", ", "> ", lifetime_defs)?;
     }
@@ -1232,7 +1232,7 @@ fn display_for_liftime_defs(f: &mut fmt::Formatter, lifetime_defs: &Vec<Lifetime
 }
 
 
-fn display_paren_param_inputs(f: &mut fmt::Formatter, inputs: &Vec<Type>) -> fmt::Result {
+fn display_paren_param_inputs(f: &mut fmt::Formatter, inputs: &[Type]) -> fmt::Result {
     display_lists!(f, "(", ", ", ")", inputs)
 }
 
@@ -1278,7 +1278,7 @@ fn display_where(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
 }
 
 
-fn display_params(f: &mut fmt::Formatter, params: &Vec<Param>) -> fmt::Result {
+fn display_params(f: &mut fmt::Formatter, params: &[Param]) -> fmt::Result {
     display_lists!(f, "(", ", ", ")", params)
 }
 
@@ -1304,7 +1304,7 @@ fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Resu
 
 fn ref_head(lifetime: &Option<Lifetime>, is_raw: bool, is_mut: bool) -> String {
     let mut head = String::new();
-    head.push_str("&");
+    head.push('&');
     if is_raw {
         if is_mut {
             head.push_str("raw mut ");
@@ -1316,7 +1316,7 @@ fn ref_head(lifetime: &Option<Lifetime>, is_raw: bool, is_mut: bool) -> String {
 
     if let Some(ref lifetime) = *lifetime {
         head.push_str(&lifetime.s);
-        head.push_str(" ");
+        head.push(' ');
     }
     if is_mut {
         head.push_str("mut ");
@@ -1386,7 +1386,7 @@ fn vis_head(vis: &Vis) -> String {
     let mut head = String::new();
     if !vis.is_empty() {
         head.push_str(vis);
-        head.push_str(" ");
+        head.push(' ');
     }
     head
 }
@@ -1395,7 +1395,7 @@ fn vis_head(vis: &Vis) -> String {
 fn foreign_head(abi: &Option<String>) -> String {
     let mut head = String::new();
     head.push_str("extern");
-    head.push_str(" ");
+    head.push(' ');
     if let Some(ref abi) = abi {
         head.push_str(abi);
     }
@@ -1844,7 +1844,7 @@ impl Formatter {
         }
     }
 
-    fn fmt_attrs(&mut self, attrs: &Vec<Attr>) {
+    fn fmt_attrs(&mut self, attrs: &[Attr]) {
         let mut group: Vec<(bool, &MetaAttr)> = Vec::new();
 
         for attr in attrs {
@@ -1888,7 +1888,7 @@ impl Formatter {
             self.raw_insert("*/");
         }
 
-        self.try_fmt_trailing_comment(&loc);
+        self.try_fmt_trailing_comment(loc);
         self.nl();
     }
 
@@ -1900,8 +1900,8 @@ impl Formatter {
         }
     }
 
-    fn fmt_meta_attr_group(&mut self, group: &Vec<(bool, &MetaAttr)>) {
-        let sorted_attrs: BTreeMap<_, _> = group.into_iter().map(|e| (e.1.to_string(), *e)).collect();
+    fn fmt_meta_attr_group(&mut self, group: &[(bool, &MetaAttr)]) {
+        let sorted_attrs: BTreeMap<_, _> = group.iter().map(|e| (e.1.to_string(), *e)).collect();
         for attr in sorted_attrs.values() {
             self.insert_indent();
             self.fmt_meta_attr(attr.0, attr.1);
@@ -1924,7 +1924,7 @@ impl Formatter {
         self.raw_insert("]");
     }
 
-    fn fmt_nested_metas(&mut self, metas: &Vec<MetaAttr>) {
+    fn fmt_nested_metas(&mut self, metas: &[MetaAttr]) {
         fmt_comma_lists!(self, "(", ")", metas, fmt_nested_meta);
     }
 
@@ -1939,13 +1939,13 @@ impl Formatter {
     }
 
 
-    fn fmt_group_items(&mut self, items: &Vec<Item>) {
+    fn fmt_group_items(&mut self, items: &[Item]) {
         self.fmt_extern_crate_items(items);
         self.fmt_use_items(items);
         self.fmt_mod_decl_items(items);
     }
 
-    fn fmt_extern_crate_items(&mut self, items: &Vec<Item>) {
+    fn fmt_extern_crate_items(&mut self, items: &[Item]) {
         fmt_item_groups!(self, items, ItemKind::ExternCrate, &ExternCrate, fmt_extern_crate);
     }
 
@@ -1953,7 +1953,7 @@ impl Formatter {
         self.insert(&format!("extern crate {};", &item.name));
     }
 
-    fn fmt_use_items(&mut self, items: &Vec<Item>) {
+    fn fmt_use_items(&mut self, items: &[Item]) {
         fmt_item_groups!(self, items, ItemKind::Use, &Use, fmt_use);
     }
 
@@ -1983,7 +1983,7 @@ impl Formatter {
         self.fmt_use_trees(&item.trees, true);
     }
 
-    fn fmt_use_more_trees(&mut self, trees: &Vec<UseTree>, wrap: bool) {
+    fn fmt_use_more_trees(&mut self, trees: &[UseTree], wrap: bool) {
         self.insert_mark_align("{");
         let mut all_nl = false;
 
@@ -2019,7 +2019,7 @@ impl Formatter {
         self.insert_unmark_align("}");
     }
 
-    fn fmt_mod_decl_items(&mut self, items: &Vec<Item>) {
+    fn fmt_mod_decl_items(&mut self, items: &[Item]) {
         fmt_item_groups!(self, items, ItemKind::ModDecl, &ModDecl, fmt_mod_decl);
     }
 
@@ -2027,7 +2027,7 @@ impl Formatter {
         self.insert(&format!("mod {};", &item.name));
     }
 
-    fn fmt_items(&mut self, items: &Vec<Item>) {
+    fn fmt_items(&mut self, items: &[Item]) {
         let mut nl = false;
         for item in items {
             nl = match item.item {
@@ -2202,7 +2202,7 @@ impl Formatter {
     }
 
 
-    fn fmt_for_lifetime_defs(&mut self, lifetime_defs: &Vec<LifetimeDef>) {
+    fn fmt_for_lifetime_defs(&mut self, lifetime_defs: &[LifetimeDef]) {
         if !lifetime_defs.is_empty() {
             fmt_comma_lists!(self, "for<", "> ", lifetime_defs, fmt_lifetime_def);
         }
@@ -2222,7 +2222,7 @@ impl Formatter {
         }
     }
 
-    fn fmt_where_clauses(&mut self, clauses: &Vec<WhereClause>) {
+    fn fmt_where_clauses(&mut self, clauses: &[WhereClause]) {
         fmt_comma_lists!(self, clauses, fmt_where_clause);
     }
 
@@ -2329,7 +2329,7 @@ impl Formatter {
     fn fmt_type(&mut self, ty: &Type) {
         maybe_nl!(self, ty);
         match ty.ty {
-            TypeKind::Symbol(ref ty) => self.fmt_symbol_type(ty),
+            TypeKind::Symbol(ty) => self.fmt_symbol_type(ty),
             TypeKind::Path(ref ty) => self.fmt_path_type(ty, false),
             TypeKind::Ptr(ref ty) => self.fmt_ptr_type(ty),
             TypeKind::Ref(ref ty) => self.fmt_ref_type(ty),
@@ -2464,7 +2464,7 @@ impl Formatter {
         }
     }
 
-    fn fmt_struct_fields(&mut self, fields: &Vec<StructField>) {
+    fn fmt_struct_fields(&mut self, fields: &[StructField]) {
         fmt_items!(self, fields, fmt_struct_field);
     }
 
@@ -2477,7 +2477,7 @@ impl Formatter {
         self.raw_insert(",");
     }
 
-    fn fmt_tuple_fields(&mut self, fields: &Vec<TupleField>) {
+    fn fmt_tuple_fields(&mut self, fields: &[TupleField]) {
         fmt_comma_lists!(self, "(", ")", fields, fmt_tuple_field);
     }
 
@@ -2502,7 +2502,7 @@ impl Formatter {
         fmt_block!(self, &item.body.fields, fmt_enum_fields);
     }
 
-    fn fmt_enum_fields(&mut self, fields: &Vec<EnumField>) {
+    fn fmt_enum_fields(&mut self, fields: &[EnumField]) {
         fmt_items!(self, fields, fmt_enum_field);
     }
 
@@ -2521,7 +2521,7 @@ impl Formatter {
         fmt_block!(self, &item.items, fmt_foreign_items);
     }
 
-    fn fmt_foreign_items(&mut self, items: &Vec<ForeignItem>) {
+    fn fmt_foreign_items(&mut self, items: &[ForeignItem]) {
         fmt_items_maybe_nl!(self, items, fmt_foreign_item);
     }
 
@@ -2567,7 +2567,7 @@ impl Formatter {
         fmt_block!(self, &item.items, fmt_trait_items);
     }
 
-    fn fmt_trait_items(&mut self, items: &Vec<TraitItem>) {
+    fn fmt_trait_items(&mut self, items: &[TraitItem]) {
         fmt_items_maybe_nl!(self, items, fmt_trait_item);
     }
 
@@ -2612,7 +2612,7 @@ impl Formatter {
         fmt_block!(self, &item.items, fmt_impl_items);
     }
 
-    fn fmt_impl_items(&mut self, items: &Vec<ImplItem>) {
+    fn fmt_impl_items(&mut self, items: &[ImplItem]) {
         fmt_items_maybe_nl!(self, items, fmt_impl_item);
     }
 
@@ -2646,7 +2646,7 @@ impl Formatter {
     }
 
 
-    fn fmt_fn_params(&mut self, params: &Vec<Param>) -> bool {
+    fn fmt_fn_params(&mut self, params: &[Param]) -> bool {
         fmt_comma_lists!(self, "(", ")", params, fmt_param)
     }
 
@@ -2704,7 +2704,7 @@ impl Formatter {
         self.block_locs.pop();
     }
 
-    fn fmt_stmts(&mut self, stmts: &Vec<Stmt>) {
+    fn fmt_stmts(&mut self, stmts: &[Stmt]) {
         for stmt in stmts {
             self.fmt_stmt(stmt);
         }
@@ -2749,7 +2749,7 @@ impl Formatter {
         maybe_nl!(self, pattern);
         match pattern.pattern {
             PattenKind::Wildcard => self.insert("_"),
-            PattenKind::Symbol(ref pattern) => self.insert(pattern),
+            PattenKind::Symbol(pattern) => self.insert(pattern),
             PattenKind::Literal(ref pattern) => self.fmt_expr(pattern),
             PattenKind::Box(ref pattern) => self.fmt_box_patten(pattern),
             PattenKind::Range(ref pattern) => self.fmt_range_patten(pattern),
@@ -2765,7 +2765,7 @@ impl Formatter {
         }
     }
 
-    fn fmt_patterns(&mut self, patterns: &Vec<Pattern>) {
+    fn fmt_patterns(&mut self, patterns: &[Pattern]) {
         fmt_lists!(self, " | ", "| ", patterns, fmt_patten);
     }
 
@@ -2851,7 +2851,7 @@ impl Formatter {
     }
 
 
-    fn fmt_struct_field_patterns(&mut self, fields: &Vec<StructFieldPatten>) {
+    fn fmt_struct_field_patterns(&mut self, fields: &[StructFieldPatten]) {
         for field in fields {
             self.try_fmt_leading_comments(&field.loc);
             self.insert_indent();
@@ -2922,7 +2922,7 @@ impl Formatter {
         self.block_locs.push(expr.loc);
         maybe_nl!(self, expr);
         match expr.expr {
-            ExprKind::Symbol(ref sym) => self.fmt_symbol_expr(sym),
+            ExprKind::Symbol(sym) => self.fmt_symbol_expr(sym),
             ExprKind::Literal(ref expr) => self.fmt_literal_expr(expr),
             ExprKind::Path(ref expr) => self.fmt_path_expr(expr),
             ExprKind::Box(ref expr) => self.fmt_box_expr(expr),
@@ -2989,7 +2989,7 @@ impl Formatter {
 
 
     fn fmt_unary_op_expr(&mut self, expr: &UnaryOpExpr) {
-        maybe_wrap!(self, &expr.op, &expr.op, expr.expr, fmt_expr);
+        maybe_wrap!(self, expr.op, expr.op, expr.expr, fmt_expr);
     }
 
 
@@ -3013,12 +3013,12 @@ impl Formatter {
     }
 
 
-    fn fmt_array_expr(&mut self, exprs: &Vec<Expr>) {
+    fn fmt_array_expr(&mut self, exprs: &[Expr]) {
         fmt_comma_lists!(self, "[", "]", exprs, fmt_expr);
     }
 
 
-    fn fmt_tuple_expr(&mut self, exprs: &Vec<Expr>) {
+    fn fmt_tuple_expr(&mut self, exprs: &[Expr]) {
         fmt_comma_lists!(self, "(", ")", exprs, fmt_expr);
     }
 
@@ -3067,7 +3067,7 @@ impl Formatter {
     }
 
 
-    fn fmt_struct_field_exprs(&mut self, fields: &Vec<StructFieldExpr>) {
+    fn fmt_struct_field_exprs(&mut self, fields: &[StructFieldExpr]) {
         for field in fields {
             self.try_fmt_leading_comments(&field.loc);
             self.insert_indent();
@@ -3239,7 +3239,7 @@ impl Formatter {
     }
 
 
-    fn fmt_arms(&mut self, arms: &Vec<Arm>) {
+    fn fmt_arms(&mut self, arms: &[Arm]) {
         fmt_items!(self, arms, fmt_arm);
     }
 
@@ -3294,7 +3294,7 @@ impl Formatter {
     }
 
 
-    fn fmt_closure_args(&mut self, args: &Vec<Param>) {
+    fn fmt_closure_args(&mut self, args: &[Param]) {
         fmt_comma_lists!(self, "|", "|", args, fmt_closure_arg);
     }
 
