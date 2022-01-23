@@ -253,13 +253,19 @@ fn is_macro_semi(style: ast::MacStmtStyle) -> bool {
 }
 
 
-fn map_ref_mut<T, F, R>(opt: &Option<T>, mut f: F) -> Option<R> where F: FnMut(&T) -> R {
+fn map_ref_mut<T, F, R>(opt: &Option<T>, f: F) -> Option<R> where F: FnMut(&T) -> R {
     opt.as_ref().map(f)
 }
 
 macro_rules! trans_list {
     ($sf: ident, $list: ident, $trans_single: ident) => ({
         $list.iter().map(|ref e| $sf.$trans_single(e)).collect()
+    });
+}
+
+macro_rules! map_trans {
+    ($sf: ident, $opt: expr, $trans: ident) => ({
+        $opt.as_ref().map(|item| $sf.$trans(item))
     });
 }
 
@@ -618,7 +624,7 @@ impl Translator {
             name: ident,
             generics: self.trans_generics(&type_alias.1),
             bounds: self.trans_type_param_bounds(&type_alias.2),
-            ty: map_ref_mut(&type_alias.3, |ty| self.trans_type(ty)),
+            ty: map_trans!(self, &type_alias.3, trans_type),
         }
     }
 
