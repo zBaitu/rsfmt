@@ -479,12 +479,10 @@ impl Display for Param {
                 TypeKind::Symbol(s) if s == "_" => OK,
                 _ => write!(f, ": {}", self.ty),
             }
+        } else if let PattenKind::Ident(ref pattern) = self.pattern.pattern {
+            write!(f, "{}{}", ident_patten_head(pattern.is_ref, pattern.is_mut), self.ty)
         } else {
-            if let PattenKind::Ident(ref pattern) = self.pattern.pattern {
-                write!(f, "{}{}", ident_patten_head(pattern.is_ref, pattern.is_mut), self.ty)
-            } else {
-                Display::fmt(&self.ty, f)
-            }
+            Display::fmt(&self.ty, f)
         }
     }
 }
