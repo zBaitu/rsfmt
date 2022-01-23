@@ -1,7 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::io::{self, Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use rustc_ap_rustc_ast::util::comments;
 use rustc_ap_rustc_parse::{self as parse};
@@ -27,11 +27,11 @@ const SEP: &str = r#"
 ------------------------------------------------------------------------------------------------------------------------
 "#;
 
-pub fn ast(path: &PathBuf) {
+pub fn ast(path: &Path) {
     let src = fs::read_to_string(path).unwrap();
     span::with_session_globals(Edition::Edition2021, || {
         let sess = ParseSess::new(FilePathMapping::empty());
-        let krate = match parse::parse_crate_from_source_str(FileName::from(path.clone()), src.clone(), &sess) {
+        let krate = match parse::parse_crate_from_source_str(FileName::from(PathBuf::from(path)), src.clone(), &sess) {
             Ok(krate) => krate,
             Err(mut e) => {
                 e.emit();
@@ -42,14 +42,14 @@ pub fn ast(path: &PathBuf) {
 
         p!(SEP);
 
-        let cmnts = comments::gather_comments(&sess.source_map(), FileName::from(path.clone()), src);
+        let cmnts = comments::gather_comments(sess.source_map(), FileName::from(PathBuf::from(path)), src);
         for cmnt in cmnts {
             p!("{}: {:#?} {:#?}", cmnt.pos.0, cmnt.style, cmnt.lines);
         }
     });
 }
 
-pub fn debug(path: &PathBuf) {
+pub fn debug(path: &Path) {
     let src = fs::read_to_string(path).unwrap();
     let result = trans(src, path);
 
@@ -59,7 +59,7 @@ pub fn debug(path: &PathBuf) {
     d!(result.trailing_cmnts);
 }
 
-pub fn print(path: &PathBuf) {
+pub fn print(path: &Path) {
     let src = fs::read_to_string(path).unwrap();
     let result = trans(src, path);
     p!(result.krate);
@@ -71,7 +71,7 @@ pub fn fmt_from_stdin() {
     fmt_str(src, &PathBuf::from("stdin"), false);
 }
 
-pub fn fmt(path: &PathBuf, overwrite: bool) {
+pub fn fmt(path: &Path, overwrite: bool) {
     if path.is_dir() {
         fmt_dir(path, overwrite);
     } else {
@@ -79,7 +79,7 @@ pub fn fmt(path: &PathBuf, overwrite: bool) {
     }
 }
 
-fn fmt_dir(path: &PathBuf, overwrite: bool) {
+fn fmt_dir(path: &Path, overwrite: bool) {
     for entry in WalkDir::new(path) {
         let entry = entry.unwrap();
         if entry.file_type().is_file() {
@@ -94,12 +94,12 @@ fn fmt_dir(path: &PathBuf, overwrite: bool) {
     }
 }
 
-fn fmt_file(path: &PathBuf, overwrite: bool) {
+fn fmt_file(path: &Path, overwrite: bool) {
     let src = fs::read_to_string(path).unwrap();
     fmt_str(src, path, overwrite);
 }
 
-fn fmt_str(src: String, path: &PathBuf, overwrite: bool) {
+fn fmt_str(src: String, path: &Path, overwrite: bool) {
     let tr_result = trans(src, path);
     let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
 
@@ -124,11 +124,11 @@ fn fmt_str(src: String, path: &PathBuf, overwrite: bool) {
     }
 }
 
-fn trans(src: String, path: &PathBuf) -> TrResult {
+fn trans(src: String, path: &Path) -> TrResult {
     span::with_session_globals(Edition::Edition2021, || {
         let sess = ParseSess::new(FilePathMapping::empty());
         let krate = parse::parse_crate_from_source_str(FileName::from(path.to_path_buf()), src.clone(), &sess).unwrap();
-        let cmnts = comments::gather_comments(&sess.source_map(), FileName::from(path.to_path_buf()), src.clone());
+        let cmnts = comments::gather_comments(sess.source_map(), FileName::from(path.to_path_buf()), src.clone());
         translator::translate(src, sess, krate, cmnts)
     })
 }
