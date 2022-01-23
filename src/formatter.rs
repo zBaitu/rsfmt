@@ -3390,9 +3390,9 @@ impl Formatter {
             if i > 0 {
                 let sep = &mac.seps[i - 1];
                 if sep.is_sep {
-                    insert_sep!(self, sep.s, expr);
+                    insert_sep!(self, &sep.s, expr);
                 } else {
-                    self.insert(sep.s);
+                    self.insert(&sep.s);
                 }
             }
             self.fmt_expr(expr);

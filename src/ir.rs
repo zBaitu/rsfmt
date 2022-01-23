@@ -1015,7 +1015,7 @@ pub enum MacroStyle {
 #[derive(Debug)]
 pub struct MacroSep {
     pub is_sep: bool,
-    pub s: &'static str,
+    pub s: String,
 }
 
 #[derive(Debug)]

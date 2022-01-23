@@ -196,11 +196,11 @@ impl Typesetter {
     }
 
     fn need_wrap_len(&self, prefix_len: usize, len: usize) -> bool {
-        self.left() <= prefix_len || (self.left() < len  && len <= self.nl_left())
+        self.left() <= prefix_len || (self.left() < len && len <= self.nl_left())
     }
 
     fn need_nl_indent_len(&self, prefix_len: usize, len: usize) -> bool {
-        self.left() <= prefix_len || (self.left() < len  && len <= self.nl_indent_left())
+        self.left() <= prefix_len || (self.left() < len && len <= self.nl_indent_left())
     }
 
     fn nl_left(&self) -> usize {
