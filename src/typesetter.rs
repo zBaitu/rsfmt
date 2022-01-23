@@ -196,11 +196,11 @@ impl Typesetter {
     }
 
     fn need_wrap_len(&self, prefix_len: usize, len: usize) -> bool {
-        (minus_novf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_left())
+        self.left() <= prefix_len || (self.left() < len  && len <= self.nl_left())
     }
 
     fn need_nl_indent_len(&self, prefix_len: usize, len: usize) -> bool {
-        (minus_novf!(self.left(), prefix_len) <= 0) || (len > self.left() && len <= self.nl_indent_left())
+        self.left() <= prefix_len || (self.left() < len  && len <= self.nl_indent_left())
     }
 
     fn nl_left(&self) -> usize {
@@ -212,10 +212,7 @@ impl Typesetter {
     }
 
     fn should_align(&self) -> bool {
-        match self.align_stack.last() {
-            Some(col) if *col <= MAX_ALIGN_COL => true,
-            _ => false,
-        }
+        matches!(self.align_stack.last(), Some(col) if *col <= MAX_ALIGN_COL)
     }
 
     fn nl_align_left(&self) -> usize {

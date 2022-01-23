@@ -667,8 +667,8 @@ pub struct Stmt {
 #[derive(Debug)]
 pub enum StmtKind {
     None,
-    Item(Item),
-    Let(Let),
+    Item(Box<Item>),
+    Let(Box<Let>),
     Expr(Expr, bool),
     Macro(MacroStmt),
 }
@@ -694,7 +694,7 @@ pub enum PattenKind {
     Symbol(&'static str),
     Literal(Expr),
     Box(Box<Pattern>),
-    Range(RangePatten),
+    Range(Box<RangePatten>),
     Ref(Box<RefPatten>),
     Path(PathPatten),
     Ident(Box<IdentPatten>),
@@ -785,8 +785,8 @@ pub enum ExprKind {
     Try(Box<Expr>),
     ListOp(Box<ListOpExpr>),
     Repeat(Box<RepeatExpr>),
-    Array(Box<Vec<Expr>>),
-    Tuple(Box<Vec<Expr>>),
+    Array(Vec<Expr>),
+    Tuple(Vec<Expr>),
     Index(Box<IndexExpr>),
     Struct(Box<StructExpr>),
     Field(Box<FieldExpr>),

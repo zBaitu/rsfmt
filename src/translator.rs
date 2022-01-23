@@ -1375,8 +1375,8 @@ impl Translator {
     fn trans_stmt(&mut self, stmt: &ast::Stmt) -> Stmt {
         let loc = self.loc(&stmt.span);
         let stmt = match stmt.kind {
-            ast::StmtKind::Item(ref item) => StmtKind::Item(self.trans_item(item)),
-            ast::StmtKind::Local(ref local) => StmtKind::Let(self.trans_let(local)),
+            ast::StmtKind::Item(ref item) => StmtKind::Item(Box::new(self.trans_item(item))),
+            ast::StmtKind::Local(ref local) => StmtKind::Let(Box::new(self.trans_let(local))),
             ast::StmtKind::Semi(ref expr) => StmtKind::Expr(self.trans_expr(expr), true),
             ast::StmtKind::Expr(ref expr) => StmtKind::Expr(self.trans_expr(expr), false),
             ast::StmtKind::MacCall(ref mac_call) => StmtKind::Macro(self.trans_macro_stmt(mac_call)),
@@ -1420,7 +1420,7 @@ impl Translator {
             ast::PatKind::Lit(ref expr) => PattenKind::Literal(self.trans_expr(expr)),
             ast::PatKind::Box(ref pattern) => PattenKind::Box(Box::new(self.trans_patten(pattern))),
             ast::PatKind::Range(ref start, ref end, ref range_end) => {
-                PattenKind::Range(self.trans_range_patten(start, end, &range_end.node))
+                PattenKind::Range(Box::new(self.trans_range_patten(start, end, &range_end.node)))
             },
             ast::PatKind::Ref(ref pattern, mutability) => {
                 PattenKind::Ref(Box::new(self.trans_ref_patten(mutability, pattern)))
@@ -1564,9 +1564,9 @@ impl Translator {
                 ExprKind::ListOp(Box::new(self.trans_op_assign_expr(op, left, right)))
             },
             ast::ExprKind::Repeat(ref expr, ref len) => ExprKind::Repeat(Box::new(self.trans_repeat_expr(expr, len))),
-            ast::ExprKind::Array(ref exprs) => ExprKind::Array(Box::new(self.trans_exprs(exprs))),
-            ast::ExprKind::Tup(ref exprs) => ExprKind::Tuple(Box::new(self.trans_exprs(exprs))),
-            ast::ExprKind::Paren(ref expr) => ExprKind::Tuple(Box::new(vec![self.trans_expr(expr)])),
+            ast::ExprKind::Array(ref exprs) => ExprKind::Array(self.trans_exprs(exprs)),
+            ast::ExprKind::Tup(ref exprs) => ExprKind::Tuple(self.trans_exprs(exprs)),
+            ast::ExprKind::Paren(ref expr) => ExprKind::Tuple(vec![self.trans_expr(expr)]),
             ast::ExprKind::Index(ref obj, ref index) => ExprKind::Index(Box::new(self.trans_index_expr(obj, index))),
             ast::ExprKind::Struct(ref expr) => ExprKind::Struct(Box::new(self.trans_struct_expr(expr))),
             ast::ExprKind::Field(ref expr, ref ident) => ExprKind::Field(Box::new(self.trans_field_expr(expr, ident))),
