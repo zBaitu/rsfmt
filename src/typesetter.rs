@@ -7,9 +7,9 @@ const EXCEED_WIDTH: usize = 120;
 const MAX_WIDTH: usize = EXCEED_WIDTH - 1;
 const MAX_ALIGN_COL: usize = EXCEED_WIDTH / 3;
 
-const INDENT: &'static str = "    ";
+const INDENT: &str = "    ";
 const INDENT_LEN: usize = INDENT.len();
-const WRAP_INDENT: &'static str = "        ";
+const WRAP_INDENT: &str = "        ";
 const WRAP_INDENT_LEN: usize = WRAP_INDENT.len();
 
 #[macro_export]
@@ -84,8 +84,8 @@ pub struct TsResult {
 
 impl Debug for Typesetter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "pos: ({}, {})\n", self.line, self.col)?;
-        write!(f, "indent: \"{}\"\n", self.indent)?;
+        writeln!(f, "pos: ({}, {})\n", self.line, self.col)?;
+        writeln!(f, "indent: \"{}\"\n", self.indent)?;
         write!(f, "align stack: ")?;
         Debug::fmt(&self.align_stack, f)?;
         write!(f, "\nexceed lines: ")?;

@@ -651,10 +651,7 @@ impl Block {
 
         match &self.stmts[0].stmt {
             StmtKind::Expr(ref expr, _) => {
-                match expr.expr {
-                    ExprKind::Literal(_) | ExprKind::Path(_) => true,
-                    _ => false,
-                }
+                matches!(expr.expr, ExprKind::Literal(_) | ExprKind::Path(_))
             },
             _ => false,
         }
