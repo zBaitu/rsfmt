@@ -133,7 +133,7 @@ fn is_const(constness: ast::Const) -> bool {
 }
 
 fn is_auto(autoness: ast::IsAuto) -> bool {
-    return autoness == ast::IsAuto::Yes;
+    autoness == ast::IsAuto::Yes
 }
 
 
@@ -141,27 +141,21 @@ fn ext_to_string(ext: ast::Extern) -> Option<String> {
     match ext {
         ast::Extern::None => None,
         ast::Extern::Implicit => Some("extern".to_string()),
-        ast::Extern::Explicit(ref str_lit) => Some(format!("extern {}", str_lit.symbol_unescaped.to_string())),
+        ast::Extern::Explicit(ref str_lit) => Some(format!("extern {}", str_lit.symbol_unescaped)),
     }
 }
 
 fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
-    match abi {
-        Some(ref abi) => Some(abi.symbol_unescaped.to_string()),
-        None => None,
-    }
+    abi.as_ref().map(|abi| abi.symbol_unescaped.to_string())
 }
 
 
 fn has_patten(param: &ast::Param, pattern: &Pattern) -> bool {
-    match param.to_self() {
-        Some(sf) => {
-            match sf.node {
-                ast::SelfKind::Value(..) | ast::SelfKind::Region(..) => return false,
-                _ => {},
-            }
-        },
-        None => {},
+    if let Some(sf) = param.to_self() {
+        match sf.node {
+            ast::SelfKind::Value(..) | ast::SelfKind::Region(..) => return false,
+            _ => {},
+        }
     }
 
     match pattern.pattern {
@@ -206,10 +200,7 @@ fn is_inclusive(limit: ast::RangeLimits) -> bool {
 
 
 fn is_patten_inclusive(range_end: &ast::RangeEnd) -> bool {
-    match *range_end {
-        ast::RangeEnd::Included(..) => true,
-        _ => false,
-    }
+    matches!(*range_end, ast::RangeEnd::Included(..))
 }
 
 
@@ -258,18 +249,12 @@ fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
 
 
 fn is_macro_semi(style: ast::MacStmtStyle) -> bool {
-    match style {
-        ast::MacStmtStyle::Semicolon => true,
-        _ => false,
-    }
+    matches!(style, ast::MacStmtStyle::Semicolon)
 }
 
 
 fn map_ref_mut<T, F, R>(opt: &Option<T>, mut f: F) -> Option<R> where F: FnMut(&T) -> R {
-    match *opt {
-        Some(ref v) => Some(f(v)),
-        None => None,
-    }
+    opt.as_ref().map(f)
 }
 
 macro_rules! trans_list {
@@ -540,7 +525,7 @@ impl Translator {
 
     fn trans_extren_crate(&mut self, ident: String, rename: &Option<ast::Symbol>) -> ExternCrate {
         let name = match *rename {
-            Some(ref rename) => format!("{} as {}", rename.to_string(), ident),
+            Some(ref rename) => format!("{} as {}", rename, ident),
             None => ident,
         };
 
@@ -575,7 +560,7 @@ impl Translator {
                     path.push_str(&path_to_string(&tree.prefix));
                     path.push_str("::");
                 }
-                path.push_str("*");
+                path.push('*');
                 (loc, path, None)
             },
             ast::UseTreeKind::Nested(ref trees) => {
@@ -595,7 +580,7 @@ impl Translator {
     }
 
     fn trans_use_trees(&mut self, trees: &Vec<(ast::UseTree, ast::NodeId)>) -> Vec<UseTree> {
-        let mut trees: Vec<UseTree> = trees.iter().map(|ref e| self.trans_use_tree(&e.0)).collect();
+        let mut trees: Vec<UseTree> = trees.iter().map(|e| self.trans_use_tree(&e.0)).collect();
         trees.sort_by(|a, b| {
             if a.path.starts_with("self") {
                 Ordering::Less
@@ -654,7 +639,7 @@ impl Translator {
     }
 
     fn trans_lifetime_defs(&mut self, params: &Vec<ast::GenericParam>) -> Vec<LifetimeDef> {
-        params.into_iter().fold(Vec::new(), |mut lifetime_defs, param| {
+        params.iter().fold(Vec::new(), |mut lifetime_defs, param| {
             if let ast::GenericParamKind::Lifetime = param.kind {
                 lifetime_defs.push(self.trans_lifetime_def(param));
             }
@@ -679,7 +664,7 @@ impl Translator {
     }
 
     fn trans_lifetimes(&mut self, bounds: &ast::GenericBounds) -> Vec<Lifetime> {
-        bounds.into_iter().fold(Vec::new(), |mut lifetimes, bound| {
+        bounds.iter().fold(Vec::new(), |mut lifetimes, bound| {
             if let ast::GenericBound::Outlives(ref lifetime) = bound {
                 lifetimes.push(self.trans_lifetime(&lifetime.ident));
             }
@@ -688,7 +673,7 @@ impl Translator {
     }
 
     fn trans_type_params(&mut self, params: &Vec<ast::GenericParam>) -> Vec<TypeParam> {
-        params.into_iter().fold(Vec::new(), |mut type_params, param| {
+        params.iter().fold(Vec::new(), |mut type_params, param| {
             if let ast::GenericParamKind::Type {..} = param.kind {
                 type_params.push(self.trans_type_param(param));
             }
@@ -799,11 +784,9 @@ impl Translator {
     }
 
     fn trans_generic_args_to_lifetime(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Lifetime> {
-        args.into_iter().fold(Vec::new(), |mut lifetimes, arg| {
-            if let ast::AngleBracketedArg::Arg(ref arg) = arg {
-                if let ast::GenericArg::Lifetime(ref lifetime) = arg {
-                    lifetimes.push(self.trans_lifetime(&lifetime.ident));
-                }
+        args.iter().fold(Vec::new(), |mut lifetimes, arg| {
+            if let ast::AngleBracketedArg::Arg(ast::GenericArg::Lifetime(ref lifetime)) = arg {
+                lifetimes.push(self.trans_lifetime(&lifetime.ident));
             }
             lifetimes
         })
@@ -811,10 +794,8 @@ impl Translator {
 
     fn trans_generic_args_to_types(&mut self, args: &Vec<ast::AngleBracketedArg>) -> Vec<Type> {
         args.into_iter().fold(Vec::new(), |mut types, arg| {
-            if let ast::AngleBracketedArg::Arg(ref arg) = arg {
-                if let ast::GenericArg::Type(ref ty) = arg {
-                    types.push(self.trans_type(ty));
-                }
+            if let ast::AngleBracketedArg::Arg(ast::GenericArg::Type(ref ty)) = arg {
+                types.push(self.trans_type(ty));
             }
             types
         })
@@ -1186,7 +1167,7 @@ impl Translator {
         let pattern = self.trans_patten(&param.pat);
         let has_patten = has_patten(param, &pattern);
         Param {
-            loc: pattern.loc.clone(),
+            loc: pattern.loc,
             pattern,
             ty: self.trans_type(&param.ty),
             has_patten,
@@ -1341,7 +1322,7 @@ impl Translator {
                 ImplItemKind::TypeAlias(self.trans_type_alias(ident, ty_alias))
             },
             ast::AssocItemKind::Fn(ref fn_kind) => {
-                ImplItemKind::Fn(self.trans_fn(ident, &fn_kind))
+                ImplItemKind::Fn(self.trans_fn(ident, fn_kind))
             },
             ast::AssocItemKind::MacCall(ref mac_call) => ImplItemKind::MacroCall(self.trans_macro_call(mac_call)),
         };
@@ -1459,8 +1440,8 @@ impl Translator {
 
     fn trans_range_patten(&mut self, start: &Option<ast::P<ast::Expr>>, end: &Option<ast::P<ast::Expr>>, range_end: &ast::RangeEnd) -> RangePatten {
         RangePatten {
-            start: map_ref_mut(&start, |start| self.trans_expr(start)),
-            end: map_ref_mut(&end, |end| self.trans_expr(end)),
+            start: map_ref_mut(start, |start| self.trans_expr(start)),
+            end: map_ref_mut(end, |end| self.trans_expr(end)),
             is_inclusive: is_patten_inclusive(range_end),
         }
     }
@@ -1880,7 +1861,8 @@ impl Translator {
 
     fn trans_return_expr(&mut self, expr: &Option<ast::P<ast::Expr>>) -> ReturnExpr {
         ReturnExpr {
-            ret: map_ref_mut(expr, |expr| self.trans_expr(expr)),
+            ret: expr.as_ref().map(|expr| self.trans_expr(expr)),
+            //ret: map_ref_mut(expr, ),
         }
     }
 
@@ -1899,7 +1881,7 @@ impl Translator {
 
     fn trans_macro_def(&mut self, ident: String, macro_def: &ast::MacroDef) -> MacroDef {
         let def = match macro_def.body.span() {
-            Some(ref span) => self.span_to_snippet(&span).unwrap(),
+            Some(ref span) => self.span_to_snippet(span).unwrap(),
             None => "".to_string(),
         };
 
