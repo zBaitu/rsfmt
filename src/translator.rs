@@ -926,7 +926,7 @@ impl Translator {
             ast::TyKind::Tup(ref types) => TypeKind::Tuple(Box::new(self.trans_tuple_type(types))),
             ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&[ty.clone()]))),
             ast::TyKind::Slice(ref ty) => TypeKind::Slice(Box::new(self.trans_slice_type(ty))),
-            ast::TyKind::Array(ref ty, ref ac) => TypeKind::Array(Box::new(self.trans_array_type(ty, &ac.value))),
+            ast::TyKind::Array(ref ty, ref anon_const) => TypeKind::Array(Box::new(self.trans_array_type(ty, &anon_const.value))),
             ast::TyKind::AnonymousStruct(ref fields, _) => TypeKind::Struct(self.trans_struct_type(fields)),
             ast::TyKind::AnonymousUnion(ref fields, _) => TypeKind::Union(self.trans_union_type(fields)),
             ast::TyKind::TraitObject(ref bounds, syntax) => {
@@ -939,8 +939,7 @@ impl Translator {
                 TypeKind::BareFn(Box::new(self.trans_bare_fn_type(bare_fn)))
             },
             ast::TyKind::MacCall(ref mac_call) => TypeKind::MacroCall(self.trans_macro_call(mac_call)),
-            ast::TyKind::Typeof(..) => unreachable!("{:#?}", ty.kind),
-            ast::TyKind::Err => unreachable!("{:#?}", ty.kind),
+            ast::TyKind::Typeof(..) | ast::TyKind::Err => unreachable!("{:#?}", ty.kind),
         };
 
         self.set_loc(&loc);
