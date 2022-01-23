@@ -150,8 +150,7 @@ impl Display for Attr {
                 if let Some(ref metas) = meta.metas {
                     display_lists!(f, "(", ", ", ")", &**metas)?;
                 }
-                write!(f, "]")?;
-                OK
+                write!(f, "]")
             },
         }
     }
@@ -172,29 +171,24 @@ impl Display for Item {
         display_attrs(f, &self.attrs)?;
         display_vis(f, &self.vis)?;
         match self.item {
-            ItemKind::ExternCrate(ref item) => Display::fmt(item, f)?,
-            ItemKind::Use(ref item) => Display::fmt(item, f)?,
-            ItemKind::ModDecl(ref item) => Display::fmt(item, f)?,
-            ItemKind::Mod(ref item) => {
-                writeln!(f, "mod {} {{", item.name)?;
-                Display::fmt(item, f)?;
-                return write!(f, "}}");
-            },
-            ItemKind::TypeAlias(ref item) => Display::fmt(item, f)?,
-            ItemKind::TraitAlias(ref item) => Display::fmt(item, f)?,
-            ItemKind::Const(ref item) => Display::fmt(item, f)?,
-            ItemKind::Static(ref item) => Display::fmt(item, f)?,
-            ItemKind::Struct(ref item) => Display::fmt(item, f)?,
-            ItemKind::Union(ref item) => Display::fmt(item, f)?,
-            ItemKind::Enum(ref item) => Display::fmt(item, f)?,
-            ItemKind::ForeignMod(ref item) => Display::fmt(item, f)?,
-            ItemKind::Fn(ref item) => Display::fmt(item, f)?,
-            ItemKind::Trait(ref item) => Display::fmt(item, f)?,
-            ItemKind::Impl(ref item) => Display::fmt(item, f)?,
-            ItemKind::MacroDef(ref item) => Display::fmt(item, f)?,
-            ItemKind::MacroCall(ref item) => Display::fmt(item, f)?,
+            ItemKind::ExternCrate(ref item) => Display::fmt(item, f),
+            ItemKind::Use(ref item) => Display::fmt(item, f),
+            ItemKind::ModDecl(ref item) => Display::fmt(item, f),
+            ItemKind::Mod(ref item) => Display::fmt(item, f),
+            ItemKind::TypeAlias(ref item) => Display::fmt(item, f),
+            ItemKind::TraitAlias(ref item) => Display::fmt(item, f),
+            ItemKind::Const(ref item) => Display::fmt(item, f),
+            ItemKind::Static(ref item) => Display::fmt(item, f),
+            ItemKind::Struct(ref item) => Display::fmt(item, f),
+            ItemKind::Union(ref item) => Display::fmt(item, f),
+            ItemKind::Enum(ref item) => Display::fmt(item, f),
+            ItemKind::ForeignMod(ref item) => Display::fmt(item, f),
+            ItemKind::Fn(ref item) => Display::fmt(item, f),
+            ItemKind::Trait(ref item) => Display::fmt(item, f),
+            ItemKind::Impl(ref item) => Display::fmt(item, f),
+            ItemKind::MacroDef(ref item) => Display::fmt(item, f),
+            ItemKind::MacroCall(ref item) => Display::fmt(item, f),
         }
-        OK
     }
 }
 
@@ -226,10 +220,11 @@ impl Display for ModDecl {
 
 impl Display for Mod {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{}mod {} {{", unsafe_head(self.is_unsafe), self.name)?;
         for item in &self.items {
             writeln!(f, "{}", item)?;
         }
-        OK
+        write!(f, "}}")
     }
 }
 
@@ -2117,7 +2112,7 @@ impl Formatter {
     }
 
     fn fmt_mod(&mut self, item: &Mod) {
-        self.insert(&format!("mod {}", &item.name));
+        self.insert(&format!("{}mod {}", unsafe_head(item.is_unsafe), &item.name));
         fmt_block!(self, item.items, item, fmt_mod_items);
     }
 

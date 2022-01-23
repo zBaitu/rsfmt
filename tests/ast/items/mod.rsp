@@ -1,0 +1,8 @@
+mod a
+mod b
+mod aa {
+type a = bool
+}
+pub unsafe mod bb {
+}
+
