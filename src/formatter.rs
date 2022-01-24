@@ -827,7 +827,7 @@ impl Display for Expr {
             ExprKind::Box(ref expr) => write!(f, "box {}", expr),
             ExprKind::Ref(ref expr) => Display::fmt(expr, f),
             ExprKind::UnaryOp(ref expr) => Display::fmt(expr, f),
-            ExprKind::Try(ref expr) => Display::fmt(expr, f),
+            ExprKind::Try(ref expr) => write!(f, "{}?", expr),
             ExprKind::ListOp(ref expr) => Display::fmt(expr, f),
             ExprKind::Repeat(ref expr) => Display::fmt(expr, f),
             ExprKind::Array(ref exprs) => display_lists!(f, "[", ", ", "]", &**exprs),
@@ -855,7 +855,7 @@ impl Display for Expr {
             ExprKind::Async(ref expr) => Display::fmt(expr, f),
             ExprKind::Await(ref expr) => write!(f, "{}.await", expr),
             ExprKind::TryBlock(ref block) => write!(f, "try{}", block),
-            ExprKind::Const(ref expr) => write!(f, "const{}", expr),
+            ExprKind::ConstBlock(ref expr) => write!(f, "const{}", expr),
             ExprKind::Yield(ref expr) => Display::fmt(expr, f),
         }
     }
@@ -974,7 +974,12 @@ impl Display for IfExpr {
         write!(f, "if {}", self.expr)?;
         Display::fmt(&self.block, f)?;
         if let Some(ref br) = self.br {
-            write!(f, " else {}", br)?
+            if is_block_expr(br) {
+                write!(f, " else")?;
+            } else {
+                write!(f, " else ")?;
+            }
+            Display::fmt(br, f)?;
         }
         OK
     }
@@ -1052,13 +1057,10 @@ impl Display for Arm {
         if let Some(ref guard) = self.guard {
             write!(f, " if {}", guard)?;
         }
-        match self.body.expr {
-            ExprKind::Block(..) => {
-                write!(f, " =>")?;
-            },
-            _ => {
-                write!(f, " => ")?;
-            },
+        if is_block_expr(&self.body) {
+            write!(f, " =>")?;
+        } else {
+            write!(f, " => ")?;
         }
         Display::fmt(&self.body, f)
     }
@@ -1291,6 +1293,13 @@ fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Resu
         write!(f, ";")?;
     }
     OK
+}
+
+fn is_block_expr(expr: &Expr) -> bool {
+    match expr.expr {
+        ExprKind::Block(..) => true,
+        _ => false,
+    }
 }
 
 fn vis_head(vis: &Vis) -> String {
@@ -2957,7 +2966,7 @@ impl Formatter {
             ExprKind::Async(ref expr) => self.fmt_async_expr(expr),
             ExprKind::Await(ref expr) => self.fmt_await_expr(expr),
             ExprKind::TryBlock(ref block) => self.fmt_try_block_expr(block),
-            ExprKind::Const(ref expr) => self.fmt_const_expr(expr),
+            ExprKind::ConstBlock(ref expr) => self.fmt_const_expr(expr),
             ExprKind::Yield(ref expr) => self.fmt_yield_expr(expr),
         }
         self.block_locs.pop();
@@ -3251,15 +3260,12 @@ impl Formatter {
             maybe_wrap!(self, " if ", "if ", guard, fmt_expr);
         }
 
-        match arm.body.expr {
-            ExprKind::Block(..) => {
-                self.raw_insert(" => ");
-                self.fmt_expr(&arm.body);
-            },
-            _ => {
-                self.raw_insert(" =>");
-                maybe_wrap!(self, " ", "", &arm.body, fmt_expr);
-            },
+        if is_block_expr(&arm.body) {
+            self.raw_insert(" => ");
+            self.fmt_expr(&arm.body);
+        } else {
+            self.raw_insert(" =>");
+            maybe_wrap!(self, " ", "", &arm.body, fmt_expr);
         }
         self.raw_insert(",");
     }

@@ -1594,11 +1594,9 @@ impl Translator {
             ast::ExprKind::Async(capture, _, ref block) => ExprKind::Async(self.trans_async_expr(capture, block)),
             ast::ExprKind::Await(ref expr) => ExprKind::Await(Box::new(self.trans_expr(expr))),
             ast::ExprKind::TryBlock(ref block) => ExprKind::TryBlock(self.trans_block(block)),
-            ast::ExprKind::ConstBlock(ref expr) => ExprKind::Const(Box::new(self.trans_expr(&expr.value))),
+            ast::ExprKind::ConstBlock(ref expr) => ExprKind::ConstBlock(Box::new(self.trans_expr(&expr.value))),
             ast::ExprKind::Yield(ref expr) => ExprKind::Yield(Box::new(self.trans_yield_expr(expr))),
-            ast::ExprKind::InlineAsm(..) => unreachable!("{:#?}", expr.kind),
-            ast::ExprKind::LlvmInlineAsm(..) => unreachable!("{:#?}", expr.kind),
-            ast::ExprKind::Err => unreachable!("{:#?}", expr.kind),
+            ast::ExprKind::InlineAsm(..) | ast::ExprKind::LlvmInlineAsm(..)  |ast::ExprKind::Err  => unreachable!("{:#?}", expr.kind),
         };
         self.set_loc(&loc);
 

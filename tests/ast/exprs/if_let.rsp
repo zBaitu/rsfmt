@@ -1,0 +1,6 @@
+fn f() {
+if a | b | c = d {
+} else {
+}
+}
+

@@ -1,0 +1,8 @@
+fn f() {
+async { true };
+async {
+let a = 1
+let b = 2
+};
+}
+

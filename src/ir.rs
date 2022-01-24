@@ -789,7 +789,7 @@ pub enum ExprKind {
     Async(AsyncExpr),
     Await(Box<Expr>),
     TryBlock(Block),
-    Const(Box<Expr>),
+    ConstBlock(Box<Expr>),
     Yield(Box<YieldExpr>),
 }
 
