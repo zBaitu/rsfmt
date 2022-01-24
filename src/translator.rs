@@ -1398,7 +1398,7 @@ impl Translator {
     fn trans_patten(&mut self, pattern: &ast::Pat) -> Pattern {
         let loc = self.loc(&pattern.span);
         let pattern = match pattern.kind {
-            ast::PatKind::Wild => PattenKind::Wildcard,
+            ast::PatKind::Wild => PattenKind::Symbol("_"),
             ast::PatKind::Rest => PattenKind::Symbol(".."),
             ast::PatKind::Lit(ref expr) => PattenKind::Literal(self.trans_expr(expr)),
             ast::PatKind::Box(ref pattern) => PattenKind::Box(Box::new(self.trans_patten(pattern))),

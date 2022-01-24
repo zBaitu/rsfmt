@@ -670,7 +670,6 @@ pub struct Pattern {
 
 #[derive(Debug)]
 pub enum PattenKind {
-    Wildcard,
     Symbol(&'static str),
     Literal(Expr),
     Box(Box<Pattern>),

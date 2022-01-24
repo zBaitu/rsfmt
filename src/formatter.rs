@@ -683,7 +683,6 @@ impl Display for ImplItem {
 impl Display for Pattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.pattern {
-            PattenKind::Wildcard => write!(f, "_"),
             PattenKind::Symbol(ref pattern) => Display::fmt(pattern, f),
             PattenKind::Literal(ref pattern) => Display::fmt(pattern, f),
             PattenKind::Box(ref pattern) => write!(f, "box {}", pattern),
@@ -763,7 +762,7 @@ impl Display for StructFieldPatten {
 
 impl Display for EnumPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.path, f)?;
+        display_qself_or_path(f, &self.qself, &self.path)?;
         display_lists!(f, "(", ", ", ")", &self.patterns)
     }
 }
@@ -1053,7 +1052,15 @@ impl Display for Arm {
         if let Some(ref guard) = self.guard {
             write!(f, " if {}", guard)?;
         }
-        write!(f, " => {}", self.body)
+        match self.body.expr {
+            ExprKind::Block(..) => {
+                write!(f, " =>")?;
+            },
+            _ => {
+                write!(f, " => ")?;
+            },
+        }
+        Display::fmt(&self.body, f)
     }
 }
 
@@ -2712,7 +2719,7 @@ impl Formatter {
         self.block_locs.push(stmt.loc);
         self.try_fmt_leading_comments(&stmt.loc);
         match stmt.stmt {
-            StmtKind::Item(ref item) => self.fmt_item(item, false),
+            StmtKind::Item(ref item) => {self.fmt_item(item, false);},
             StmtKind::Let(ref local) => self.fmt_let(local),
             StmtKind::Expr(ref expr, is_semi) => self.fmt_expr_stmt(expr, is_semi),
             StmtKind::Macro(ref mac) => self.fmt_macro_stmt(mac),
@@ -2743,7 +2750,6 @@ impl Formatter {
     fn fmt_patten(&mut self, pattern: &Pattern) {
         maybe_nl!(self, pattern);
         match pattern.pattern {
-            PattenKind::Wildcard => self.insert("_"),
             PattenKind::Symbol(pattern) => self.insert(pattern),
             PattenKind::Literal(ref pattern) => self.fmt_expr(pattern),
             PattenKind::Box(ref pattern) => self.fmt_box_patten(pattern),
