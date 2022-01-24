@@ -2712,9 +2712,7 @@ impl Formatter {
         self.block_locs.push(stmt.loc);
         self.try_fmt_leading_comments(&stmt.loc);
         match stmt.stmt {
-            StmtKind::Item(ref item) => {
-                self.fmt_item(item, false);
-            },
+            StmtKind::Item(ref item) => self.fmt_item(item, false),
             StmtKind::Let(ref local) => self.fmt_let(local),
             StmtKind::Expr(ref expr, is_semi) => self.fmt_expr_stmt(expr, is_semi),
             StmtKind::Macro(ref mac) => self.fmt_macro_stmt(mac),
