@@ -1,6 +1,6 @@
 default impl A {}
 
-//unsafe impl !A {}
+unsafe impl !A {}
 
 impl A for B {}
 

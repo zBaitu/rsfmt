@@ -565,14 +565,6 @@ pub enum ForeignKind {
 }
 
 #[derive(Debug)]
-pub struct MethodSig {
-    pub header: FnHeader,
-    pub name: String,
-    pub generics: Generics,
-    pub sig: FnSig,
-}
-
-#[derive(Debug)]
 pub struct Trait {
     pub is_auto: bool,
     pub is_unsafe: bool,
@@ -625,12 +617,6 @@ pub enum ImplItemKind {
 }
 
 #[derive(Debug)]
-pub struct MethodImplItem {
-    pub sig: MethodSig,
-    pub block: Block,
-}
-
-#[derive(Debug)]
 pub struct Block {
     pub loc: Loc,
     pub is_unsafe: bool,
@@ -638,7 +624,6 @@ pub struct Block {
 }
 
 impl Block {
-
     pub fn is_one_literal_expr(&self) -> bool {
         if self.stmts.len() != 1 {
             return false;

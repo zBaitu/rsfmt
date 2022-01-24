@@ -637,15 +637,6 @@ impl Display for TraitItem {
     }
 }
 
-impl Display for MethodSig {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}", fn_head(&self.header), self.name)?;
-        display_generics(f, &self.generics)?;
-        Display::fmt(&self.sig, f)?;
-        display_where(f, &self.generics)
-    }
-}
-
 impl Display for Impl {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", impl_head(self.is_unsafe, self.is_default))?;
@@ -2629,6 +2620,7 @@ impl Formatter {
             },
             TraitItemKind::MacroCall(ref item) => {
                 self.fmt_macro(item);
+                self.raw_insert(";");
                 false
             },
         }

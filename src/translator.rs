@@ -481,7 +481,7 @@ impl Translator {
                     ast::ModKind::Loaded(ref items, ..) => ItemKind::Mod(self.trans_mod(is_unsafe, ident, items)),
                 }
             },
-            ast::ItemKind::TyAlias(ref ty_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, ty_alias)),
+            ast::ItemKind::TyAlias(ref type_alias) => ItemKind::TypeAlias(self.trans_type_alias(ident, type_alias)),
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
@@ -1232,7 +1232,7 @@ impl Translator {
         let vis = self.trans_vis(&item.vis);
         let ident = ident_to_string(&item.ident);
         let item = match item.kind {
-            ast::ForeignItemKind::TyAlias(ref ty_alias) => ForeignKind::TypeAlias(self.trans_type_alias(ident, ty_alias)),
+            ast::ForeignItemKind::TyAlias(ref type_alias) => ForeignKind::TypeAlias(self.trans_type_alias(ident, type_alias)),
             ast::ForeignItemKind::Static(ref ty, mutability, ref expr) => {
                 ForeignKind::Static(self.trans_static(mutability, ident, ty, expr))
             },
@@ -1320,8 +1320,8 @@ impl Translator {
             ast::AssocItemKind::Const(defaultness, ref ty, ref expr) => {
                 ImplItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
             },
-            ast::AssocItemKind::TyAlias(ref ty_alias) => {
-                ImplItemKind::TypeAlias(self.trans_type_alias(ident, ty_alias))
+            ast::AssocItemKind::TyAlias(ref type_alias) => {
+                ImplItemKind::TypeAlias(self.trans_type_alias(ident, type_alias))
             },
             ast::AssocItemKind::Fn(ref fn_kind) => {
                 ImplItemKind::Fn(self.trans_fn(ident, fn_kind))
@@ -1935,7 +1935,7 @@ impl Translator {
             exprs.push(match parser.parse_expr() {
                 Ok(expr) => expr,
                 Err(mut e) => {
-                    e.cancel();
+                    e.emit();
                     panic!()
                 },
             });
