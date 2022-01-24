@@ -89,7 +89,7 @@ fn ext_to_string(ext: ast::Extern) -> Option<String> {
 }
 
 fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
-    abi.as_ref().map(|abi| abi.symbol_unescaped.to_string())
+    abi.as_ref().map(|abi| format!("\"{}\"", abi.symbol_unescaped.to_string()))
 }
 
 
@@ -926,7 +926,7 @@ impl Translator {
             ast::TyKind::Tup(ref types) => TypeKind::Tuple(Box::new(self.trans_tuple_type(types))),
             ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&[ty.clone()]))),
             ast::TyKind::Slice(ref ty) => TypeKind::Slice(Box::new(self.trans_slice_type(ty))),
-            ast::TyKind::Array(ref ty, ref anon_const) => TypeKind::Array(Box::new(self.trans_array_type(ty, &anon_const.value))),
+            ast::TyKind::Array(ref ty, ref ac) => TypeKind::Array(Box::new(self.trans_array_type(ty, &ac.value))),
             ast::TyKind::AnonymousStruct(ref fields, _) => TypeKind::Struct(self.trans_struct_type(fields)),
             ast::TyKind::AnonymousUnion(ref fields, _) => TypeKind::Union(self.trans_union_type(fields)),
             ast::TyKind::TraitObject(ref bounds, syntax) => {
@@ -1194,15 +1194,6 @@ impl Translator {
         self.is_nl(right_arrow_pos)
     }
 
-    fn trans_fn_header(&mut self, header: &ast::FnHeader) -> FnHeader {
-        FnHeader {
-            is_unsafe: is_unsafe(header.unsafety),
-            is_async: is_async(header.asyncness),
-            is_const: is_const(header.constness),
-            ext: ext_to_string(header.ext),
-        }
-    }
-
     fn trans_fn(&mut self, ident: String, fn_kind: &ast::FnKind) -> Fn {
         Fn {
             is_default: is_default(fn_kind.0),
@@ -1211,6 +1202,15 @@ impl Translator {
             sig: self.trans_fn_sig(&fn_kind.1.decl),
             generics: self.trans_generics(&fn_kind.2),
             block: map_ref_mut(&fn_kind.3, |block|  self.trans_block(block)),
+        }
+    }
+
+    fn trans_fn_header(&mut self, header: &ast::FnHeader) -> FnHeader {
+        FnHeader {
+            is_unsafe: is_unsafe(header.unsafety),
+            is_async: is_async(header.asyncness),
+            is_const: is_const(header.constness),
+            ext: ext_to_string(header.ext),
         }
     }
 

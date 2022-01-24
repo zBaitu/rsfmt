@@ -524,6 +524,24 @@ pub struct Return {
     pub ret: Option<Type>,
 }
 
+#[derive(Debug, Default)]
+pub struct FnHeader {
+    pub is_unsafe: bool,
+    pub is_async: bool,
+    pub is_const: bool,
+    pub ext: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct Fn {
+    pub is_default: bool,
+    pub header: FnHeader,
+    pub name: String,
+    pub generics: Generics,
+    pub sig: FnSig,
+    pub block: Option<Block>,
+}
+
 #[derive(Debug)]
 pub struct ForeignMod {
     pub abi: Option<String>,
@@ -544,24 +562,6 @@ pub enum ForeignKind {
     Static(Static),
     Fn(Fn),
     MacroCall(MacroCall),
-}
-
-#[derive(Debug, Default)]
-pub struct FnHeader {
-    pub is_unsafe: bool,
-    pub is_async: bool,
-    pub is_const: bool,
-    pub ext: Option<String>,
-}
-
-#[derive(Debug)]
-pub struct Fn {
-    pub is_default: bool,
-    pub header: FnHeader,
-    pub name: String,
-    pub generics: Generics,
-    pub sig: FnSig,
-    pub block: Option<Block>,
 }
 
 #[derive(Debug)]

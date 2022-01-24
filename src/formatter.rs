@@ -182,8 +182,8 @@ impl Display for Item {
             ItemKind::Struct(ref item) => Display::fmt(item, f),
             ItemKind::Union(ref item) => Display::fmt(item, f),
             ItemKind::Enum(ref item) => Display::fmt(item, f),
-            ItemKind::ForeignMod(ref item) => Display::fmt(item, f),
             ItemKind::Fn(ref item) => Display::fmt(item, f),
+            ItemKind::ForeignMod(ref item) => Display::fmt(item, f),
             ItemKind::Trait(ref item) => Display::fmt(item, f),
             ItemKind::Impl(ref item) => Display::fmt(item, f),
             ItemKind::MacroDef(ref item) => Display::fmt(item, f),
@@ -465,41 +465,10 @@ impl Display for TupleField {
     }
 }
 
-impl Display for FnSig {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_params(f, &self.params)?;
-        Display::fmt(&self.ret, f)
-    }
-}
-
-impl Display for Param {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.has_patten {
-            write!(f, "{}", self.pattern)?;
-            match self.ty.ty {
-                TypeKind::Symbol(s) if s == "_" => OK,
-                _ => write!(f, ": {}", self.ty),
-            }
-        } else if let PattenKind::Ident(ref pattern) = self.pattern.pattern {
-            write!(f, "{}{}", ident_patten_head(pattern.is_ref, pattern.is_mut), self.ty)
-        } else {
-            Display::fmt(&self.ty, f)
-        }
-    }
-}
-
-impl Display for Return {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.ret {
-            Some(ref ty) => write!(f, " -> {}", ty),
-            None => OK,
-        }
-    }
-}
 
 impl Display for Const {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "const {}: {}", self.name, self.ty)?;
+        write!(f, "{}const {}: {}", default_head(self.is_default), self.name, self.ty)?;
         if let Some(ref expr) = self.expr {
             write!(f, " = {}", expr)?;
         }
@@ -575,6 +544,51 @@ impl Display for EnumField {
     }
 }
 
+impl Display for FnSig {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        display_params(f, &self.params)?;
+        Display::fmt(&self.ret, f)
+    }
+}
+
+impl Display for Param {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.has_patten {
+            write!(f, "{}", self.pattern)?;
+            match self.ty.ty {
+                TypeKind::Symbol(s) if s == "_" => OK,
+                _ => write!(f, ": {}", self.ty),
+            }
+        } else if let PattenKind::Ident(ref pattern) = self.pattern.pattern {
+            write!(f, "{}{}", ident_patten_head(pattern.is_ref, pattern.is_mut), self.ty)
+        } else {
+            Display::fmt(&self.ty, f)
+        }
+    }
+}
+
+impl Display for Return {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.ret {
+            Some(ref ty) => write!(f, " -> {}", ty),
+            None => OK,
+        }
+    }
+}
+
+impl Display for Fn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}", fn_head(&self.header), self.name)?;
+        display_generics(f, &self.generics)?;
+        Display::fmt(&self.sig, f)?;
+        display_where(f, &self.generics)?;
+        if let Some(ref block) = self.block {
+            try_display_block_one_line(f, block)?;
+        }
+        OK
+    }
+}
+
 impl Display for ForeignMod {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", foreign_head(&self.abi))?;
@@ -593,24 +607,11 @@ impl Display for ForeignItem {
 impl Display for ForeignKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ForeignKind::TypeAlias(ref item) => write!(f, "type {}", item),
+            ForeignKind::TypeAlias(ref item) => Display::fmt(item, f),
             ForeignKind::Static(ref item) => Display::fmt(item, f),
             ForeignKind::Fn(ref item) => Display::fmt(item, f),
             ForeignKind::MacroCall(ref item) => Display::fmt(item, f),
         }
-    }
-}
-
-impl Display for Fn {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}", fn_head(&self.header), self.name)?;
-        display_generics(f, &self.generics)?;
-        Display::fmt(&self.sig, f)?;
-        display_where(f, &self.generics)?;
-        if let Some(ref block) = self.block {
-            try_display_block_one_line(f, block)?;
-        }
-        OK
     }
 }
 
@@ -1304,12 +1305,20 @@ fn vis_head(vis: &Vis) -> String {
 }
 
 
-fn unsafe_head(is_unsafe: bool) -> String {
-    let mut head = String::new();
+fn unsafe_head(is_unsafe: bool) -> &'static str {
     if is_unsafe {
-        head.push_str("unsafe ");
+        "unsafe "
+    } else {
+        ""
     }
-    head
+}
+
+fn default_head(is_default: bool) -> &'static str {
+    if is_default {
+        "default "
+    } else {
+        ""
+    }
 }
 
 fn ref_head(lifetime: &Option<Lifetime>, is_raw: bool, is_mut: bool) -> String {
@@ -1396,8 +1405,8 @@ fn impl_head(is_unsafe: bool, is_default: bool) -> String {
 fn foreign_head(abi: &Option<String>) -> String {
     let mut head = String::new();
     head.push_str("extern");
-    head.push(' ');
     if let Some(ref abi) = abi {
+        head.push(' ');
         head.push_str(abi);
     }
     head
@@ -2072,13 +2081,13 @@ impl Formatter {
                 self.fmt_enum(item);
                 true
             },
-            ItemKind::ForeignMod(ref item) => {
-                self.fmt_foreign_mod(item);
-                true
-            },
             ItemKind::Fn(ref item) => {
                 // TODO
                 self.fmt_fn(item);
+                true
+            },
+            ItemKind::ForeignMod(ref item) => {
+                self.fmt_foreign_mod(item);
                 true
             },
             ItemKind::Trait(ref item) => {
@@ -2415,9 +2424,8 @@ impl Formatter {
 
 
 
-    // TODO default
     fn fmt_const(&mut self, item: &Const) {
-        self.insert(&format!("const {}", item.name));
+        self.insert(&format!("{}const {}", default_head(item.is_default), item.name));
         insert_sep!(self, ":", item.ty);
         self.fmt_type(&item.ty);
         if let Some(ref expr) = item.expr {
@@ -2511,6 +2519,57 @@ impl Formatter {
         self.raw_insert(",");
     }
 
+    fn fmt_fn_sig(&mut self, sig: &FnSig) {
+        self.fmt_fn_params(&sig.params);
+        self.fmt_fn_return(&sig.ret);
+    }
+
+
+    fn fmt_fn_params(&mut self, params: &[Param]) -> bool {
+        fmt_comma_lists!(self, "(", ")", params, fmt_param)
+    }
+
+
+    fn fmt_param(&mut self, param: &Param) {
+        maybe_nl!(self, param);
+        maybe_wrap!(self, param);
+
+        if param.has_patten {
+            self.fmt_patten(&param.pattern);
+            self.raw_insert(": ");
+        } else if let PattenKind::Ident(ref pattern) = param.pattern.pattern {
+            self.insert(&ident_patten_head(pattern.is_ref, pattern.is_mut));
+        }
+        self.fmt_type(&param.ty);
+    }
+
+
+    fn fmt_fn_return(&mut self, ret: &Return) {
+        if let Some(ref ty) = ret.ret {
+            if ret.nl {
+                self.nl_indent();
+                self.raw_insert("-> ");
+            } else {
+                maybe_nl_indent!(self, " -> ", "-> ", ty);
+            }
+            self.fmt_type(ty);
+        }
+    }
+
+    fn fmt_fn(&mut self, item: &Fn) -> bool {
+        self.insert(&format!("{} {}", fn_head(&item.header), item.name));
+        self.fmt_generics(&item.generics);
+        self.fmt_fn_sig(&item.sig);
+        self.fmt_where(&item.generics);
+        if let Some(ref block) = item.block {
+            self.try_fmt_block_one_line(block);
+            true
+        } else {
+            self.raw_insert(";");
+            false
+        }
+    }
+
     fn fmt_foreign_mod(&mut self, item: &ForeignMod) {
         self.insert(&foreign_head(&item.abi));
         fmt_block!(self, &item.items, fmt_foreign_items);
@@ -2535,22 +2594,9 @@ impl Formatter {
             ForeignKind::Fn(ref item) => self.fmt_fn(item),
             ForeignKind::MacroCall(ref item) => {
                 self.fmt_macro(item);
+                self.raw_insert(";");
                 false
             }
-        }
-    }
-
-    fn fmt_fn(&mut self, item: &Fn) -> bool {
-        self.insert(&format!("{} {}", fn_head(&item.header), item.name));
-        self.fmt_generics(&item.generics);
-        self.fmt_fn_sig(&item.sig);
-        self.fmt_where(&item.generics);
-        if let Some(ref block) = item.block {
-            self.try_fmt_block_one_line(block);
-            true
-        } else {
-            self.raw_insert(";");
-            false
         }
     }
 
@@ -2635,42 +2681,6 @@ impl Formatter {
 
 
 
-    fn fmt_fn_sig(&mut self, sig: &FnSig) {
-        self.fmt_fn_params(&sig.params);
-        self.fmt_fn_return(&sig.ret);
-    }
-
-
-    fn fmt_fn_params(&mut self, params: &[Param]) -> bool {
-        fmt_comma_lists!(self, "(", ")", params, fmt_param)
-    }
-
-
-    fn fmt_param(&mut self, param: &Param) {
-        maybe_nl!(self, param);
-        maybe_wrap!(self, param);
-
-        if param.has_patten {
-            self.fmt_patten(&param.pattern);
-            self.raw_insert(": ");
-        } else if let PattenKind::Ident(ref pattern) = param.pattern.pattern {
-            self.insert(&ident_patten_head(pattern.is_ref, pattern.is_mut));
-        }
-        self.fmt_type(&param.ty);
-    }
-
-
-    fn fmt_fn_return(&mut self, ret: &Return) {
-        if let Some(ref ty) = ret.ret {
-            if ret.nl {
-                self.nl_indent();
-                self.raw_insert("-> ");
-            } else {
-                maybe_nl_indent!(self, " -> ", "-> ", ty);
-            }
-            self.fmt_type(ty);
-        }
-    }
 
 
     fn try_fmt_block_one_line(&mut self, block: &Block) -> bool {
