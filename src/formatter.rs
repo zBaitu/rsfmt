@@ -2552,15 +2552,18 @@ impl Formatter {
 
 
     fn fmt_fn_return(&mut self, ret: &Return) {
-        if let Some(ref ty) = ret.ret {
-            if ret.nl {
-                self.nl_indent();
-                self.raw_insert("-> ");
-            } else {
-                maybe_nl_indent!(self, " -> ", "-> ", ty);
-            }
-            self.fmt_type(ty);
+        if ret.ret.is_none() {
+            return;
         }
+
+        let ty = ret.ret.as_ref().unwrap();
+        if ret.nl {
+            self.nl_indent();
+            self.raw_insert("-> ");
+        } else {
+            maybe_nl_indent!(self, " -> ", "-> ", ty);
+        }
+        self.fmt_type(ty);
     }
 
     fn fmt_fn(&mut self, item: &Fn) -> bool {

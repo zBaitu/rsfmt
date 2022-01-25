@@ -4,7 +4,7 @@ use std::fmt::{self, Debug};
 const NL: char = '\n';
 
 const EXCEED_WIDTH: usize = 120;
-const MAX_WIDTH: usize = EXCEED_WIDTH - 1;
+const MAX_WIDTH: usize = EXCEED_WIDTH - 2;
 const MAX_ALIGN_COL: usize = EXCEED_WIDTH / 3;
 
 const INDENT: &str = "    ";
