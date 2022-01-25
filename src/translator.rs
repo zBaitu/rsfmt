@@ -456,7 +456,7 @@ impl Translator {
             },
             ast::ItemKind::Const(defaultness, ref ty, ref expr) => {
                 ItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
-            }
+            },
             ast::ItemKind::Static(ref ty, mutability, ref expr) => {
                 ItemKind::Static(self.trans_static(mutability, ident, ty, expr))
             },
@@ -786,10 +786,10 @@ impl Translator {
         let loc = self.loc(&binding.span);
         let name = ident_to_string(&binding.ident);
         let binding = match binding.kind {
-            ast::AssocTyConstraintKind::Equality { ref ty } => TypeBindingKind::Eq(self.trans_type(ty)),
-            ast::AssocTyConstraintKind::Bound { ref bounds } => {
+            ast::AssocTyConstraintKind::Equality { ref ty, } => TypeBindingKind::Eq(self.trans_type(ty)),
+            ast::AssocTyConstraintKind::Bound { ref bounds, } => {
                 TypeBindingKind::Bound(self.trans_type_param_bounds(bounds))
-            }
+            },
         };
         self.set_loc(&loc);
 
@@ -890,7 +890,7 @@ impl Translator {
             ast::TyKind::Ptr(ref mut_type) => TypeKind::Ptr(Box::new(self.trans_ptr_type(mut_type))),
             ast::TyKind::Rptr(ref lifetime, ref mut_type) => {
                 TypeKind::Ref(Box::new(self.trans_ref_type(lifetime, mut_type)))
-            }
+            },
             ast::TyKind::Tup(ref types) => TypeKind::Tuple(Box::new(self.trans_tuple_type(types))),
             ast::TyKind::Paren(ref ty) => TypeKind::Tuple(Box::new(self.trans_tuple_type(&[ty.clone()]))),
             ast::TyKind::Slice(ref ty) => TypeKind::Slice(Box::new(self.trans_slice_type(ty))),
@@ -1199,7 +1199,7 @@ impl Translator {
         let item = match item.kind {
             ast::ForeignItemKind::TyAlias(ref type_alias) => {
                 ForeignKind::TypeAlias(self.trans_type_alias(ident, type_alias))
-            }
+            },
             ast::ForeignItemKind::Static(ref ty, mutability, ref expr) => {
                 ForeignKind::Static(self.trans_static(mutability, ident, ty, expr))
             },
@@ -1498,7 +1498,7 @@ impl Translator {
             ast::ExprKind::Box(ref expr) => ExprKind::Box(Box::new(self.trans_expr(expr))),
             ast::ExprKind::AddrOf(borrow, mutabilitye, ref expr) => {
                 ExprKind::Ref(Box::new(self.trans_ref_expr(borrow, mutabilitye, expr)))
-            }
+            },
             ast::ExprKind::Unary(op, ref expr) => ExprKind::UnaryOp(Box::new(self.trans_unary_expr(op, expr))),
             ast::ExprKind::Try(ref expr) => ExprKind::Try(Box::new(self.trans_expr(expr))),
             ast::ExprKind::Binary(ref op, ref left, ref right) => {
@@ -1562,7 +1562,7 @@ impl Translator {
             ast::ExprKind::Yield(ref expr) => ExprKind::Yield(Box::new(self.trans_yield_expr(expr))),
             ast::ExprKind::InlineAsm(..) | ast::ExprKind::LlvmInlineAsm(..) | ast::ExprKind::Err => {
                 unreachable!("{:#?}", expr.kind)
-            }
+            },
         };
         self.set_loc(&loc);
 
