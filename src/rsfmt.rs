@@ -120,6 +120,7 @@ fn fmt_str(src: String, path: &Path, overwrite: bool) {
         exit = true;
     }
     if exit {
+        eprintln!("{:?}", path);
         std::process::exit(1);
     }
 }

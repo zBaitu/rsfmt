@@ -714,14 +714,15 @@ impl Translator {
 
     fn trans_const_params(&mut self, params: &[ast::GenericParam]) -> Vec<ConstParam> {
         params.iter().fold(Vec::new(), |mut const_params, param| {
-            if let ast::GenericParamKind::Const { ref ty, ref kw_span, ref default } = param.kind {
+            if let ast::GenericParamKind::Const { ref ty, ref kw_span, ref default, } = param.kind {
                 const_params.push(self.trans_const_param(kw_span, &param.ident, ty, default));
             }
             const_params
         })
     }
 
-    fn trans_const_param(&mut self, span: &ast::Span, ident: &ast::Ident, ty: &ast::Ty, default: &Option<ast::AnonConst>) -> ConstParam {
+    fn trans_const_param(&mut self, span: &ast::Span, ident: &ast::Ident,
+                         ty: &ast::Ty, default: &Option<ast::AnonConst>) -> ConstParam {
         let loc = self.loc(span);
         let name = ident_to_string(ident);
         let ty = self.trans_type(ty);
