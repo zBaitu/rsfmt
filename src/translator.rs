@@ -176,7 +176,7 @@ fn has_patten(param: &ast::Param, pattern: &Pattern) -> bool {
     if let Some(sf) = param.to_self() {
         match sf.node {
             ast::SelfKind::Value(..) | ast::SelfKind::Region(..) => return false,
-            _ => {},
+            _ => (),
         }
     }
 
@@ -609,6 +609,7 @@ impl Translator {
         Generics {
             lifetime_defs: self.trans_lifetime_defs(&generics.params),
             type_params: self.trans_type_params(&generics.params),
+            const_params: self.trans_const_params(&generics.params),
             wh: self.trans_where(&generics.where_clause.predicates),
         }
     }
@@ -709,6 +710,30 @@ impl Translator {
 
     fn trans_trait_ref(&mut self, trait_ref: &ast::TraitRef) -> TraitRef {
         self.trans_path(&trait_ref.path)
+    }
+
+    fn trans_const_params(&mut self, params: &[ast::GenericParam]) -> Vec<ConstParam> {
+        params.iter().fold(Vec::new(), |mut const_params, param| {
+            if let ast::GenericParamKind::Const { ref ty, ref kw_span, ref default } = param.kind {
+                const_params.push(self.trans_const_param(kw_span, &param.ident, ty, default));
+            }
+            const_params
+        })
+    }
+
+    fn trans_const_param(&mut self, span: &ast::Span, ident: &ast::Ident, ty: &ast::Ty, default: &Option<ast::AnonConst>) -> ConstParam {
+        let loc = self.loc(span);
+        let name = ident_to_string(ident);
+        let ty = self.trans_type(ty);
+        let default = map_ref_mut(default, |ac| self.trans_expr(&ac.value));
+        self.set_loc(&loc);
+
+        ConstParam {
+            loc,
+            name,
+            ty,
+            default,
+        }
     }
 
     fn trans_path(&mut self, path: &ast::Path) -> Path {

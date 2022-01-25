@@ -168,12 +168,13 @@ pub struct TraitAlias {
 pub struct Generics {
     pub lifetime_defs: Vec<LifetimeDef>,
     pub type_params: Vec<TypeParam>,
+    pub const_params: Vec<ConstParam>,
     pub wh: Where,
 }
 
 impl Generics {
     pub fn is_empty(&self) -> bool {
-        self.lifetime_defs.is_empty() && self.type_params.is_empty()
+        self.lifetime_defs.is_empty() && self.type_params.is_empty() && self.const_params.is_empty()
     }
 }
 
@@ -227,6 +228,14 @@ impl PolyTraitRef {
 }
 
 pub type TraitRef = Path;
+
+#[derive(Debug)]
+pub struct ConstParam {
+    pub loc: Loc,
+    pub name: String,
+    pub ty: Type,
+    pub default: Option<Expr>,
+}
 
 #[derive(Debug)]
 pub struct Where {

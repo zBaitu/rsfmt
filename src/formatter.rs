@@ -248,7 +248,7 @@ impl Display for TraitAlias {
 impl Display for Generics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if !self.is_empty() {
-            display_lists!(f, "<", ", ", ">", &self.lifetime_defs, &self.type_params)?;
+            display_lists!(f, "<", ", ", ">", &self.lifetime_defs, &self.type_params, &self.const_params)?;
         }
         if !self.wh.is_empty() {
             write!(f, " where {}", self.wh)?;
@@ -298,6 +298,16 @@ impl Display for PolyTraitRef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         display_for_liftime_defs(f, &self.lifetime_defs)?;
         Display::fmt(&self.trait_ref, f)
+    }
+}
+
+impl Display for ConstParam {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "const {}: {}", self.name, self.ty)?;
+        if let Some(ref expr) = self.default {
+            write!(f, " = {}", expr)?;
+        }
+        OK
     }
 }
 
@@ -1247,7 +1257,7 @@ fn display_path_segments(f: &mut fmt::Formatter, segments: &[PathSegment]) -> fm
 
 fn display_generics(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
     if !generics.is_empty() {
-        display_lists!(f, "<", ", ", ">", &generics.lifetime_defs, &generics.type_params)?;
+        display_lists!(f, "<", ", ", ">", &generics.lifetime_defs, &generics.type_params, &generics.const_params)?;
     }
     OK
 }
@@ -2109,8 +2119,10 @@ impl Formatter {
 
     fn fmt_generics(&mut self, generics: &Generics) {
         if !generics.is_empty() {
-            fmt_comma_lists!(self, "<", ">", &generics.lifetime_defs, fmt_lifetime_def,
-                             &generics.type_params, fmt_type_param);
+            fmt_comma_lists!(self, "<", ">",
+                             &generics.lifetime_defs, fmt_lifetime_def,
+                             &generics.type_params, fmt_type_param,
+                             &generics.const_params, fmt_const_param);
         }
     }
 
@@ -2172,6 +2184,18 @@ impl Formatter {
 
     fn fmt_trait_ref(&mut self, trait_ref: &TraitRef) {
         self.fmt_path(trait_ref, false);
+    }
+
+    fn fmt_const_param(&mut self, const_param: &ConstParam) {
+        maybe_nl!(self, const_param);
+        maybe_wrap!(self, const_param);
+
+        self.insert(&format!("const {}", const_param.name));
+        insert_sep!(self, ":", const_param.ty);
+        self.fmt_type(&const_param.ty);
+        if let Some(ref expr) = const_param.default {
+            maybe_wrap!(self, " = ", "= ", expr, fmt_expr);
+        }
     }
 
     fn fmt_where(&mut self, generics: &Generics) {
