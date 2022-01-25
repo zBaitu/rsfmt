@@ -2555,7 +2555,9 @@ impl Formatter {
         match item.item {
             TraitItemKind::Const(ref item) => self.fmt_const(item),
             TraitItemKind::TypeAlias(ref item) => self.fmt_type_alias(item),
-            TraitItemKind::Fn(ref item) => { nl = self.fmt_fn(item); },
+            TraitItemKind::Fn(ref item) => {
+                nl = self.fmt_fn(item);
+            },
             TraitItemKind::MacroCall(ref item) => {
                 self.fmt_macro(item);
                 self.raw_insert(";");
@@ -2593,7 +2595,9 @@ impl Formatter {
         match item.item {
             ImplItemKind::Const(ref item) => self.fmt_const(item),
             ImplItemKind::TypeAlias(ref item) => self.fmt_type_alias(item),
-            ImplItemKind::Fn(ref item) => { nl = self.fmt_fn(item); },
+            ImplItemKind::Fn(ref item) => {
+                nl = self.fmt_fn(item);
+            },
             ImplItemKind::MacroCall(ref item) => {
                 self.fmt_macro(item);
                 self.raw_insert(";");
@@ -2638,7 +2642,9 @@ impl Formatter {
         self.block_locs.push(stmt.loc);
         self.try_fmt_leading_comments(&stmt.loc);
         match stmt.stmt {
-            StmtKind::Item(ref item) => {self.fmt_item(item, false);}
+            StmtKind::Item(ref item) => {
+                self.fmt_item(item, false);
+            },
             StmtKind::Let(ref local) => self.fmt_let(local),
             StmtKind::Expr(ref expr, is_semi) => self.fmt_expr_stmt(expr, is_semi),
             StmtKind::Macro(ref mac) => self.fmt_macro_stmt(mac),
