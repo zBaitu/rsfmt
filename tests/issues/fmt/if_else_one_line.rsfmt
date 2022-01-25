@@ -1,0 +1,10 @@
+fn unsafe_head(is_unsafe: bool) -> &'static str {
+    if is_unsafe { "unsafe " } else { "" }
+
+    if is_unsafe {
+        "unsafe "
+    } else {
+        ""
+    }
+}
+
