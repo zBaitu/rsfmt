@@ -22,7 +22,7 @@ macro_rules! display_lines {
 macro_rules! display_items {
     ($f:expr, $items: expr) => ({
         display_lines!($f, $items, "")
-    })
+    });
 }
 
 macro_rules! display_lists {
@@ -51,7 +51,7 @@ macro_rules! display_fields_block {
         writeln!($f, " {{")?;
         display_fields!($f, $fields)?;
         write!($f, "}}")
-    })
+    });
 }
 
 macro_rules! display_fields {
@@ -65,7 +65,7 @@ macro_rules! display_decls_block {
         writeln!($f, " {{")?;
         display_decls!($f, $items)?;
         write!($f, "}}")
-    })
+    });
 }
 
 macro_rules! display_decls {
@@ -79,7 +79,7 @@ macro_rules! display_block {
         writeln!($f, " {{")?;
         display_items!($f, $items)?;
         write!($f, "}}")
-    })
+    });
 }
 
 macro_rules! select_str {
@@ -407,7 +407,7 @@ impl Display for Type {
 
 impl Display for PathType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_qself_or_path(f, &self.qself, &self.path)
+        display_qself_path(f, &self.qself, &self.path)
     }
 }
 
@@ -740,7 +740,7 @@ impl Display for IdentPatten {
 
 impl Display for StructPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_qself_or_path(f, &self.qself, &self.path)?;
+        display_qself_path(f, &self.qself, &self.path)?;
 
         if self.fields.is_empty() {
             if self.omit {
@@ -771,7 +771,7 @@ impl Display for StructFieldPatten {
 
 impl Display for EnumPatten {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_qself_or_path(f, &self.qself, &self.path)?;
+        display_qself_path(f, &self.qself, &self.path)?;
         display_lists!(f, "(", ", ", ")", &self.patterns)
     }
 }
@@ -907,7 +907,7 @@ impl Display for IndexExpr {
 
 impl Display for StructExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        display_qself_or_path(f, &self.qself, &self.path)?;
+        display_qself_path(f, &self.qself, &self.path)?;
 
         writeln!(f, " {{")?;
         display_fields!(f, &self.fields)?;
@@ -1236,7 +1236,7 @@ fn display_paren_param_inputs(f: &mut fmt::Formatter, inputs: &[Type]) -> fmt::R
     display_lists!(f, "(", ", ", ")", inputs)
 }
 
-fn display_qself_or_path(f: &mut fmt::Formatter, qself: &Option<QSelf>, path: &Path) -> fmt::Result {
+fn display_qself_path(f: &mut fmt::Formatter, qself: &Option<QSelf>, path: &Path) -> fmt::Result {
     match qself {
         Some(ref qself) => display_qself_and_path(f, qself, path),
         None => Display::fmt(path, f),
@@ -1474,6 +1474,7 @@ macro_rules! maybe_nl {
             $sf.wrap();
         }
     });
+
     ($sf:expr, $e:expr) => ({
         if $e.loc.nl {
             $sf.wrap();
@@ -1669,7 +1670,7 @@ macro_rules! fmt_block {
 
     ($sf:expr, $items:expr, $fmt:ident) => ({
         fmt_block!($sf, $items, $items, $fmt);
-    })
+    });
 }
 
 macro_rules! fmt_items {
@@ -1701,6 +1702,18 @@ macro_rules! fmt_items_maybe_nl {
 
             $sf.try_fmt_trailing_comment(&item.loc);
             $sf.nl();
+        }
+    });
+}
+
+macro_rules! fmt_qself_path {
+    ($sf:ident, $item:ident, $from_expr:expr) => ({
+        match $item.qself {
+            Some(ref qself) => {
+                maybe_wrap!($sf, $item);
+                $sf.fmt_qself_path(qself, &$item.path, $from_expr);
+            },
+            None => $sf.fmt_path(&$item.path, $from_expr),
         }
     });
 }
@@ -2054,7 +2067,6 @@ impl Formatter {
                 true
             },
             ItemKind::Fn(ref item) => {
-                // TODO
                 self.fmt_fn(item);
                 true
             },
@@ -2331,13 +2343,7 @@ impl Formatter {
     }
 
     fn fmt_path_type(&mut self, ty: &PathType, from_expr: bool) {
-        match ty.qself {
-            Some(ref qself) => {
-                maybe_wrap!(self, ty);
-                self.fmt_qself_path(qself, &ty.path, from_expr);
-            },
-            None => self.fmt_path(&ty.path, from_expr),
-        }
+        fmt_qself_path!(self, ty, from_expr);
     }
 
     fn fmt_ptr_type(&mut self, ty: &PtrType) {
@@ -2750,14 +2756,7 @@ impl Formatter {
     }
 
     fn fmt_struct_patten(&mut self, pattern: &StructPatten) {
-        // TODO
-        match pattern.qself {
-            Some(ref qself) => {
-                maybe_wrap!(self, pattern);
-                self.fmt_qself_path(qself, &pattern.path, false);
-            },
-            None => self.fmt_path(&pattern.path, false),
-        }
+        fmt_qself_path!(self, pattern, false);
 
         if pattern.fields.is_empty() {
             if pattern.omit {
@@ -2820,14 +2819,7 @@ impl Formatter {
     }
 
     fn fmt_enum_patten(&mut self, pattern: &EnumPatten) {
-        match pattern.qself {
-            Some(ref qself) => {
-                maybe_wrap!(self, pattern);
-                self.fmt_qself_path(qself, &pattern.path, false);
-            },
-            None => self.fmt_path(&pattern.path, false),
-        }
-
+        fmt_qself_path!(self, pattern, false);
         fmt_comma_lists!(self, "(", ")", &pattern.patterns, fmt_patten);
     }
 
@@ -2964,13 +2956,7 @@ impl Formatter {
     }
 
     fn fmt_struct_expr(&mut self, expr: &StructExpr) {
-        match expr.qself {
-            Some(ref qself) => {
-                maybe_wrap!(self, expr);
-                self.fmt_qself_path(qself, &expr.path, false);
-            },
-            None => self.fmt_path(&expr.path, false),
-        }
+        fmt_qself_path!(self, expr, false);
 
         if expr.fields.is_empty() && !expr.has_rest {
             self.insert(" {}");

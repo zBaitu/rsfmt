@@ -44,7 +44,7 @@ macro_rules! minus_novf {
         } else {
             $a - $b
         }
-    })
+    });
 }
 
 fn list_len_info(list: &[&str]) -> (usize, usize) {
