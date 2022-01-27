@@ -227,8 +227,8 @@ fn is_macro_semi(style: ast::MacStmtStyle) -> bool {
     matches!(style, ast::MacStmtStyle::Semicolon)
 }
 
-fn map_ref_mut<T, F, R>(opt: &Option<T>, f: F) -> Option<R> where F: FnMut(&T) -> R {
-    opt.as_ref().map(f)
+fn map_trans_label(label: &Option<ast::Label>) -> Option<String> {
+    label.as_ref().map(|label| ident_to_string(&label.ident))
 }
 
 macro_rules! trans_list {
@@ -726,7 +726,7 @@ impl Translator {
         let loc = self.loc(span);
         let name = ident_to_string(ident);
         let ty = self.trans_type(ty);
-        let default = map_ref_mut(default, |ac| self.trans_expr(&ac.value));
+        let default = default.as_ref().map(|ac| self.trans_expr(&ac.value));
         self.set_loc(&loc);
 
         ConstParam {
@@ -970,7 +970,7 @@ impl Translator {
 
     fn trans_ref_type(&mut self, lifetime: &Option<ast::Lifetime>, mut_type: &ast::MutTy) -> RefType {
         RefType {
-            lifetime: map_ref_mut(lifetime, |lifetime| self.trans_lifetime(&lifetime.ident)),
+            lifetime: lifetime.as_ref().map(|lifetime| self.trans_lifetime(&lifetime.ident)),
             is_mut: is_mut(mut_type.mutbl),
             ty: self.trans_type(&mut_type.ty),
         }
@@ -1145,7 +1145,7 @@ impl Translator {
         let attrs = self.trans_thin_attrs(&var.attrs);
         let name = ident_to_string(&var.ident);
         let body = self.trans_struct_body(&var.data);
-        let expr = map_ref_mut(&var.disr_expr, |ac| self.trans_expr(&ac.value));
+        let expr = var.disr_expr.as_ref().map(|ac| self.trans_expr(&ac.value));
         self.set_loc(&loc);
 
         EnumField {
@@ -1746,7 +1746,7 @@ impl Translator {
 
     fn trans_block_expr(&mut self, block: &ast::Block, label: &Option<ast::Label>) -> BlockExpr {
         BlockExpr {
-            label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
+            label: map_trans_label(label),
             block: self.trans_block(block),
         }
     }
@@ -1761,7 +1761,7 @@ impl Translator {
 
     fn trans_while_expr(&mut self, expr: &ast::Expr, block: &ast::Block, label: &Option<ast::Label>) -> WhileExpr {
         WhileExpr {
-            label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
+            label: map_trans_label(label),
             expr: self.trans_expr(expr),
             block: self.trans_block(block),
         }
@@ -1777,7 +1777,7 @@ impl Translator {
     fn trans_for_expr(&mut self, pattern: &ast::P<ast::Pat>, expr: &ast::Expr, block: &ast::Block,
                       label: &Option<ast::Label>) -> ForExpr {
         ForExpr {
-            label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
+            label: map_trans_label(label),
             pattern: self.trans_pattern(pattern),
             expr: self.trans_expr(expr),
             block: self.trans_block(block),
@@ -1786,21 +1786,21 @@ impl Translator {
 
     fn trans_loop_expr(&mut self, block: &ast::Block, label: &Option<ast::Label>) -> LoopExpr {
         LoopExpr {
-            label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
+            label: map_trans_label(label),
             block: self.trans_block(block),
         }
     }
 
     fn trans_break_expr(&mut self, label: &Option<ast::Label>, expr: &Option<ast::P<ast::Expr>>) -> BreakExpr {
         BreakExpr {
-            label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
+            label: map_trans_label(label),
             expr: map_trans!(self, expr, trans_expr),
         }
     }
 
     fn trans_continue_expr(&mut self, label: &Option<ast::Label>) -> ContinueExpr {
         ContinueExpr {
-            label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
+            label: map_trans_label(label),
         }
     }
 
