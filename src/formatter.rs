@@ -2262,11 +2262,13 @@ impl Formatter {
         if from_expr {
             self.insert("::");
         }
+        self.block_non_sep = true;
         fmt_comma_lists!(self, "<", ">",
                          &param.lifetimes, fmt_lifetime,
                          &param.types, fmt_type,
                          &param.consts, fmt_expr,
                          &param.bindings, fmt_type_binding);
+        self.block_non_sep = false;
     }
 
     fn fmt_type_binding(&mut self, binding: &TypeBinding) {
@@ -2638,8 +2640,12 @@ impl Formatter {
     }
 
     fn fmt_block_one_line(&mut self, block: &Block) {
-        self.block_non_sep = false;
-        self.raw_insert(" { ");
+        if self.block_non_sep {
+            self.raw_insert("{ ");
+            self.block_non_sep = false
+        } else {
+            self.raw_insert(" { ");
+        }
         if let StmtKind::Expr(ref expr, _) = block.stmts[0].stmt {
             self.fmt_expr(expr);
         }
