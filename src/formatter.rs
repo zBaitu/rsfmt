@@ -358,7 +358,7 @@ impl Display for PathParam {
 impl Display for AngleParam {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if !self.is_empty() {
-            display_lists!(f, "<", ", ", ">", &self.lifetimes, &self.types, &self.bindings)?;
+            display_lists!(f, "<", ", ", ">", &self.lifetimes, &self.types, &self.consts, &self.bindings)?;
         }
         OK
     }
@@ -592,7 +592,7 @@ impl Display for Fn {
         Display::fmt(&self.sig, f)?;
         display_where(f, &self.generics)?;
         if let Some(ref block) = self.block {
-            try_display_block_one_line(f, block)?;
+            Display::fmt(block, f)?;
         }
         OK
     }
@@ -797,7 +797,11 @@ impl Display for SlicePatten {
 impl Display for Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", unsafe_head(self.is_unsafe))?;
-        display_block!(f, &self.stmts)
+        if self.is_one_line() {
+            write!(f, " {{ {} }}", self.stmts[0])
+        } else {
+            display_block!(f, &self.stmts)
+        }
     }
 }
 
@@ -1118,7 +1122,7 @@ impl Display for ReturnExpr {
 impl Display for AsyncExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", async_head(self.is_move))?;
-        try_display_block_one_line(f, &self.block)
+        Display::fmt(&self.block, f)
     }
 }
 
@@ -1271,14 +1275,6 @@ fn display_where(f: &mut fmt::Formatter, generics: &Generics) -> fmt::Result {
 
 fn display_params(f: &mut fmt::Formatter, params: &[Param]) -> fmt::Result {
     display_lists!(f, "(", ", ", ")", params)
-}
-
-fn try_display_block_one_line(f: &mut fmt::Formatter, block: &Block) -> fmt::Result {
-    if block.is_one_literal_expr() {
-        write!(f, " {{ {} }}", block.stmts[0])
-    } else {
-        Display::fmt(block, f)
-    }
 }
 
 fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Result {
@@ -1437,12 +1433,12 @@ fn is_if_one_line(expr: &IfExpr) -> bool {
         return false;
     }
 
-    if !expr.block.is_one_literal_expr() {
+    if !expr.block.is_one_line() {
         return false;
     }
 
     match expr.br.as_ref().unwrap().expr {
-        ExprKind::Block(ref block) => block.block.is_one_literal_expr(),
+        ExprKind::Block(ref block) => block.block.is_one_line(),
         _ => false,
     }
 }
@@ -2266,8 +2262,11 @@ impl Formatter {
         if from_expr {
             self.insert("::");
         }
-        fmt_comma_lists!(self, "<", ">", &param.lifetimes, fmt_lifetime, &param.types,
-                         fmt_type, &param.bindings, fmt_type_binding);
+        fmt_comma_lists!(self, "<", ">",
+                         &param.lifetimes, fmt_lifetime,
+                         &param.types, fmt_type,
+                         &param.consts, fmt_expr,
+                         &param.bindings, fmt_type_binding);
     }
 
     fn fmt_type_binding(&mut self, binding: &TypeBinding) {
@@ -2523,7 +2522,7 @@ impl Formatter {
         self.fmt_fn_sig(&item.sig);
         self.fmt_where(&item.generics);
         if let Some(ref block) = item.block {
-            self.try_fmt_block_one_line(block);
+            self.fmt_block(block);
             true
         } else {
             self.raw_insert(";");
@@ -2630,13 +2629,11 @@ impl Formatter {
         nl
     }
 
-    fn try_fmt_block_one_line(&mut self, block: &Block) -> bool {
-        if block.is_one_literal_expr() {
+    fn fmt_block(&mut self, block: &Block) {
+        if block.is_one_line() {
             self.fmt_block_one_line(block);
-            true
         } else {
-            self.fmt_block(block);
-            false
+            self.fmt_block_multi_lines(block);
         }
     }
 
@@ -2649,7 +2646,7 @@ impl Formatter {
         self.raw_insert(" }");
     }
 
-    fn fmt_block(&mut self, block: &Block) {
+    fn fmt_block_multi_lines(&mut self, block: &Block) {
         self.block_locs.push(block.loc);
         self.insert(&unsafe_head(block.is_unsafe));
         fmt_block!(self, &block.stmts, fmt_stmts);
@@ -3223,7 +3220,7 @@ impl Formatter {
 
     fn fmt_async_expr(&mut self, expr: &AsyncExpr) {
         self.raw_insert(&async_head(expr.is_move));
-        self.try_fmt_block_one_line(&expr.block);
+        self.fmt_block(&expr.block);
     }
 
     fn fmt_await_expr(&mut self, expr: &Expr) {

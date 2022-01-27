@@ -778,6 +778,7 @@ impl Translator {
         AngleParam {
             lifetimes: self.trans_generic_args_to_lifetime(&param.args),
             types: self.trans_generic_args_to_types(&param.args),
+            consts: self.trans_generic_args_to_exprs(&param.args),
             bindings: self.trans_type_constraints(&param.args),
         }
     }
@@ -797,6 +798,15 @@ impl Translator {
                 types.push(self.trans_type(ty));
             }
             types
+        })
+    }
+
+    fn trans_generic_args_to_exprs(&mut self, args: &[ast::AngleBracketedArg]) -> Vec<Expr> {
+        args.iter().fold(Vec::new(), |mut exprs, arg| {
+            if let ast::AngleBracketedArg::Arg(ast::GenericArg::Const(ref ac)) = arg {
+                exprs.push(self.trans_expr(&ac.value));
+            }
+            exprs
         })
     }
 

@@ -1,0 +1,2 @@
+type a = StaticVec<T, {N}>;
+type a = V<1, 2>;

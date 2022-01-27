@@ -316,12 +316,13 @@ pub enum PathParam {
 pub struct AngleParam {
     pub lifetimes: Vec<Lifetime>,
     pub types: Vec<Type>,
+    pub consts: Vec<Expr>,
     pub bindings: Vec<TypeBinding>,
 }
 
 impl AngleParam {
     pub fn is_empty(&self) -> bool {
-        self.lifetimes.is_empty() && self.types.is_empty() && self.bindings.is_empty()
+        self.lifetimes.is_empty() && self.types.is_empty() && self.consts.is_empty() && self.bindings.is_empty()
     }
 }
 
@@ -633,7 +634,7 @@ pub struct Block {
 }
 
 impl Block {
-    pub fn is_one_literal_expr(&self) -> bool {
+    pub fn is_one_line(&self) -> bool {
         if self.stmts.len() != 1 {
             return false;
         }

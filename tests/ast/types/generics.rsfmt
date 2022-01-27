@@ -10,3 +10,6 @@ type a<T: for<'a> ::iter<bool>::Iterator<A, B, C, B=A, C: A+B> + Sized> = bool;
 type a<T: Fn(A, B) -> ()> = bool;
 type a<T = u8> = bool;
 
+type a<const N: usize> = bool;
+impl a for StaticVec<T,  { N }> {}
+
