@@ -1802,7 +1802,16 @@ impl Formatter {
 
     fn fmt_loc_str(&mut self, loc_str: &LocStr) {
         maybe_nl!(self, loc_str);
-        self.raw_insert(&loc_str.s);
+
+        let mut first = true;
+        for line in loc_str.s.split('\n') {
+            if !first {
+                self.nl();
+            }
+
+            self.insert(line);
+            first = false;
+        }
     }
 
     fn fmt_attrs(&mut self, attrs: &[Attr]) {
