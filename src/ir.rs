@@ -39,14 +39,14 @@ pub struct Comment {
 }
 
 #[derive(Debug, Default)]
-pub struct Chunk {
+pub struct LocStr {
     pub loc: Loc,
     pub s: String,
 }
 
-impl Chunk {
-    pub fn new<S>(s: S) -> Chunk where S: Into<String> {
-        Chunk {
+impl LocStr {
+    pub fn new<S>(s: S) -> LocStr where S: Into<String> {
+        LocStr {
             loc: Default::default(),
             s: s.into(),
         }
@@ -185,7 +185,7 @@ pub struct LifetimeDef {
     pub bounds: Vec<Lifetime>,
 }
 
-pub type Lifetime = Chunk;
+pub type Lifetime = LocStr;
 
 #[derive(Debug)]
 pub struct TypeParam {
@@ -766,7 +766,7 @@ pub struct Expr {
 #[derive(Debug)]
 pub enum ExprKind {
     Symbol(&'static str),
-    Literal(Chunk),
+    Literal(LocStr),
     Path(PathExpr),
     Box(Box<Expr>),
     Ref(Box<RefExpr>),
@@ -820,7 +820,7 @@ pub struct UnaryOpExpr {
 
 #[derive(Debug)]
 pub struct ListOpExpr {
-    pub op: Chunk,
+    pub op: LocStr,
     pub exprs: Vec<Expr>,
 }
 

@@ -1610,8 +1610,8 @@ impl Translator {
         }
     }
 
-    fn trans_literal_expr(&mut self, lit: &ast::Lit) -> Chunk {
-        Chunk {
+    fn trans_literal_expr(&mut self, lit: &ast::Lit) -> LocStr {
+        LocStr {
             loc: self.leaf_loc(&lit.span),
             s: self.literal_to_string(lit),
         }
@@ -1639,8 +1639,8 @@ impl Translator {
         }
     }
 
-    fn trans_bop(&mut self, op: &ast::BinOp) -> Chunk {
-        Chunk {
+    fn trans_bop(&mut self, op: &ast::BinOp) -> LocStr {
+        LocStr {
             loc: self.leaf_loc(&op.span),
             s: op.node.to_string().to_string(),
         }
@@ -1648,7 +1648,7 @@ impl Translator {
 
     fn trans_assign_expr(&mut self, left: &ast::Expr, right: &ast::Expr) -> ListOpExpr {
         ListOpExpr {
-            op: Chunk::new("="),
+            op: LocStr::new("="),
             exprs: vec![self.trans_expr(left), self.trans_expr(right)],
         }
     }
@@ -1660,8 +1660,8 @@ impl Translator {
         }
     }
 
-    fn trans_bop_assign(&mut self, op: &ast::BinOp) -> Chunk {
-        Chunk {
+    fn trans_bop_assign(&mut self, op: &ast::BinOp) -> LocStr {
+        LocStr {
             loc: self.leaf_loc(&op.span),
             s: format!("{}=", op.node.to_string()),
         }

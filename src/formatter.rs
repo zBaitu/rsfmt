@@ -101,18 +101,9 @@ select_str!(ptr_head, is_mut, "*mut ", "*const ");
 select_str!(static_head, is_mut, "static mut ", "static ");
 select_str!(range, is_inclusive, "..=", "..");
 
-impl Display for Chunk {
+impl Display for LocStr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut first = true;
-        for line in self.s.split('\n') {
-            if !first {
-                writeln!(f)?
-            }
-
-            write!(f, "{}", line)?;
-            first = false;
-        }
-        OK
+        Display::fmt(&self.s, f)
     }
 }
 
@@ -1809,21 +1800,9 @@ impl Formatter {
         }
     }
 
-    fn fmt_chunk(&mut self, chunk: &Chunk) {
-        maybe_nl!(self, chunk);
-        self.fmt_long_str(&chunk.s);
-    }
-
-    fn fmt_long_str(&mut self, s: &str) {
-        let mut first = true;
-        for line in s.split('\n') {
-            if !first {
-                self.nl();
-            }
-
-            self.insert(line);
-            first = false;
-        }
+    fn fmt_loc_str(&mut self, loc_str: &LocStr) {
+        maybe_nl!(self, loc_str);
+        self.raw_insert(&loc_str.s);
     }
 
     fn fmt_attrs(&mut self, attrs: &[Attr]) {
@@ -2143,7 +2122,7 @@ impl Formatter {
     }
 
     fn fmt_lifetime(&mut self, lifetime: &Lifetime) {
-        self.fmt_chunk(lifetime);
+        self.fmt_loc_str(lifetime);
     }
 
     fn fmt_type_param(&mut self, type_param: &TypeParam) {
@@ -2898,8 +2877,8 @@ impl Formatter {
         self.raw_insert(sym)
     }
 
-    fn fmt_literal_expr(&mut self, expr: &Chunk) {
-        self.fmt_chunk(expr);
+    fn fmt_literal_expr(&mut self, expr: &LocStr) {
+        self.fmt_loc_str(expr);
     }
 
     fn fmt_path_expr(&mut self, expr: &PathExpr) {
