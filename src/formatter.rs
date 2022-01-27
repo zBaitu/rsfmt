@@ -1286,10 +1286,7 @@ fn display_expr(f: &mut fmt::Formatter, expr: &Expr, is_semi: bool) -> fmt::Resu
 }
 
 fn is_block_expr(expr: &Expr) -> bool {
-    match expr.expr {
-        ExprKind::Block(..) => true,
-        _ => false,
-    }
+    matches!(expr.expr, ExprKind::Block(..))
 }
 
 fn vis_head(vis: &Vis) -> String {
@@ -2594,7 +2591,7 @@ impl Formatter {
                 self.raw_insert(";");
             },
         }
-        return nl;
+        nl
     }
 
     fn fmt_impl(&mut self, item: &Impl) {
@@ -2660,7 +2657,7 @@ impl Formatter {
 
     fn fmt_block_multi_lines(&mut self, block: &Block) {
         self.block_locs.push(block.loc);
-        self.insert(&unsafe_head(block.is_unsafe));
+        self.insert(unsafe_head(block.is_unsafe));
         fmt_block!(self, &block.stmts, fmt_stmts);
         self.block_locs.pop();
     }

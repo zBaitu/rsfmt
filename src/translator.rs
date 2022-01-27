@@ -84,7 +84,7 @@ fn ext_to_string(ext: ast::Extern) -> Option<String> {
 }
 
 fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
-    abi.as_ref().map(|abi| format!("\"{}\"", abi.symbol_unescaped.to_string()))
+    abi.as_ref().map(|abi| format!("\"{}\"", abi.symbol_unescaped))
 }
 
 fn uop_to_string(op: ast::UnOp) -> &'static str {
@@ -662,7 +662,7 @@ impl Translator {
         let name = ident_to_string(&param.ident);
         let bounds = self.trans_type_param_bounds(&param.bounds);
         let default = match param.kind {
-            ast::GenericParamKind::Type { ref default, } => map_ref_mut(default, |ty| self.trans_type(ty)),
+            ast::GenericParamKind::Type { ref default, } => map_trans!(self, default, trans_type),
             _ => None,
         };
         self.set_loc(&loc);
@@ -956,7 +956,7 @@ impl Translator {
 
     fn trans_path_type(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path) -> PathType {
         PathType {
-            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
+            qself: map_trans!(self, qself, trans_qself),
             path: self.trans_path(path),
         }
     }
@@ -1033,7 +1033,7 @@ impl Translator {
             is_default: is_default(defaultness),
             name: ident,
             ty: self.trans_type(ty),
-            expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
+            expr: map_trans!(self, expr, trans_expr),
         }
     }
 
@@ -1043,7 +1043,7 @@ impl Translator {
             is_mut: is_mut(mutability),
             name: ident,
             ty: self.trans_type(ty),
-            expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
+            expr: map_trans!(self, expr, trans_expr),
         }
     }
 
@@ -1169,7 +1169,7 @@ impl Translator {
     }
 
     fn trans_param(&mut self, param: &ast::Param) -> Param {
-        let pattern = self.trans_patten(&param.pat);
+        let pattern = self.trans_pattern(&param.pat);
         let has_patten = has_patten(param, &pattern);
         Param {
             loc: pattern.loc,
@@ -1204,7 +1204,7 @@ impl Translator {
             name: ident,
             sig: self.trans_fn_sig(&fn_kind.1.decl),
             generics: self.trans_generics(&fn_kind.2),
-            block: map_ref_mut(&fn_kind.3, |block| self.trans_block(block)),
+            block: map_trans!(self, &fn_kind.3, trans_block),
         }
     }
 
@@ -1301,7 +1301,7 @@ impl Translator {
             is_default: is_default(impl_kind.defaultness),
             is_neg: is_neg(impl_kind.polarity),
             generics: self.trans_generics(&impl_kind.generics),
-            trait_ref: map_ref_mut(&impl_kind.of_trait, |trait_ref| self.trans_trait_ref(trait_ref)),
+            trait_ref: map_trans!(self, &impl_kind.of_trait, trans_trait_ref),
             ty: self.trans_type(&impl_kind.self_ty),
             items: self.trans_impl_items(&impl_kind.items),
         }
@@ -1375,9 +1375,9 @@ impl Translator {
     fn trans_let(&mut self, local: &ast::Local) -> Let {
         let loc = self.loc(&local.span);
         let attrs = self.trans_thin_attrs(&local.attrs);
-        let pattern = self.trans_patten(&local.pat);
-        let ty = map_ref_mut(&local.ty, |ty| self.trans_type(ty));
-        let init = map_ref_mut(&local.init, |expr| self.trans_expr(expr));
+        let pattern = self.trans_pattern(&local.pat);
+        let ty = map_trans!(self, &local.ty, trans_type);
+        let init = map_trans!(self, &local.init, trans_expr);
         self.set_loc(&loc);
 
         Let {
@@ -1390,16 +1390,16 @@ impl Translator {
     }
 
     fn trans_patterns(&mut self, patterns: &[ast::P<ast::Pat>]) -> Vec<Pattern> {
-        trans_list!(self, patterns, trans_patten)
+        trans_list!(self, patterns, trans_pattern)
     }
 
-    fn trans_patten(&mut self, pattern: &ast::Pat) -> Pattern {
+    fn trans_pattern(&mut self, pattern: &ast::Pat) -> Pattern {
         let loc = self.loc(&pattern.span);
         let pattern = match pattern.kind {
             ast::PatKind::Wild => PattenKind::Symbol("_"),
             ast::PatKind::Rest => PattenKind::Symbol(".."),
             ast::PatKind::Lit(ref expr) => PattenKind::Literal(self.trans_expr(expr)),
-            ast::PatKind::Box(ref pattern) => PattenKind::Box(Box::new(self.trans_patten(pattern))),
+            ast::PatKind::Box(ref pattern) => PattenKind::Box(Box::new(self.trans_pattern(pattern))),
             ast::PatKind::Range(ref start, ref end, ref range_end) => {
                 PattenKind::Range(Box::new(self.trans_range_patten(start, end, &range_end.node)))
             },
@@ -1441,8 +1441,8 @@ impl Translator {
     fn trans_range_patten(&mut self, start: &Option<ast::P<ast::Expr>>, end: &Option<ast::P<ast::Expr>>,
                           range_end: &ast::RangeEnd) -> RangePatten {
         RangePatten {
-            start: map_ref_mut(start, |start| self.trans_expr(start)),
-            end: map_ref_mut(end, |end| self.trans_expr(end)),
+            start: map_trans!(self, start, trans_expr),
+            end: map_trans!(self, end, trans_expr),
             is_inclusive: is_patten_inclusive(range_end),
         }
     }
@@ -1450,7 +1450,7 @@ impl Translator {
     fn trans_ref_patten(&mut self, mutability: ast::Mutability, pattern: &ast::P<ast::Pat>) -> RefPatten {
         RefPatten {
             is_mut: is_mut(mutability),
-            pattern: self.trans_patten(pattern),
+            pattern: self.trans_pattern(pattern),
         }
     }
 
@@ -1461,14 +1461,14 @@ impl Translator {
             is_ref,
             is_mut,
             name: ident_to_string(ident),
-            pattern: map_ref_mut(pattern, |pattern| self.trans_patten(pattern)),
+            pattern: map_trans!(self, pattern, trans_pattern),
         }
     }
 
     fn trans_struct_patten(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path, fields: &[ast::PatField],
                            omit: bool) -> StructPatten {
         StructPatten {
-            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
+            qself: map_trans!(self, qself, trans_qself),
             path: self.trans_path(path),
             fields: self.trans_struct_field_patterns(fields),
             omit,
@@ -1482,7 +1482,7 @@ impl Translator {
     fn trans_struct_field_patten(&mut self, field: &ast::PatField) -> StructFieldPatten {
         let loc = self.loc(&field.span);
         let name = ident_to_string(&field.ident);
-        let pattern = self.trans_patten(&field.pat);
+        let pattern = self.trans_pattern(&field.pat);
         let shorthand = field.is_shorthand;
         self.set_loc(&loc);
 
@@ -1497,7 +1497,7 @@ impl Translator {
     fn trans_enum_patten(&mut self, qself: &Option<ast::QSelf>, path: &ast::Path, patterns: &[ast::P<ast::Pat>])
     -> EnumPatten {
         EnumPatten {
-            qself: map_ref_mut(qself, |qself| self.trans_qself(qself)),
+            qself: map_trans!(self, qself, trans_qself),
             path: self.trans_path(path),
             patterns: self.trans_patterns(patterns),
         }
@@ -1689,7 +1689,7 @@ impl Translator {
         };
 
         StructExpr {
-            qself: map_ref_mut(&expr.qself, |qself| self.trans_qself(qself)),
+            qself: map_trans!(self, expr.qself, trans_qself),
             path: self.trans_path(&expr.path),
             fields: self.trans_struct_field_exprs(&expr.fields),
             has_rest,
@@ -1738,8 +1738,8 @@ impl Translator {
     fn trans_range_expr(&mut self, start: &Option<ast::P<ast::Expr>>, end: &Option<ast::P<ast::Expr>>,
                         limit: ast::RangeLimits) -> RangeExpr {
         RangeExpr {
-            start: map_ref_mut(start, |expr| self.trans_expr(expr)),
-            end: map_ref_mut(end, |expr| self.trans_expr(expr)),
+            start: map_trans!(self, start, trans_expr),
+            end: map_trans!(self, end, trans_expr),
             is_inclusive: is_inclusive(limit),
         }
     }
@@ -1755,7 +1755,7 @@ impl Translator {
         IfExpr {
             expr: self.trans_expr(expr),
             block: self.trans_block(block),
-            br: map_ref_mut(br, |expr| self.trans_expr(expr)),
+            br: map_trans!(self, br, trans_expr),
         }
     }
 
@@ -1769,7 +1769,7 @@ impl Translator {
 
     fn trans_let_expr(&mut self, pattern: &ast::Pat, expr: &ast::Expr) -> LetExpr {
         LetExpr {
-            pattern: self.trans_patten(pattern),
+            pattern: self.trans_pattern(pattern),
             expr: self.trans_expr(expr),
         }
     }
@@ -1778,7 +1778,7 @@ impl Translator {
                       label: &Option<ast::Label>) -> ForExpr {
         ForExpr {
             label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
-            pattern: self.trans_patten(pattern),
+            pattern: self.trans_pattern(pattern),
             expr: self.trans_expr(expr),
             block: self.trans_block(block),
         }
@@ -1794,7 +1794,7 @@ impl Translator {
     fn trans_break_expr(&mut self, label: &Option<ast::Label>, expr: &Option<ast::P<ast::Expr>>) -> BreakExpr {
         BreakExpr {
             label: map_ref_mut(label, |label| ident_to_string(&label.ident)),
-            expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
+            expr: map_trans!(self, expr, trans_expr),
         }
     }
 
@@ -1817,8 +1817,8 @@ impl Translator {
 
     fn trans_arm(&mut self, arm: &ast::Arm) -> Arm {
         let attrs = self.trans_thin_attrs(&arm.attrs);
-        let pattern = self.trans_patten(&arm.pat);
-        let guard = map_ref_mut(&arm.guard, |guard| self.trans_expr(guard));
+        let pattern = self.trans_pattern(&arm.pat);
+        let guard = map_trans!(self, &arm.guard, trans_expr);
         let body = self.trans_expr(&arm.body);
 
         Arm {
@@ -1861,8 +1861,7 @@ impl Translator {
 
     fn trans_return_expr(&mut self, expr: &Option<ast::P<ast::Expr>>) -> ReturnExpr {
         ReturnExpr {
-            ret: expr.as_ref().map(|expr| self.trans_expr(expr)),
-            //ret: map_ref_mut(expr, ),
+            ret: map_trans!(self, expr, trans_expr),
         }
     }
 
@@ -1875,7 +1874,7 @@ impl Translator {
 
     fn trans_yield_expr(&mut self, expr: &Option<ast::P<ast::Expr>>) -> YieldExpr {
         YieldExpr {
-            expr: map_ref_mut(expr, |expr| self.trans_expr(expr)),
+            expr: map_trans!(self, expr, trans_expr),
         }
     }
 
