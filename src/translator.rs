@@ -102,11 +102,13 @@ fn macro_style(style: ast::DelimToken) -> MacroStyle {
 
 fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
     let (is_sep, s) = match token {
+        ast::TokenKind::At => (false, " @ ".to_string()),
         ast::TokenKind::Comma => (true, ",".to_string()),
-        ast::TokenKind::Semi => (true, ";".to_string()),
-        ast::TokenKind::FatArrow => (true, " =>".to_string()),
         ast::TokenKind::DotDotDot => (false, "...".to_string()),
+        ast::TokenKind::DotDotEq => (false, "..=".to_string()),
+        ast::TokenKind::FatArrow => (true, " =>".to_string()),
         ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
+        ast::TokenKind::Semi => (true, ";".to_string()),
         _ => unreachable!("{:?}", token),
     };
 
