@@ -145,7 +145,7 @@ impl Display for Attr {
             },
             AttrKind::Raw(ref s) => {
                 Display::fmt(s, f)
-            }
+            },
         }
     }
 }
@@ -1859,7 +1859,7 @@ impl Formatter {
 
                     self.fmt_loc_str(s);
                     self.nl();
-                }
+                },
             }
         }
 

@@ -364,7 +364,7 @@ impl Translator {
                     let attr = AttrKind::Attr(self.trans_meta_attr(meta_item, span_forward));
                     (loc, attr)
                 } else {
-                    let attr = AttrKind::Raw(LocStr::new(self.span_to_snippet(&attr.span).unwrap()));
+                    let attr = AttrKind::Raw(LocStr::new(self.span_to_snippet(&attr.span)));
                     (loc, attr)
                 }
             },
@@ -1199,7 +1199,7 @@ impl Translator {
     }
 
     fn is_return_nl(&self, pos: Pos) -> bool {
-        let snippet = self.span_to_snippet(&span(self.last_loc.end, pos)).unwrap();
+        let snippet = self.span_to_snippet(&span(self.last_loc.end, pos));
         let right_arrow_pos = self.last_loc.end + snippet.find("->").unwrap() as Pos;
         self.is_nl(right_arrow_pos)
     }
@@ -1887,7 +1887,7 @@ impl Translator {
 
     fn trans_macro_def(&mut self, ident: String, macro_def: &ast::MacroDef) -> MacroDef {
         let s = match macro_def.body.span() {
-            Some(ref span) => self.span_to_snippet(span).unwrap(),
+            Some(ref span) => self.span_to_snippet(span),
             None => "".to_string(),
         };
 
@@ -1926,7 +1926,7 @@ impl Translator {
                 })
             },
             None => {
-                let s = self.span_to_snippet(&macro_call.span()).unwrap();
+                let s = self.span_to_snippet(&macro_call.span());
                 MacroCall::Raw(LocStr::new(s))
             },
         }
@@ -2005,11 +2005,11 @@ impl Translator {
     }
 
     fn literal_to_string(&self, lit: &ast::Lit) -> String {
-        self.span_to_snippet(&lit.span).unwrap()
+        self.span_to_snippet(&lit.span)
     }
 
-    fn span_to_snippet(&self, sp: &ast::Span) -> Result<String, ast::SpanSnippetError> {
-        self.sess.source_map().span_to_snippet(*sp)
+    fn span_to_snippet(&self, sp: &ast::Span) -> String {
+        self.sess.source_map().span_to_snippet(*sp).unwrap()
     }
 
     fn crate_file_end(&self) -> Pos {
