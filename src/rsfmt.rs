@@ -1,7 +1,7 @@
-use std::{fs, panic};
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
+use std::{fs, panic};
 
 use rustc_ap_rustc_ast::util::comments;
 use rustc_ap_rustc_parse::{self as parse};
