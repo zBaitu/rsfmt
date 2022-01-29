@@ -1194,7 +1194,7 @@ impl Display for MacroExpr {
         }
 
         write!(f, "{}", close)
-            }
+    }
 }
 
 impl Display for MacroSep {
@@ -3341,7 +3341,7 @@ impl Formatter {
             self.fmt_expr(expr);
             expr_idx += 1;
         }
-        
+
         self.insert_unmark_align(close);
     }
 
