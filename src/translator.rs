@@ -110,28 +110,6 @@ fn delim_to_string(delim: &ast::DelimToken, open: bool) -> String {
     s.to_string()
 }
 
-fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
-    let (is_sep, s) = match token {
-        ast::TokenKind::At => (false, " @ ".to_string()),
-        ast::TokenKind::Comma => (true, ",".to_string()),
-        ast::TokenKind::CloseDelim(ref delim) => (false, delim_to_string(delim, false)),
-        ast::TokenKind::DotDotDot => (false, "...".to_string()),
-        ast::TokenKind::DotDotEq => (false, "..=".to_string()),
-        ast::TokenKind::FatArrow => (true, " =>".to_string()),
-        ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
-        ast::TokenKind::OpenDelim(ref delim) => (false, delim_to_string(delim, true)),
-        ast::TokenKind::Pound => (false, "#".to_string()),
-        ast::TokenKind::RArrow => (false, " -> ".to_string()),
-        ast::TokenKind::Semi => (true, ";".to_string()),
-        _ => unreachable!("{:?}", token),
-    };
-
-    MacroSep {
-        is_sep,
-        s,
-    }
-}
-
 fn is_inner(style: &ast::AttrStyle) -> bool {
     *style == ast::AttrStyle::Inner
 }
@@ -1973,7 +1951,7 @@ impl Translator {
                 ast::TokenKind::Eof => break,
                 ast::TokenKind::Literal(..) => (),
                 ref other => {
-                    seps.push(token_to_macro_sep(other));
+                    seps.push(self.token_to_macro_sep(&parser.token));
 
                     parser.bump();
                     if parser.token.kind == ast::TokenKind::Eof {
@@ -1983,6 +1961,33 @@ impl Translator {
             }
         }
         Some((exprs, seps))
+    }
+
+    fn token_to_macro_sep(&self, token: &ast::Token) -> MacroSep {
+        let (is_sep, s) = match token.kind {
+            ast::TokenKind::At => (false, " @ ".to_string()),
+            ast::TokenKind::Comma => (true, ",".to_string()),
+            ast::TokenKind::CloseDelim(ref delim) => (false, delim_to_string(delim, false)),
+            ast::TokenKind::DotDotDot => (false, "...".to_string()),
+            ast::TokenKind::DotDotEq => (false, "..=".to_string()),
+            ast::TokenKind::FatArrow => (true, " =>".to_string()),
+            ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
+            ast::TokenKind::OpenDelim(ref delim) => (false, delim_to_string(delim, true)),
+            ast::TokenKind::Pound => (false, "#".to_string()),
+            ast::TokenKind::RArrow => (false, " -> ".to_string()),
+            ast::TokenKind::Semi => (true, ";".to_string()),
+            _ => unreachable!("{:?}", token),
+        };
+
+        MacroSep {
+            loc: Loc {
+                start: token.span.lo().0,
+                end: token.span.hi().0,
+                nl: self.is_nl(token.span.lo().0),
+            },
+            is_sep,
+            s,
+        }
     }
 
     fn trans_macro_raw(&self, macro_call: &ast::MacCall) -> MacroCall {
