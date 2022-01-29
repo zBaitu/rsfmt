@@ -9,7 +9,7 @@ use rustc_ap_rustc_session::parse::ParseSess;
 use rustc_ap_rustc_span::{self as span, FileName, edition::Edition, source_map::FilePathMapping};
 use walkdir::WalkDir;
 
-use crate::formatter;
+use crate::{formatter, Opt};
 use crate::translator::{self, TrResult};
 
 macro_rules! p {
@@ -65,21 +65,21 @@ pub fn print(path: &Path) {
     p!(result.krate);
 }
 
-pub fn fmt_from_stdin() {
+pub fn fmt_from_stdin(opt: &Opt) {
     let mut src = String::new();
     io::stdin().read_to_string(&mut src).unwrap();
-    fmt_str(src, &PathBuf::from("stdin"), false);
+    fmt_str(src, &PathBuf::from("stdin"), opt);
 }
 
-pub fn fmt(path: &Path, overwrite: bool) {
+pub fn fmt(path: &Path, opt: &Opt) {
     if path.is_dir() {
-        fmt_dir(path, overwrite);
+        fmt_dir(path, opt);
     } else {
-        fmt_file(path, overwrite);
+        fmt_file(path, opt);
     }
 }
 
-fn fmt_dir(path: &Path, overwrite: bool) {
+fn fmt_dir(path: &Path, opt: &Opt) {
     for entry in WalkDir::new(path) {
         let entry = entry.unwrap();
         if entry.file_type().is_file() {
@@ -87,23 +87,23 @@ fn fmt_dir(path: &Path, overwrite: bool) {
             let ext = path.extension();
             if let Some(ext) = ext {
                 if ext == "rs" {
-                    fmt_file(&path, overwrite);
+                    fmt_file(&path, opt);
                 }
             }
         }
     }
 }
 
-fn fmt_file(path: &Path, overwrite: bool) {
+fn fmt_file(path: &Path, opt: &Opt) {
     let src = fs::read_to_string(path).unwrap();
-    fmt_str(src, path, overwrite);
+    fmt_str(src, path, opt);
 }
 
-fn fmt_str(src: String, path: &Path, overwrite: bool) {
+fn fmt_str(src: String, path: &Path, opt: &Opt) {
     let tr_result = trans(src, path);
     let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
 
-    if overwrite {
+    if opt.overwrite {
         let mut file = File::create(path).unwrap();
         file.write_all(ft_result.s.as_bytes()).unwrap();
     } else {
@@ -119,7 +119,7 @@ fn fmt_str(src: String, path: &Path, overwrite: bool) {
         eprintln!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
         exit = true;
     }
-    if exit {
+    if exit && !opt.keep  {
         eprintln!("{:?}", path);
         std::process::exit(1);
     }

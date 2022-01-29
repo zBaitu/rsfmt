@@ -20,6 +20,10 @@ pub struct Opt {
     debug: bool,
 
     #[structopt(long, short)]
+    /// Keep going when error occurred
+    keep: bool,
+
+    #[structopt(long, short)]
     /// Print the rsfmt ir simple format
     print: bool,
 
@@ -37,7 +41,7 @@ pub struct Opt {
 fn main() {
     let opt = Opt::from_args();
     if opt.input.is_none() {
-        rsfmt::fmt_from_stdin();
+        rsfmt::fmt_from_stdin(&opt);
         return;
     }
 
@@ -49,6 +53,6 @@ fn main() {
     } else if opt.print {
         rsfmt::print(path);
     } else {
-        rsfmt::fmt(path, opt.overwrite);
+        rsfmt::fmt(path, &opt);
     }
 }

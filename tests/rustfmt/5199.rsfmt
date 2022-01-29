@@ -1,0 +1,29 @@
+use rusqlite::{Connection, OptionalExtension, params};
+#[derive(Default)]
+struct TestModel {
+    pub group_id: i64,
+    pub user_id: i64,
+    pub time: i64,
+}
+
+struct MyStruct {
+    conn: Option<Connection>,
+}
+
+impl MyStruct {
+    pub fn test(&self, group_id: i64, user_id: i64) -> rusqlite::Result<TestModel> {
+        let db = self.conn.as_ref().unwrap();
+        let query_result = db
+                .query_row("SELECT * FROM SIGNINS WHERE GROUP_ID = ? AND USER_ID = ? ORDER BY TIME DESC LIMIT 1",
+                           params![group_id, user_id],
+                           |r| Ok(TestModel {
+            group_id: r.get(0)?,
+            user_id: r.get(1)?,
+            time: r.get(2)?,
+        })).optional();
+        return Ok(query_result?.unwrap_or(TestModel::default()));
+    }
+}
+
+fn main() {}
+
