@@ -1618,9 +1618,8 @@ impl Translator {
             ast::ExprKind::TryBlock(ref block) => ExprKind::TryBlock(self.trans_block(block)),
             ast::ExprKind::ConstBlock(ref expr) => ExprKind::ConstBlock(Box::new(self.trans_expr(&expr.value))),
             ast::ExprKind::Yield(ref expr) => ExprKind::Yield(Box::new(self.trans_yield_expr(expr))),
-            ast::ExprKind::InlineAsm(..) | ast::ExprKind::LlvmInlineAsm(..) | ast::ExprKind::Err => {
-                unreachable!("{:#?}", expr.kind)
-            },
+            ast::ExprKind::Err => ExprKind::Err(LocStr::new(self.span_to_snippet(&expr.span))),
+            ast::ExprKind::InlineAsm(..) | ast::ExprKind::LlvmInlineAsm(..) => unreachable!("{:#?}", expr.kind),
         };
         self.set_loc(&loc);
 
@@ -1930,8 +1929,12 @@ impl Translator {
         let name = path_to_string(&macro_call.path);
         match self.trans_macro_exprs(&macro_call.args.inner_tokens()) {
             Some((exprs, seps)) => {
-                let style = macro_style(&macro_call.args.delim());
                 let exprs = self.trans_exprs(&exprs);
+                if exprs.iter().find(|expr| if let ExprKind::Err(..) = expr.expr { true } else { false }).is_some() {
+                    return self.trans_macro_call(macro_call);
+                }
+
+                let style = macro_style(&macro_call.args.delim());
                 MacroCall::Expr(MacroExpr {
                     name,
                     style,
@@ -1939,10 +1942,7 @@ impl Translator {
                     seps,
                 })
             },
-            None => {
-                let s = self.span_to_snippet(&macro_call.span());
-                MacroCall::Raw(LocStr::new(s))
-            },
+            None => self.trans_macro_raw(macro_call),
         }
     }
 
@@ -1959,7 +1959,7 @@ impl Translator {
             exprs.push(match parser.parse_expr() {
                 Ok(expr) => expr,
                 Err(mut e) => {
-                    e.cancel();
+                    e.emit();
                     return None;
                 },
             });
@@ -1978,6 +1978,11 @@ impl Translator {
             }
         }
         Some((exprs, seps))
+    }
+
+    fn trans_macro_raw(&self, macro_call: &ast::MacCall) -> MacroCall {
+        let s = self.span_to_snippet(&macro_call.span());
+        MacroCall::Raw(LocStr::new(s))
     }
 
     fn loc(&mut self, sp: &ast::Span) -> Loc {

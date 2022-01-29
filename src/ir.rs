@@ -802,6 +802,7 @@ pub enum ExprKind {
     TryBlock(Block),
     ConstBlock(Box<Expr>),
     Yield(Box<YieldExpr>),
+    Err(LocStr),
 }
 
 pub type PathExpr = PathType;

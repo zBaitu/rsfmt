@@ -864,6 +864,7 @@ impl Display for Expr {
             ExprKind::TryBlock(ref block) => write!(f, "try{}", block),
             ExprKind::ConstBlock(ref expr) => write!(f, "const{}", expr),
             ExprKind::Yield(ref expr) => Display::fmt(expr, f),
+            ExprKind::Err(ref s) => Display::fmt(s, f),
         }
     }
 }
@@ -2911,6 +2912,7 @@ impl Formatter {
             ExprKind::TryBlock(ref block) => self.fmt_try_block_expr(block),
             ExprKind::ConstBlock(ref expr) => self.fmt_const_expr(expr),
             ExprKind::Yield(ref expr) => self.fmt_yield_expr(expr),
+            ExprKind::Err(ref s) => self.fmt_loc_str(s),
         }
         self.block_locs.pop();
     }
