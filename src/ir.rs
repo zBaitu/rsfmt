@@ -76,13 +76,13 @@ pub enum AttrKind {
 #[derive(Debug)]
 pub struct DocAttr {
     pub is_block: bool,
-    pub doc: String,
+    pub doc: LocStr,
 }
 
 #[derive(Debug)]
 pub struct MetaAttr {
     pub loc: Loc,
-    pub name: String,
+    pub name: LocStr,
     pub metas: Option<Vec<MetaAttr>>,
 }
 

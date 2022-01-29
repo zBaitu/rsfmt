@@ -373,12 +373,12 @@ impl Translator {
     fn trans_doc_attr(&mut self, cmnt_kind: &ast::CommentKind, sym: &ast::Symbol) -> DocAttr {
         DocAttr {
             is_block: is_block(cmnt_kind),
-            doc: sym.to_string(),
+            doc: LocStr::new(sym.to_string())
         }
     }
 
     fn trans_meta_attr(&mut self, meta_item: &ast::MetaItem, span_forward: u32) -> MetaAttr {
-        let name = path_to_string(&meta_item.path);
+        let name = LocStr::new(path_to_string(&meta_item.path));
         let span = span(meta_item.span.lo().0 + span_forward, meta_item.span.hi().0);
         match meta_item.kind {
             ast::MetaItemKind::Word => {
@@ -389,7 +389,7 @@ impl Translator {
                 }
             },
             ast::MetaItemKind::NameValue(ref lit) => {
-                let s = format!("{} = {}", name, self.literal_to_string(lit));
+                let s = LocStr::new(format!("{} = {}", name, self.literal_to_string(lit)));
                 MetaAttr {
                     loc: self.leaf_loc(&span),
                     name: s,
@@ -412,7 +412,7 @@ impl Translator {
 
     fn trans_nested_metas(&mut self, nested_meta_items: &[ast::NestedMetaItem]) -> Vec<MetaAttr> {
         let mut metas: Vec<MetaAttr> = trans_list!(self, nested_meta_items, trans_nested_meta);
-        metas.sort_by(|a, b| a.name.cmp(&b.name));
+        metas.sort_by(|a, b| a.name.s.cmp(&b.name.s));
         metas
     }
 
@@ -421,7 +421,7 @@ impl Translator {
             ast::NestedMetaItem::Literal(ref lit) => {
                 MetaAttr {
                     loc: self.leaf_loc(&nested_meta_item.span()),
-                    name: self.literal_to_string(lit),
+                    name: LocStr::new(self.literal_to_string(lit)),
                     metas: None,
                 }
             },

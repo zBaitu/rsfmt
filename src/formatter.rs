@@ -125,7 +125,7 @@ impl Display for Attr {
                 } else {
                     display_doc_symbol(f, doc.is_block)?;
                 }
-                write!(f, "{}", doc.doc)?;
+                Display::fmt(&doc.doc, f)?;
                 if doc.is_block {
                     write!(f, "*/")?;
                 }
@@ -137,7 +137,7 @@ impl Display for Attr {
                     write!(f, "!")?;
                 }
                 write!(f, "[")?;
-                write!(f, "{}", meta.name)?;
+                Display::fmt(&meta.name, f)?;
                 if let Some(ref metas) = meta.metas {
                     display_lists!(f, "(", ", ", ")", &**metas)?;
                 }
@@ -149,7 +149,7 @@ impl Display for Attr {
 
 impl Display for MetaAttr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.name)?;
+        Display::fmt(&self.name, f)?;
         if let Some(ref metas) = self.metas {
             display_lists!(f, "(", ", ", ")", &**metas)?;
         }
@@ -1852,7 +1852,7 @@ impl Formatter {
         } else {
             self.fmt_doc_symbol(doc.is_block);
         }
-        self.raw_insert(&doc.doc);
+        self.fmt_loc_str(&doc.doc);
         if doc.is_block {
             self.raw_insert("*/");
         }
@@ -1885,7 +1885,7 @@ impl Formatter {
             self.raw_insert("!");
         }
         self.raw_insert("[");
-        self.insert(&meta.name);
+        self.fmt_loc_str(&meta.name);
         if let Some(ref metas) = meta.metas {
             self.fmt_nested_metas(metas);
         }
@@ -1898,7 +1898,7 @@ impl Formatter {
 
     fn fmt_nested_meta(&mut self, meta: &MetaAttr) {
         maybe_nl!(self, meta);
-        self.insert(&meta.name);
+        self.fmt_loc_str(&meta.name);
 
         if let Some(ref metas) = meta.metas {
             self.fmt_nested_metas(metas);
@@ -2019,7 +2019,18 @@ impl Formatter {
 
         self.block_locs.push(item.loc);
         let nl = match item.item {
-            ItemKind::ExternCrate(..) | ItemKind::Use(..) | ItemKind::ModDecl(..) => unreachable!("{:?}", item.item),
+            ItemKind::ExternCrate(ref item) => {
+                self.fmt_extern_crate(item);
+                false
+            },
+            ItemKind::Use(ref item) => {
+                self.fmt_use(item);
+                false
+            },
+            ItemKind::ModDecl(ref item) => {
+                self.fmt_mod_decl(item);
+                false
+            },
             ItemKind::Mod(ref item) => {
                 self.fmt_mod(item);
                 true
