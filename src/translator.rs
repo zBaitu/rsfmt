@@ -75,8 +75,8 @@ fn path_to_string(path: &ast::Path) -> String {
     })
 }
 
-fn ext_to_string(ext: ast::Extern) -> Option<String> {
-    match ext {
+fn ext_to_string(ext: &ast::Extern) -> Option<String> {
+    match *ext {
         ast::Extern::None => None,
         ast::Extern::Implicit => Some("extern".to_string()),
         ast::Extern::Explicit(ref str_lit) => Some(format!("extern \"{}\"", str_lit.symbol_unescaped)),
@@ -87,12 +87,12 @@ fn abi_to_string(abi: &Option<ast::StrLit>) -> Option<String> {
     abi.as_ref().map(|abi| format!("\"{}\"", abi.symbol_unescaped))
 }
 
-fn uop_to_string(op: ast::UnOp) -> &'static str {
-    ast::UnOp::to_string(op)
+fn uop_to_string(op: &ast::UnOp) -> &'static str {
+    ast::UnOp::to_string(*op)
 }
 
-fn macro_style(style: ast::DelimToken) -> MacroStyle {
-    match style {
+fn macro_style(style: &ast::DelimToken) -> MacroStyle {
+    match *style {
         ast::DelimToken::Paren => MacroStyle::Paren,
         ast::DelimToken::Bracket => MacroStyle::Bracket,
         ast::DelimToken::Brace => MacroStyle::Brace,
@@ -139,52 +139,52 @@ fn is_block(kind: &ast::CommentKind) -> bool {
     *kind == ast::CommentKind::Block
 }
 
-fn is_unsafe(unsafety: ast::Unsafe) -> bool {
-    match unsafety {
+fn is_unsafe(unsafety: &ast::Unsafe) -> bool {
+    match *unsafety {
         ast::Unsafe::Yes(..) => true,
         ast::Unsafe::No => false,
     }
 }
 
-fn is_default(defaultness: ast::Defaultness) -> bool {
-    match defaultness {
+fn is_default(defaultness: &ast::Defaultness) -> bool {
+    match *defaultness {
         ast::Defaultness::Default(..) => true,
         ast::Defaultness::Final => false,
     }
 }
 
-fn is_sized(modifier: ast::TraitBoundModifier) -> bool {
-    modifier == ast::TraitBoundModifier::Maybe
+fn is_sized(modifier: &ast::TraitBoundModifier) -> bool {
+    *modifier == ast::TraitBoundModifier::Maybe
 }
 
-fn is_mut(mutability: ast::Mutability) -> bool {
-    mutability == ast::Mutability::Mut
+fn is_mut(mutability: &ast::Mutability) -> bool {
+    *mutability == ast::Mutability::Mut
 }
 
-fn is_raw(borrow: ast::BorrowKind) -> bool {
-    borrow == ast::BorrowKind::Raw
+fn is_raw(borrow: &ast::BorrowKind) -> bool {
+    *borrow == ast::BorrowKind::Raw
 }
 
-fn is_dyn(syntax: ast::TraitObjectSyntax) -> bool {
-    syntax == ast::TraitObjectSyntax::Dyn
+fn is_dyn(syntax: &ast::TraitObjectSyntax) -> bool {
+    *syntax == ast::TraitObjectSyntax::Dyn
 }
 
-fn is_async(asyncness: ast::Async) -> bool {
-    match asyncness {
+fn is_async(asyncness: &ast::Async) -> bool {
+    match *asyncness {
         ast::Async::Yes {..} => true,
         ast::Async::No => false,
     }
 }
 
-fn is_const(constness: ast::Const) -> bool {
-    match constness {
+fn is_const(constness: &ast::Const) -> bool {
+    match *constness {
         ast::Const::Yes(..) => true,
         ast::Const::No => false,
     }
 }
 
-fn is_auto(autoness: ast::IsAuto) -> bool {
-    autoness == ast::IsAuto::Yes
+fn is_auto(autoness: &ast::IsAuto) -> bool {
+    *autoness == ast::IsAuto::Yes
 }
 
 fn has_patten(param: &ast::Param, pattern: &Pattern) -> bool {
@@ -201,44 +201,44 @@ fn has_patten(param: &ast::Param, pattern: &Pattern) -> bool {
     }
 }
 
-fn is_neg(polarity: ast::ImplPolarity) -> bool {
-    match polarity {
+fn is_neg(polarity: &ast::ImplPolarity) -> bool {
+    match *polarity {
         ast::ImplPolarity::Negative(..) => true,
         ast::ImplPolarity::Positive => false,
     }
 }
 
-fn is_block_unsafe(rules: ast::BlockCheckMode) -> bool {
-    match rules {
+fn is_block_unsafe(rules: &ast::BlockCheckMode) -> bool {
+    match *rules {
         ast::BlockCheckMode::Unsafe(source) => source == ast::UnsafeSource::UserProvided,
         _ => false,
     }
 }
 
-fn is_inclusive(limit: ast::RangeLimits) -> bool {
-    limit == ast::RangeLimits::Closed
+fn is_inclusive(limit: &ast::RangeLimits) -> bool {
+    *limit == ast::RangeLimits::Closed
 }
 
 fn is_patten_inclusive(range_end: &ast::RangeEnd) -> bool {
     matches!(*range_end, ast::RangeEnd::Included(..))
 }
 
-fn is_static(movability: ast::Movability) -> bool {
-    movability == ast::Movability::Static
+fn is_static(movability: &ast::Movability) -> bool {
+    *movability == ast::Movability::Static
 }
 
-fn is_move(capture: ast::CaptureBy) -> bool {
-    capture == ast::CaptureBy::Value
+fn is_move(capture: &ast::CaptureBy) -> bool {
+    *capture == ast::CaptureBy::Value
 }
 
-fn is_ref_mut(binding: ast::BindingMode) -> (bool, bool) {
-    match binding {
-        ast::BindingMode::ByRef(mutability) => (true, is_mut(mutability)),
-        ast::BindingMode::ByValue(mutability) => (false, is_mut(mutability)),
+fn is_ref_mut(binding: &ast::BindingMode) -> (bool, bool) {
+    match *binding {
+        ast::BindingMode::ByRef(ref mutability) => (true, is_mut(mutability)),
+        ast::BindingMode::ByValue(ref mutability) => (false, is_mut(mutability)),
     }
 }
 
-fn is_macro_semi(style: ast::MacStmtStyle) -> bool {
+fn is_macro_semi(style: &ast::MacStmtStyle) -> bool {
     matches!(style, ast::MacStmtStyle::Semicolon)
 }
 
@@ -463,7 +463,7 @@ impl Translator {
         let item = match item.kind {
             ast::ItemKind::ExternCrate(ref rename) => ItemKind::ExternCrate(self.trans_extren_crate(ident, rename)),
             ast::ItemKind::Use(ref tree) => ItemKind::Use(self.trans_use(tree)),
-            ast::ItemKind::Mod(unsafety, ref module) => {
+            ast::ItemKind::Mod(ref unsafety, ref module) => {
                 let is_unsafe = is_unsafe(unsafety);
                 match module {
                     ast::ModKind::Unloaded => ItemKind::ModDecl(self.trans_mod_decl(is_unsafe, ident)),
@@ -474,10 +474,10 @@ impl Translator {
             ast::ItemKind::TraitAlias(ref generics, ref bounds) => {
                 ItemKind::TraitAlias(self.trans_trait_alias(ident, generics, bounds))
             },
-            ast::ItemKind::Const(defaultness, ref ty, ref expr) => {
+            ast::ItemKind::Const(ref defaultness, ref ty, ref expr) => {
                 ItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
             },
-            ast::ItemKind::Static(ref ty, mutability, ref expr) => {
+            ast::ItemKind::Static(ref ty, ref mutability, ref expr) => {
                 ItemKind::Static(self.trans_static(mutability, ident, ty, expr))
             },
             ast::ItemKind::Struct(ref var, ref generics) => ItemKind::Struct(self.trans_struct(ident, generics, var)),
@@ -608,7 +608,7 @@ impl Translator {
 
     fn trans_type_alias(&mut self, ident: String, type_alias: &ast::TyAliasKind) -> TypeAlias {
         TypeAlias {
-            is_default: is_default(type_alias.0),
+            is_default: is_default(&type_alias.0),
             name: ident,
             generics: self.trans_generics(&type_alias.1),
             bounds: self.trans_type_param_bounds(&type_alias.2),
@@ -704,13 +704,13 @@ impl Translator {
             ast::GenericBound::Outlives(ref lifetime) => {
                 TypeParamBound::Lifetime(self.trans_lifetime(&lifetime.ident))
             },
-            ast::GenericBound::Trait(ref poly_trait_ref, modifier) => {
+            ast::GenericBound::Trait(ref poly_trait_ref, ref modifier) => {
                 TypeParamBound::PolyTraitRef(self.trans_poly_trait_ref(poly_trait_ref, modifier))
             },
         }
     }
 
-    fn trans_poly_trait_ref(&mut self, poly_trait_ref: &ast::PolyTraitRef, modifier: ast::TraitBoundModifier)
+    fn trans_poly_trait_ref(&mut self, poly_trait_ref: &ast::PolyTraitRef, modifier: &ast::TraitBoundModifier)
     -> PolyTraitRef {
         if is_sized(modifier) {
             return PolyTraitRef::new_sized(self.leaf_loc(&poly_trait_ref.span));
@@ -954,7 +954,7 @@ impl Translator {
             ast::TyKind::Array(ref ty, ref ac) => TypeKind::Array(Box::new(self.trans_array_type(ty, &ac.value))),
             ast::TyKind::AnonymousStruct(ref fields, _) => TypeKind::Struct(self.trans_struct_type(fields)),
             ast::TyKind::AnonymousUnion(ref fields, _) => TypeKind::Union(self.trans_union_type(fields)),
-            ast::TyKind::TraitObject(ref bounds, syntax) => {
+            ast::TyKind::TraitObject(ref bounds, ref syntax) => {
                 TypeKind::Trait(Box::new(self.trans_trait_type(is_dyn(syntax), false, bounds)))
             },
             ast::TyKind::ImplTrait(_, ref bounds) => {
@@ -983,7 +983,7 @@ impl Translator {
 
     fn trans_ptr_type(&mut self, mut_type: &ast::MutTy) -> PtrType {
         PtrType {
-            is_mut: is_mut(mut_type.mutbl),
+            is_mut: is_mut(&mut_type.mutbl),
             ty: self.trans_type(&mut_type.ty),
         }
     }
@@ -991,7 +991,7 @@ impl Translator {
     fn trans_ref_type(&mut self, lifetime: &Option<ast::Lifetime>, mut_type: &ast::MutTy) -> RefType {
         RefType {
             lifetime: lifetime.as_ref().map(|lifetime| self.trans_lifetime(&lifetime.ident)),
-            is_mut: is_mut(mut_type.mutbl),
+            is_mut: is_mut(&mut_type.mutbl),
             ty: self.trans_type(&mut_type.ty),
         }
     }
@@ -1039,15 +1039,15 @@ impl Translator {
         BareFnType {
             lifetime_defs: self.trans_lifetime_defs(&bare_fn.generic_params),
             header: FnHeader {
-                is_unsafe: is_unsafe(bare_fn.unsafety),
-                ext: ext_to_string(bare_fn.ext),
+                is_unsafe: is_unsafe(&bare_fn.unsafety),
+                ext: ext_to_string(&bare_fn.ext),
                 ..Default::default()
             },
             sig: self.trans_fn_sig(&bare_fn.decl),
         }
     }
 
-    fn trans_const(&mut self, defaultness: ast::Defaultness, ident: String,
+    fn trans_const(&mut self, defaultness: &ast::Defaultness, ident: String,
                    ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>) -> Const {
         Const {
             is_default: is_default(defaultness),
@@ -1057,7 +1057,7 @@ impl Translator {
         }
     }
 
-    fn trans_static(&mut self, mutability: ast::Mutability, ident: String,
+    fn trans_static(&mut self, mutability: &ast::Mutability, ident: String,
                     ty: &ast::Ty, expr: &Option<ast::P<ast::Expr>>) -> Static {
         Static {
             is_mut: is_mut(mutability),
@@ -1219,7 +1219,7 @@ impl Translator {
 
     fn trans_fn(&mut self, ident: String, fn_kind: &ast::FnKind) -> Fn {
         Fn {
-            is_default: is_default(fn_kind.0),
+            is_default: is_default(&fn_kind.0),
             header: self.trans_fn_header(&fn_kind.1.header),
             name: ident,
             sig: self.trans_fn_sig(&fn_kind.1.decl),
@@ -1230,10 +1230,10 @@ impl Translator {
 
     fn trans_fn_header(&mut self, header: &ast::FnHeader) -> FnHeader {
         FnHeader {
-            is_unsafe: is_unsafe(header.unsafety),
-            is_async: is_async(header.asyncness),
-            is_const: is_const(header.constness),
-            ext: ext_to_string(header.ext),
+            is_unsafe: is_unsafe(&header.unsafety),
+            is_async: is_async(&header.asyncness),
+            is_const: is_const(&header.constness),
+            ext: ext_to_string(&header.ext),
         }
     }
 
@@ -1257,7 +1257,7 @@ impl Translator {
             ast::ForeignItemKind::TyAlias(ref type_alias) => {
                 ForeignKind::TypeAlias(self.trans_type_alias(ident, type_alias))
             },
-            ast::ForeignItemKind::Static(ref ty, mutability, ref expr) => {
+            ast::ForeignItemKind::Static(ref ty, ref mutability, ref expr) => {
                 ForeignKind::Static(self.trans_static(mutability, ident, ty, expr))
             },
             ast::ForeignItemKind::Fn(ref fn_kind) => {
@@ -1277,8 +1277,8 @@ impl Translator {
 
     fn trans_trait(&mut self, ident: String, trait_kind: &ast::TraitKind) -> Trait {
         Trait {
-            is_auto: is_auto(trait_kind.0),
-            is_unsafe: is_unsafe(trait_kind.1),
+            is_auto: is_auto(&trait_kind.0),
+            is_unsafe: is_unsafe(&trait_kind.1),
             name: ident,
             generics: self.trans_generics(&trait_kind.2),
             bounds: self.trans_type_param_bounds(&trait_kind.3),
@@ -1295,7 +1295,7 @@ impl Translator {
         let attrs = self.trans_attrs(&item.attrs);
         let ident = ident_to_string(&item.ident);
         let item = match item.kind {
-            ast::AssocItemKind::Const(defaultness, ref ty, ref expr) => {
+            ast::AssocItemKind::Const(ref defaultness, ref ty, ref expr) => {
                 TraitItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
             },
             ast::AssocItemKind::TyAlias(ref type_alias) => {
@@ -1317,9 +1317,9 @@ impl Translator {
 
     fn trans_impl(&mut self, impl_kind: &ast::ImplKind) -> Impl {
         Impl {
-            is_unsafe: is_unsafe(impl_kind.unsafety),
-            is_default: is_default(impl_kind.defaultness),
-            is_neg: is_neg(impl_kind.polarity),
+            is_unsafe: is_unsafe(&impl_kind.unsafety),
+            is_default: is_default(&impl_kind.defaultness),
+            is_neg: is_neg(&impl_kind.polarity),
             generics: self.trans_generics(&impl_kind.generics),
             trait_ref: map_trans!(self, &impl_kind.of_trait, trans_trait_ref),
             ty: self.trans_type(&impl_kind.self_ty),
@@ -1337,7 +1337,7 @@ impl Translator {
         let vis = self.trans_vis(&item.vis);
         let ident = ident_to_string(&item.ident);
         let item = match item.kind {
-            ast::AssocItemKind::Const(defaultness, ref ty, ref expr) => {
+            ast::AssocItemKind::Const(ref defaultness, ref ty, ref expr) => {
                 ImplItemKind::Const(self.trans_const(defaultness, ident, ty, expr))
             },
             ast::AssocItemKind::TyAlias(ref type_alias) => {
@@ -1365,7 +1365,7 @@ impl Translator {
 
         Block {
             loc,
-            is_unsafe: is_block_unsafe(block.rules),
+            is_unsafe: is_block_unsafe(&block.rules),
             stmts,
         }
     }
@@ -1423,13 +1423,13 @@ impl Translator {
             ast::PatKind::Range(ref start, ref end, ref range_end) => {
                 PattenKind::Range(Box::new(self.trans_range_patten(start, end, &range_end.node)))
             },
-            ast::PatKind::Ref(ref pattern, mutability) => {
+            ast::PatKind::Ref(ref pattern, ref mutability) => {
                 PattenKind::Ref(Box::new(self.trans_ref_patten(mutability, pattern)))
             },
             ast::PatKind::Path(ref qself, ref path) => {
                 PattenKind::Path(self.trans_path_type(qself, path))
             },
-            ast::PatKind::Ident(binding, ref ident, ref pattern) => {
+            ast::PatKind::Ident(ref binding, ref ident, ref pattern) => {
                 PattenKind::Ident(Box::new(self.trans_ident_patten(binding, ident, pattern)))
             },
             ast::PatKind::Struct(ref qself, ref path, ref fields, etc) => {
@@ -1467,14 +1467,14 @@ impl Translator {
         }
     }
 
-    fn trans_ref_patten(&mut self, mutability: ast::Mutability, pattern: &ast::P<ast::Pat>) -> RefPatten {
+    fn trans_ref_patten(&mut self, mutability: &ast::Mutability, pattern: &ast::P<ast::Pat>) -> RefPatten {
         RefPatten {
             is_mut: is_mut(mutability),
             pattern: self.trans_pattern(pattern),
         }
     }
 
-    fn trans_ident_patten(&mut self, binding: ast::BindingMode, ident: &ast::Ident, pattern: &Option<ast::P<ast::Pat>>)
+    fn trans_ident_patten(&mut self, binding: &ast::BindingMode, ident: &ast::Ident, pattern: &Option<ast::P<ast::Pat>>)
     -> IdentPatten {
         let (is_ref, is_mut) = is_ref_mut(binding);
         IdentPatten {
@@ -1553,10 +1553,10 @@ impl Translator {
             ast::ExprKind::Lit(ref lit) => ExprKind::Literal(self.trans_literal_expr(lit)),
             ast::ExprKind::Path(ref qself, ref path) => ExprKind::Path(self.trans_path_type(qself, path)),
             ast::ExprKind::Box(ref expr) => ExprKind::Box(Box::new(self.trans_expr(expr))),
-            ast::ExprKind::AddrOf(borrow, mutabilitye, ref expr) => {
+            ast::ExprKind::AddrOf(ref borrow, ref mutabilitye, ref expr) => {
                 ExprKind::Ref(Box::new(self.trans_ref_expr(borrow, mutabilitye, expr)))
             },
-            ast::ExprKind::Unary(op, ref expr) => ExprKind::UnaryOp(Box::new(self.trans_unary_expr(op, expr))),
+            ast::ExprKind::Unary(ref op, ref expr) => ExprKind::UnaryOp(Box::new(self.trans_unary_expr(op, expr))),
             ast::ExprKind::Try(ref expr) => ExprKind::Try(Box::new(self.trans_expr(expr))),
             ast::ExprKind::Binary(ref op, ref left, ref right) => {
                 ExprKind::ListOp(Box::new(self.trans_binary_expr(op, left, right)))
@@ -1576,7 +1576,7 @@ impl Translator {
             ast::ExprKind::Field(ref expr, ref ident) => ExprKind::Field(Box::new(self.trans_field_expr(expr, ident))),
             ast::ExprKind::Type(ref expr, ref ty) => ExprKind::Type(Box::new(self.trans_type_expr(expr, ty))),
             ast::ExprKind::Cast(ref expr, ref ty) => ExprKind::Cast(Box::new(self.trans_cast_expr(expr, ty))),
-            ast::ExprKind::Range(ref start, ref end, limit) => {
+            ast::ExprKind::Range(ref start, ref end, ref limit) => {
                 ExprKind::Range(Box::new(self.trans_range_expr(start, end, limit)))
             },
             ast::ExprKind::Block(ref block, ref label) =>
@@ -1607,12 +1607,12 @@ impl Translator {
             ast::ExprKind::MethodCall(ref path, ref args, _) => {
                 ExprKind::MethodCall(Box::new(self.trans_method_call_expr(path, args)))
             },
-            ast::ExprKind::Closure(capture, asyncness, movability, ref sig, ref expr, _) => {
+            ast::ExprKind::Closure(ref capture, ref asyncness, ref movability, ref sig, ref expr, _) => {
                 ExprKind::Closure(Box::new(self.trans_closure_expr(capture, asyncness, movability, sig, expr)))
             },
             ast::ExprKind::Ret(ref expr) => ExprKind::Return(Box::new(self.trans_return_expr(expr))),
             ast::ExprKind::MacCall(ref mac_call) => ExprKind::MacroCall(self.trans_macro_call(mac_call)),
-            ast::ExprKind::Async(capture, _, ref block) => ExprKind::Async(self.trans_async_expr(capture, block)),
+            ast::ExprKind::Async(ref capture, _, ref block) => ExprKind::Async(self.trans_async_expr(capture, block)),
             ast::ExprKind::Await(ref expr) => ExprKind::Await(Box::new(self.trans_expr(expr))),
             ast::ExprKind::TryBlock(ref block) => ExprKind::TryBlock(self.trans_block(block)),
             ast::ExprKind::ConstBlock(ref expr) => ExprKind::ConstBlock(Box::new(self.trans_expr(&expr.value))),
@@ -1637,7 +1637,7 @@ impl Translator {
         }
     }
 
-    fn trans_ref_expr(&mut self, borrow: ast::BorrowKind, mutabilitye: ast::Mutability, expr: &ast::Expr) -> RefExpr {
+    fn trans_ref_expr(&mut self, borrow: &ast::BorrowKind, mutabilitye: &ast::Mutability, expr: &ast::Expr) -> RefExpr {
         RefExpr {
             is_raw: is_raw(borrow),
             is_mut: is_mut(mutabilitye),
@@ -1645,7 +1645,7 @@ impl Translator {
         }
     }
 
-    fn trans_unary_expr(&mut self, op: ast::UnOp, expr: &ast::Expr) -> UnaryOpExpr {
+    fn trans_unary_expr(&mut self, op: &ast::UnOp, expr: &ast::Expr) -> UnaryOpExpr {
         UnaryOpExpr {
             op: uop_to_string(op),
             expr: self.trans_expr(expr),
@@ -1756,7 +1756,7 @@ impl Translator {
     }
 
     fn trans_range_expr(&mut self, start: &Option<ast::P<ast::Expr>>, end: &Option<ast::P<ast::Expr>>,
-                        limit: ast::RangeLimits) -> RangeExpr {
+                        limit: &ast::RangeLimits) -> RangeExpr {
         RangeExpr {
             start: map_trans!(self, start, trans_expr),
             end: map_trans!(self, end, trans_expr),
@@ -1868,7 +1868,7 @@ impl Translator {
         }
     }
 
-    fn trans_closure_expr(&mut self, capture: ast::CaptureBy, asyncness: ast::Async, movability: ast::Movability,
+    fn trans_closure_expr(&mut self, capture: &ast::CaptureBy, asyncness: &ast::Async, movability: &ast::Movability,
                           sig: &ast::FnDecl, expr: &ast::Expr) -> ClosureExpr {
         ClosureExpr {
             is_static: is_static(movability),
@@ -1885,7 +1885,7 @@ impl Translator {
         }
     }
 
-    fn trans_async_expr(&mut self, capture: ast::CaptureBy, block: &ast::Block) -> AsyncExpr {
+    fn trans_async_expr(&mut self, capture: &ast::CaptureBy, block: &ast::Block) -> AsyncExpr {
         AsyncExpr {
             is_move: is_move(capture),
             block: self.trans_block(block),
@@ -1914,7 +1914,7 @@ impl Translator {
         let loc = self.loc(&mac_call.mac.span());
         let attrs = self.trans_thin_attrs(&mac_call.attrs);
         let mac = self.trans_macro_call(&mac_call.mac);
-        let is_semi = is_macro_semi(mac_call.style);
+        let is_semi = is_macro_semi(&mac_call.style);
         self.set_loc(&loc);
 
         MacroStmt {
@@ -1929,7 +1929,7 @@ impl Translator {
         let name = path_to_string(&macro_call.path);
         match self.trans_macro_exprs(&macro_call.args.inner_tokens()) {
             Some((exprs, seps)) => {
-                let style = macro_style(macro_call.args.delim());
+                let style = macro_style(&macro_call.args.delim());
                 let exprs = self.trans_exprs(&exprs);
                 MacroCall::Expr(MacroExpr {
                     name,
