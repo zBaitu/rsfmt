@@ -16,6 +16,10 @@ pub struct Opt {
     ast: bool,
 
     #[structopt(long, short)]
+    /// Only check without output or overwrite
+    check: bool,
+
+    #[structopt(long, short)]
     /// Print the rsfmt ir debug info
     debug: bool,
 

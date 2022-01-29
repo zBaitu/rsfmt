@@ -109,19 +109,23 @@ fn try_fmt_str(src: String, path: &Path, opt: &Opt) {
 
     if let Err(err) = result {
         ep!(SEP);
-        ep!("{:?}", path);
+        ep!(path.display());
         panic!("{:?}", err);
     }
 }
 
 fn fmt_str(src: String, path: &Path, opt: &Opt) {
+    if opt.check {
+        p!(path.display());
+    }
+
     let tr_result = trans(src, path);
     let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
 
     if opt.overwrite {
         let mut file = File::create(path).unwrap();
         file.write_all(ft_result.s.as_bytes()).unwrap();
-    } else {
+    } else if !opt.check {
         p!(ft_result.s);
     }
 
@@ -135,7 +139,7 @@ fn fmt_str(src: String, path: &Path, opt: &Opt) {
         exit = true;
     }
     if exit && !opt.keep {
-        ep!("{:?}", path);
+        ep!(path.display());
         std::process::exit(1);
     }
 }
