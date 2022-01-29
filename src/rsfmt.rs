@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, panic};
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
@@ -13,10 +13,13 @@ use crate::translator::{self, TrResult};
 use crate::{Opt, formatter};
 
 macro_rules! p {
-    () => ({println!()});
     ($arg:expr) => ({println!("{}", $arg)});
     ($fmt:expr, $($arg:tt)*) => ({println!($fmt, $($arg)*)});
-    ($($arg:tt)+) => ({println!("{}", $($arg)+)});
+}
+
+macro_rules! ep {
+    ($arg:expr) => ({eprintln!("{}", $arg)});
+    ($fmt:expr, $($arg:tt)*) => ({eprintln!($fmt, $($arg)*)});
 }
 
 macro_rules! d {
@@ -68,7 +71,7 @@ pub fn print(path: &Path) {
 pub fn fmt_from_stdin(opt: &Opt) {
     let mut src = String::new();
     io::stdin().read_to_string(&mut src).unwrap();
-    fmt_str(src, &PathBuf::from("stdin"), opt);
+    try_fmt_str(src, &PathBuf::from("stdin"), opt);
 }
 
 pub fn fmt(path: &Path, opt: &Opt) {
@@ -96,7 +99,19 @@ fn fmt_dir(path: &Path, opt: &Opt) {
 
 fn fmt_file(path: &Path, opt: &Opt) {
     let src = fs::read_to_string(path).unwrap();
-    fmt_str(src, path, opt);
+    try_fmt_str(src, path, opt);
+}
+
+fn try_fmt_str(src: String, path: &Path, opt: &Opt) {
+    let result = panic::catch_unwind(|| {
+        fmt_str(src, path, opt);
+    });
+
+    if let Err(err) = result {
+        ep!(SEP);
+        ep!("{:?}", path);
+        panic!("{:?}", err);
+    }
 }
 
 fn fmt_str(src: String, path: &Path, opt: &Opt) {
@@ -112,15 +127,15 @@ fn fmt_str(src: String, path: &Path, opt: &Opt) {
 
     let mut exit = false;
     if !ft_result.exceed_lines.is_empty() {
-        eprintln!("exceed_lines: {:?}", ft_result.exceed_lines);
+        ep!("exceed_lines: {:?}", ft_result.exceed_lines);
         exit = true;
     }
     if !ft_result.trailing_ws_lines.is_empty() {
-        eprintln!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
+        ep!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
         exit = true;
     }
     if exit && !opt.keep {
-        eprintln!("{:?}", path);
+        ep!("{:?}", path);
         std::process::exit(1);
     }
 }
