@@ -1930,8 +1930,8 @@ impl Translator {
         match self.trans_macro_exprs(&macro_call.args.inner_tokens()) {
             Some((exprs, seps)) => {
                 let exprs = self.trans_exprs(&exprs);
-                if exprs.iter().find(|expr| if let ExprKind::Err(..) = expr.expr { true } else { false }).is_some() {
-                    return self.trans_macro_call(macro_call);
+                if exprs.iter().any(|expr| matches!(expr.expr, ExprKind::Err(..))) {
+                    return self.trans_macro_raw(macro_call);
                 }
 
                 let style = macro_style(&macro_call.args.delim());
