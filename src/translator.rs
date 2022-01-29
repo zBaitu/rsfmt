@@ -358,10 +358,15 @@ impl Translator {
                 (self.leaf_loc(&attr.span), AttrKind::Doc(self.trans_doc_attr(cmnt_kind, sym)))
             },
             ast::AttrKind::Normal(..) => {
-                let span_forward = if is_inner { 2 } else { 1 };
                 let loc = self.loc(&attr.span);
-                let attr = AttrKind::Attr(self.trans_meta_attr(attr.meta().as_ref().unwrap(), span_forward));
-                (loc, attr)
+                if let Some(ref meta_item) = attr.meta().as_ref() {
+                    let span_forward = if is_inner { 2 } else { 1 };
+                    let attr = AttrKind::Attr(self.trans_meta_attr(meta_item, span_forward));
+                    (loc, attr)
+                } else {
+                    let attr = AttrKind::Raw(LocStr::new(self.span_to_snippet(&attr.span).unwrap()));
+                    (loc, attr)
+                }
             },
         };
 

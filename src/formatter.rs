@@ -143,6 +143,9 @@ impl Display for Attr {
                 }
                 write!(f, "]")
             },
+            AttrKind::Raw(ref s) => {
+                Display::fmt(s, f)
+            }
         }
     }
 }
@@ -1850,6 +1853,13 @@ impl Formatter {
                     }
                     group.push((is_inner, meta));
                 },
+                AttrKind::Raw(ref s) => {
+                    self.fmt_meta_attr_group(&group);
+                    group.clear();
+
+                    self.fmt_loc_str(s);
+                    self.nl();
+                }
             }
         }
 

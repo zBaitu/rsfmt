@@ -71,6 +71,7 @@ pub struct Attr {
 pub enum AttrKind {
     Doc(DocAttr),
     Attr(MetaAttr),
+    Raw(LocStr),
 }
 
 #[derive(Debug)]
