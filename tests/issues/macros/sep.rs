@@ -11,5 +11,7 @@ fn f() {
     }
 
     m!(&v[..], [N(0), sub @ .., N(4)] => c!(sub, &[N], n![1, 2, 3]));
+
+      quote! { &self.#field_ident }
 }
 

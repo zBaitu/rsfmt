@@ -120,6 +120,7 @@ fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
         ast::TokenKind::FatArrow => (true, " =>".to_string()),
         ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
         ast::TokenKind::OpenDelim(ref delim) => (false, delim_to_string(delim, true)),
+        ast::TokenKind::Pound => (false, "#".to_string()),
         ast::TokenKind::RArrow => (false, " -> ".to_string()),
         ast::TokenKind::Semi => (true, ";".to_string()),
         _ => unreachable!("{:?}", token),
@@ -1926,7 +1927,11 @@ impl Translator {
     }
 
     fn trans_macro_call(&mut self, macro_call: &ast::MacCall) -> MacroCall {
-        let name = path_to_string(&macro_call.path);
+        let style = macro_style(&macro_call.args.delim());
+        if matches!(style, MacroStyle::Brace) {
+            return self.trans_macro_raw(macro_call);
+        }
+
         match self.trans_macro_exprs(&macro_call.args.inner_tokens()) {
             Some((exprs, seps)) => {
                 let exprs = self.trans_exprs(&exprs);
@@ -1934,7 +1939,7 @@ impl Translator {
                     return self.trans_macro_raw(macro_call);
                 }
 
-                let style = macro_style(&macro_call.args.delim());
+                let name = path_to_string(&macro_call.path);
                 MacroCall::Expr(MacroExpr {
                     name,
                     style,
