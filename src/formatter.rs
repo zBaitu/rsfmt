@@ -1163,19 +1163,25 @@ impl Display for MacroExpr {
 
         write!(f, "{}!", self.name)?;
         write!(f, "{}", open)?;
-        let expr_len = self.exprs.len();
-        for i in 0..expr_len {
-            let expr = &self.exprs[i];
-            if i > 0 {
-                let sep = &self.seps[i - 1];
-                if sep.is_sep {
-                    write!(f, "{} ", sep.s)?;
-                } else {
-                    write!(f, "{}", sep.s)?;
+
+        if self.seps.is_empty() {
+            display_lists!(f, " ", &self.exprs)?;
+        } else {
+            let expr_len = self.exprs.len();
+            for i in 0..expr_len {
+                let expr = &self.exprs[i];
+                if i > 0 {
+                    let sep = &self.seps[i - 1];
+                    if sep.is_sep {
+                        write!(f, "{} ", sep.s)?;
+                    } else {
+                        write!(f, "{}", sep.s)?;
+                    }
                 }
+                Display::fmt(expr, f)?;
             }
-            Display::fmt(expr, f)?;
         }
+
         write!(f, "{}", close)
     }
 }
@@ -3281,19 +3287,25 @@ impl Formatter {
 
         self.insert(&format!("{}!", mac.name));
         self.insert_mark_align(open);
-        let expr_len = mac.exprs.len();
-        for i in 0..expr_len {
-            let expr = &mac.exprs[i];
-            if i > 0 {
-                let sep = &mac.seps[i - 1];
-                if sep.is_sep {
-                    insert_sep!(self, &sep.s, expr);
-                } else {
-                    self.insert(&sep.s);
+
+        if mac.seps.is_empty() {
+            fmt_lists!(self, &mac.exprs, fmt_expr);
+        } else {
+            let exprs_len = mac.exprs.len();
+            for i in 0..exprs_len {
+                let expr = &mac.exprs[i];
+                if i > 0 {
+                    let sep = &mac.seps[i - 1];
+                    if sep.is_sep {
+                        insert_sep!(self, &sep.s, expr);
+                    } else {
+                        self.insert(&sep.s);
+                    }
                 }
+                self.fmt_expr(expr);
             }
-            self.fmt_expr(expr);
         }
+
         self.insert_unmark_align(close);
     }
 

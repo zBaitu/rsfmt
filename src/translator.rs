@@ -1945,12 +1945,15 @@ impl Translator {
 
             match parser.token.kind {
                 ast::TokenKind::Eof => break,
-                ref other => seps.push(token_to_macro_sep(other)),
-            }
+                ast::TokenKind::Literal(..) => (),
+                ref other => {
+                    seps.push(token_to_macro_sep(other));
 
-            parser.bump();
-            if parser.token.kind == ast::TokenKind::Eof {
-                break;
+                    parser.bump();
+                    if parser.token.kind == ast::TokenKind::Eof {
+                        break;
+                    }
+                },
             }
         }
         Some((exprs, seps))
