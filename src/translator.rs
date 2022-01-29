@@ -1879,14 +1879,14 @@ impl Translator {
     }
 
     fn trans_macro_def(&mut self, ident: String, macro_def: &ast::MacroDef) -> MacroDef {
-        let def = match macro_def.body.span() {
+        let s = match macro_def.body.span() {
             Some(ref span) => self.span_to_snippet(span).unwrap(),
             None => "".to_string(),
         };
 
         MacroDef {
             name: ident,
-            def,
+            s,
         }
     }
 
@@ -1906,25 +1906,31 @@ impl Translator {
     }
 
     fn trans_macro_call(&mut self, macro_call: &ast::MacCall) -> MacroCall {
-        let (exprs, seps) = self.trans_macro_exprs(&macro_call.args.inner_tokens());
         let name = path_to_string(&macro_call.path);
-        let style = macro_style(macro_call.args.delim());
-        let exprs = self.trans_exprs(&exprs);
-
-        MacroCall {
-            name,
-            style,
-            exprs,
-            seps,
+        match self.trans_macro_exprs(&macro_call.args.inner_tokens()) {
+            Some((exprs, seps)) => {
+                let style = macro_style(macro_call.args.delim());
+                let exprs = self.trans_exprs(&exprs);
+                MacroCall::Expr(MacroExpr {
+                    name,
+                    style,
+                    exprs,
+                    seps,
+                })
+            }
+            None => {
+                let s = self.span_to_snippet(&macro_call.span()).unwrap();
+                MacroCall::Raw(LocStr::new(s))
+            }
         }
     }
 
-    fn trans_macro_exprs(&self, ts: &ast::TokenStream) -> (Vec<ast::P<ast::Expr>>, Vec<MacroSep>) {
+    fn trans_macro_exprs(&self, ts: &ast::TokenStream) -> Option<(Vec<ast::P<ast::Expr>>, Vec<MacroSep>)> {
         let mut exprs = Vec::new();
         let mut seps = Vec::new();
 
         if ts.is_empty() {
-            return (exprs, seps);
+            return Some((exprs, seps));
         }
 
         let mut parser = parse::stream_to_parser(&self.sess, ts.clone(), None);
@@ -1932,8 +1938,8 @@ impl Translator {
             exprs.push(match parser.parse_expr() {
                 Ok(expr) => expr,
                 Err(mut e) => {
-                    e.emit();
-                    panic!()
+                    e.cancel();
+                    return None;
                 },
             });
 
@@ -1947,7 +1953,7 @@ impl Translator {
                 break;
             }
         }
-        (exprs, seps)
+        Some((exprs, seps))
     }
 
     fn loc(&mut self, sp: &ast::Span) -> Loc {

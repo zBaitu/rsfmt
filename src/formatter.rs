@@ -1129,7 +1129,7 @@ impl Display for YieldExpr {
 
 impl Display for MacroDef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "macro_rules! {} {}", self.name, self.def)
+        write!(f, "macro_rules! {} {}", self.name, self.s)
     }
 }
 
@@ -1145,6 +1145,15 @@ impl Display for MacroStmt {
 }
 
 impl Display for MacroCall {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MacroCall::Raw(ref raw) => Display::fmt(raw, f),
+            MacroCall::Expr(ref expr) => Display::fmt(expr, f),
+        }
+    }
+}
+
+impl Display for MacroExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (open, close) = match self.style {
             MacroStyle::Paren => ("(", ")"),
@@ -1170,6 +1179,7 @@ impl Display for MacroCall {
         write!(f, "{}", close)
     }
 }
+
 
 fn display_doc_symbol(f: &mut fmt::Formatter, is_block: bool) -> fmt::Result {
     if is_block {
@@ -2083,7 +2093,7 @@ impl Formatter {
                 true
             },
             ItemKind::MacroCall(ref item) => {
-                self.fmt_macro_item(item);
+                self.fmt_macro_call(item, true);
                 false
             },
         };
@@ -2330,7 +2340,7 @@ impl Formatter {
             TypeKind::Union(ref ty) => self.fmt_union_type(ty),
             TypeKind::Trait(ref ty) => self.fmt_trait_type(ty),
             TypeKind::BareFn(ref ty) => self.fmt_bare_fn_type(ty),
-            TypeKind::MacroCall(ref ty) => self.fmt_macro(ty),
+            TypeKind::MacroCall(ref ty) => self.fmt_macro_call(ty, false),
         }
     }
 
@@ -2556,8 +2566,7 @@ impl Formatter {
             },
             ForeignKind::Fn(ref item) => self.fmt_fn(item),
             ForeignKind::MacroCall(ref item) => {
-                self.fmt_macro(item);
-                self.raw_insert(";");
+                self.fmt_macro_call(item, true);
                 false
             },
         }
@@ -2586,8 +2595,7 @@ impl Formatter {
                 nl = self.fmt_fn(item);
             },
             TraitItemKind::MacroCall(ref item) => {
-                self.fmt_macro(item);
-                self.raw_insert(";");
+                self.fmt_macro_call(item, true);
             },
         }
         nl
@@ -2626,8 +2634,7 @@ impl Formatter {
                 nl = self.fmt_fn(item);
             },
             ImplItemKind::MacroCall(ref item) => {
-                self.fmt_macro(item);
-                self.raw_insert(";");
+                self.fmt_macro_call(item, true);
             },
         }
         nl
@@ -2716,7 +2723,7 @@ impl Formatter {
             PattenKind::Or(ref pattern) => self.fmt_or_patten(pattern),
             PattenKind::Tuple(ref pattern) => self.fmt_tuple_patten(pattern),
             PattenKind::Slice(ref pattern) => self.fmt_slice_patten(pattern),
-            PattenKind::MacroCall(ref pattern) => self.fmt_macro(pattern),
+            PattenKind::MacroCall(ref pattern) => self.fmt_macro_call(pattern, false),
         }
     }
 
@@ -2883,7 +2890,7 @@ impl Formatter {
             ExprKind::MethodCall(ref expr) => self.fmt_method_call_expr(expr),
             ExprKind::Closure(ref expr) => self.fmt_closure_expr(expr),
             ExprKind::Return(ref expr) => self.fmt_return_expr(expr),
-            ExprKind::MacroCall(ref expr) => self.fmt_macro(expr),
+            ExprKind::MacroCall(ref expr) => self.fmt_macro_call(expr, false),
             ExprKind::Async(ref expr) => self.fmt_async_expr(expr),
             ExprKind::Await(ref expr) => self.fmt_await_expr(expr),
             ExprKind::TryBlock(ref block) => self.fmt_try_block_expr(block),
@@ -3235,12 +3242,7 @@ impl Formatter {
 
     fn fmt_macro_def(&mut self, item: &MacroDef) {
         self.raw_insert(&format!("macro_rules! {} ", item.name));
-        self.force_insert(&item.def);
-    }
-
-    fn fmt_macro_item(&mut self, item: &MacroCall) {
-        self.fmt_macro(item);
-        self.raw_insert(";");
+        self.force_insert(&item.s);
     }
 
     fn fmt_macro_stmt(&mut self, mac: &MacroStmt) {
@@ -3249,7 +3251,7 @@ impl Formatter {
         self.insert_indent();
 
         let mut loc = mac.loc;
-        self.fmt_macro(&mac.mac);
+        self.fmt_macro_call(&mac.mac, false);
         if mac.is_semi {
             self.raw_insert(";");
             loc.end += 1;
@@ -3259,7 +3261,19 @@ impl Formatter {
         self.nl();
     }
 
-    fn fmt_macro(&mut self, mac: &MacroCall) {
+    fn fmt_macro_call(&mut self, item: &MacroCall, semi: bool) {
+        match item {
+            MacroCall::Raw(ref s) => self.fmt_loc_str(s),
+            MacroCall::Expr(ref expr) => {
+                self.fmt_macro_expr(expr);
+                if semi {
+                    self.raw_insert(";");
+                }
+            }
+        }
+    }
+
+    fn fmt_macro_expr(&mut self, mac: &MacroExpr) {
         let (open, close) = match mac.style {
             MacroStyle::Paren => ("(", ")"),
             MacroStyle::Bracket => ("[", "]"),

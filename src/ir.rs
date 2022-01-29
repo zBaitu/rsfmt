@@ -983,7 +983,7 @@ pub struct YieldExpr {
 #[derive(Debug)]
 pub struct MacroDef {
     pub name: String,
-    pub def: String,
+    pub s: String,
 }
 
 #[derive(Debug)]
@@ -992,6 +992,12 @@ pub struct MacroStmt {
     pub attrs: Vec<Attr>,
     pub mac: MacroCall,
     pub is_semi: bool,
+}
+
+#[derive(Debug)]
+pub enum MacroCall {
+    Raw(LocStr),
+    Expr(MacroExpr),
 }
 
 #[derive(Debug)]
@@ -1008,7 +1014,7 @@ pub struct MacroSep {
 }
 
 #[derive(Debug)]
-pub struct MacroCall {
+pub struct MacroExpr {
     pub name: String,
     pub style: MacroStyle,
     pub exprs: Vec<Expr>,
