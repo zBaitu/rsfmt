@@ -373,7 +373,7 @@ impl Translator {
     fn trans_doc_attr(&mut self, cmnt_kind: &ast::CommentKind, sym: &ast::Symbol) -> DocAttr {
         DocAttr {
             is_block: is_block(cmnt_kind),
-            doc: LocStr::new(sym.to_string())
+            doc: LocStr::new(sym.to_string()),
         }
     }
 
