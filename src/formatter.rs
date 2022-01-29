@@ -1180,7 +1180,6 @@ impl Display for MacroExpr {
     }
 }
 
-
 fn display_doc_symbol(f: &mut fmt::Formatter, is_block: bool) -> fmt::Result {
     if is_block {
         write!(f, "*")
@@ -3269,7 +3268,7 @@ impl Formatter {
                 if semi {
                     self.raw_insert(";");
                 }
-            }
+            },
         }
     }
 

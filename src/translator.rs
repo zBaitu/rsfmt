@@ -1917,11 +1917,11 @@ impl Translator {
                     exprs,
                     seps,
                 })
-            }
+            },
             None => {
                 let s = self.span_to_snippet(&macro_call.span()).unwrap();
                 MacroCall::Raw(LocStr::new(s))
-            }
+            },
         }
     }
 
