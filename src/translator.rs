@@ -100,14 +100,26 @@ fn macro_style(style: ast::DelimToken) -> MacroStyle {
     }
 }
 
+fn delim_to_string(delim: &ast::DelimToken, open: bool) -> String {
+    let s = match delim {
+        ast::DelimToken::Paren => if open { "(" } else { ")" },
+        ast::DelimToken::Bracket => if open { "[" } else { "]" },
+        ast::DelimToken::Brace => if open { "{" } else { "}" },
+        _ => unreachable!("{:#?}", delim),
+    };
+    s.to_string()
+}
+
 fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
     let (is_sep, s) = match token {
         ast::TokenKind::At => (false, " @ ".to_string()),
         ast::TokenKind::Comma => (true, ",".to_string()),
+        ast::TokenKind::CloseDelim(ref delim) => (false, delim_to_string(delim, false)),
         ast::TokenKind::DotDotDot => (false, "...".to_string()),
         ast::TokenKind::DotDotEq => (false, "..=".to_string()),
         ast::TokenKind::FatArrow => (true, " =>".to_string()),
         ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
+        ast::TokenKind::OpenDelim(ref delim) => (false, delim_to_string(delim, true)),
         ast::TokenKind::RArrow => (false, " -> ".to_string()),
         ast::TokenKind::Semi => (true, ";".to_string()),
         _ => unreachable!("{:?}", token),
@@ -360,7 +372,7 @@ impl Translator {
             },
             ast::AttrKind::Normal(..) => {
                 let loc = self.loc(&attr.span);
-                if let Some(ref meta_item) = attr.meta().as_ref() {
+                if let Some(meta_item) = attr.meta().as_ref() {
                     let span_forward = if is_inner { 2 } else { 1 };
                     let attr = AttrKind::Attr(self.trans_meta_attr(meta_item, span_forward));
                     (loc, attr)

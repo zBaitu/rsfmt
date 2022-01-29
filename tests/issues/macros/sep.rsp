@@ -4,5 +4,6 @@ fn f() {
 matches!(a, b if c < d);
 matches!(*self, '!'..='/' | ':'..='@');
 test!{0 1 2 4}
+m!(&v[..], [N(0), sub @ .., N(4)] => c!(sub, &[N], n![1, 2, 3]));
 }
 
