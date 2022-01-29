@@ -108,6 +108,7 @@ fn token_to_macro_sep(token: &ast::TokenKind) -> MacroSep {
         ast::TokenKind::DotDotEq => (false, "..=".to_string()),
         ast::TokenKind::FatArrow => (true, " =>".to_string()),
         ast::TokenKind::Ident(ref sym, _) => (false, format!(" {} ", sym)),
+        ast::TokenKind::RArrow => (false, " -> ".to_string()),
         ast::TokenKind::Semi => (true, ";".to_string()),
         _ => unreachable!("{:?}", token),
     };
