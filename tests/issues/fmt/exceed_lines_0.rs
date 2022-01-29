@@ -1,5 +1,6 @@
 impl a {
-    fn trans_trait_alias(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds) -> TraitAlias {
+    fn trans_trait_alias(&mut self, ident: String, generics: &ast::Generics, bounds: &ast::GenericBounds) 
+        -> TraitAlias {
         TraitAlias {
             name: ident,
             generics: self.trans_generics(generics),

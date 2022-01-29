@@ -3,9 +3,8 @@ use std::fmt::{self, Debug};
 
 const NL: char = '\n';
 
-const EXCEED_WIDTH: usize = 120;
-const MAX_WIDTH: usize = EXCEED_WIDTH - 2;
-const MAX_ALIGN_COL: usize = EXCEED_WIDTH / 3;
+const MAX_WIDTH: usize = 120;
+const MAX_ALIGN_COL: usize = MAX_WIDTH / 3;
 
 const INDENT: &str = "    ";
 const INDENT_LEN: usize = INDENT.len();
@@ -31,7 +30,7 @@ macro_rules! raw_insert {
         $sf.s.push_str($s);
 
         $sf.col += $s.len();
-        if $sf.col > EXCEED_WIDTH {
+        if $sf.col > MAX_WIDTH {
             $sf.exceed_lines.insert($sf.line);
         }
     });

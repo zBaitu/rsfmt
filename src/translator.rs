@@ -1579,8 +1579,9 @@ impl Translator {
             ast::ExprKind::Range(ref start, ref end, ref limit) => {
                 ExprKind::Range(Box::new(self.trans_range_expr(start, end, limit)))
             },
-            ast::ExprKind::Block(ref block, ref label) =>
-                    ExprKind::Block(Box::new(self.trans_block_expr(block, label))),
+            ast::ExprKind::Block(ref block, ref label) => {
+                ExprKind::Block(Box::new(self.trans_block_expr(block, label)))
+            },
             ast::ExprKind::If(ref expr, ref block, ref br) => {
                 ExprKind::If(Box::new(self.trans_if_expr(expr, block, br)))
             },
