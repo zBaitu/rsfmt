@@ -9,8 +9,8 @@ use rustc_ap_rustc_session::parse::ParseSess;
 use rustc_ap_rustc_span::{self as span, FileName, edition::Edition, source_map::FilePathMapping};
 use walkdir::WalkDir;
 
-use crate::{formatter, Opt};
 use crate::translator::{self, TrResult};
+use crate::{Opt, formatter};
 
 macro_rules! p {
     () => ({println!()});
@@ -119,7 +119,7 @@ fn fmt_str(src: String, path: &Path, opt: &Opt) {
         eprintln!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
         exit = true;
     }
-    if exit && !opt.keep  {
+    if exit && !opt.keep {
         eprintln!("{:?}", path);
         std::process::exit(1);
     }
