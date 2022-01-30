@@ -355,7 +355,7 @@ impl Translator {
                     let attr = AttrKind::Attr(self.trans_meta_attr(meta_item, span_forward));
                     (loc, attr)
                 } else {
-                    let attr = AttrKind::Raw(LocStr::new(self.span_to_snippet(&attr.span)));
+                    let attr = AttrKind::Raw(LocStr::from(self.span_to_snippet(&attr.span)));
                     (loc, attr)
                 }
             },
@@ -371,12 +371,12 @@ impl Translator {
     fn trans_doc_attr(&mut self, cmnt_kind: &ast::CommentKind, sym: &ast::Symbol) -> DocAttr {
         DocAttr {
             is_block: is_block(cmnt_kind),
-            doc: LocStr::new(sym.to_string()),
+            doc: LocStr::from(sym.to_string()),
         }
     }
 
     fn trans_meta_attr(&mut self, meta_item: &ast::MetaItem, span_forward: u32) -> MetaAttr {
-        let name = LocStr::new(path_to_string(&meta_item.path));
+        let name = LocStr::from(path_to_string(&meta_item.path));
         let span = span(meta_item.span.lo().0 + span_forward, meta_item.span.hi().0);
         match meta_item.kind {
             ast::MetaItemKind::Word => {
@@ -387,7 +387,7 @@ impl Translator {
                 }
             },
             ast::MetaItemKind::NameValue(ref lit) => {
-                let s = LocStr::new(format!("{} = {}", name, self.literal_to_string(lit)));
+                let s = LocStr::from(format!("{} = {}", name, self.literal_to_string(lit)));
                 MetaAttr {
                     loc: self.leaf_loc(&span),
                     name: s,
@@ -419,7 +419,7 @@ impl Translator {
             ast::NestedMetaItem::Literal(ref lit) => {
                 MetaAttr {
                     loc: self.leaf_loc(&nested_meta_item.span()),
-                    name: LocStr::new(self.literal_to_string(lit)),
+                    name: LocStr::from(self.literal_to_string(lit)),
                     metas: None,
                 }
             },
@@ -942,7 +942,8 @@ impl Translator {
                 TypeKind::BareFn(Box::new(self.trans_bare_fn_type(bare_fn)))
             },
             ast::TyKind::MacCall(ref mac_call) => TypeKind::MacroCall(self.trans_macro_call(mac_call)),
-            ast::TyKind::Typeof(..) | ast::TyKind::Err => unreachable!("{:#?}", ty.kind),
+            ast::TyKind::Err => TypeKind::Err(LocStr::new(loc, self.span_to_snippet(&ty.span))),
+            ast::TyKind::Typeof(..) => unreachable!("{:#?}", ty.kind),
         };
 
         self.set_loc(&loc);
@@ -1596,7 +1597,7 @@ impl Translator {
             ast::ExprKind::TryBlock(ref block) => ExprKind::TryBlock(self.trans_block(block)),
             ast::ExprKind::ConstBlock(ref expr) => ExprKind::ConstBlock(Box::new(self.trans_expr(&expr.value))),
             ast::ExprKind::Yield(ref expr) => ExprKind::Yield(Box::new(self.trans_yield_expr(expr))),
-            ast::ExprKind::Err => ExprKind::Err(LocStr::new(self.span_to_snippet(&expr.span))),
+            ast::ExprKind::Err => ExprKind::Err(LocStr::new(loc, self.span_to_snippet(&expr.span))),
             ast::ExprKind::InlineAsm(..) | ast::ExprKind::LlvmInlineAsm(..) => unreachable!("{:#?}", expr.kind),
         };
         self.set_loc(&loc);
@@ -1646,7 +1647,7 @@ impl Translator {
 
     fn trans_assign_expr(&mut self, left: &ast::Expr, right: &ast::Expr) -> ListOpExpr {
         ListOpExpr {
-            op: LocStr::new("="),
+            op: LocStr::from("="),
             exprs: vec![self.trans_expr(left), self.trans_expr(right)],
         }
     }
@@ -1999,7 +2000,7 @@ impl Translator {
 
     fn trans_macro_raw(&self, macro_call: &ast::MacCall) -> MacroCall {
         let s = self.span_to_snippet(&macro_call.span());
-        MacroCall::Raw(LocStr::new(s))
+        MacroCall::Raw(LocStr::from(s))
     }
 
     fn span_to_loc(&self, span: &ast::Span) -> Loc {

@@ -45,7 +45,14 @@ pub struct LocStr {
 }
 
 impl LocStr {
-    pub fn new<S>(s: S) -> LocStr where S: Into<String> {
+    pub fn new<S>(loc: Loc, s: S) -> LocStr where S: Into<String> {
+        LocStr {
+            loc,
+            s: s.into(),
+        }
+    }
+
+    pub fn from<S>(s: S) -> LocStr where S: Into<String> {
         LocStr {
             loc: Default::default(),
             s: s.into(),
@@ -379,6 +386,7 @@ pub enum TypeKind {
     Trait(Box<TraitType>),
     BareFn(Box<BareFnType>),
     MacroCall(MacroCall),
+    Err(LocStr),
 }
 
 #[derive(Debug)]

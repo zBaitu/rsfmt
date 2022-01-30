@@ -395,6 +395,7 @@ impl Display for Type {
             TypeKind::Trait(ref ty) => Display::fmt(ty, f),
             TypeKind::BareFn(ref ty) => Display::fmt(ty, f),
             TypeKind::MacroCall(ref ty) => Display::fmt(ty, f),
+            TypeKind::Err(ref ty) => Display::fmt(ty, f),
         }
     }
 }
@@ -2373,6 +2374,7 @@ impl Formatter {
             TypeKind::Trait(ref ty) => self.fmt_trait_type(ty),
             TypeKind::BareFn(ref ty) => self.fmt_bare_fn_type(ty),
             TypeKind::MacroCall(ref ty) => self.fmt_macro_call(ty, false),
+            TypeKind::Err(ref ty) => self.fmt_loc_str(ty),
         }
     }
 
