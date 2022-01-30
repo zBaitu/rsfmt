@@ -1,4 +1,3 @@
-use rustc_ap_rustc_parse::maybe_whole;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::{self, Display};
 

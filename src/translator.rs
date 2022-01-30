@@ -1950,7 +1950,7 @@ impl Translator {
             match parser.token.kind {
                 ast::TokenKind::Eof => break,
                 ast::TokenKind::Literal(..) => (),
-                ref other => {
+                _ => {
                     seps.push(self.token_to_macro_sep(&parser.token));
 
                     parser.bump();
@@ -1966,6 +1966,7 @@ impl Translator {
     fn token_to_macro_sep(&self, token: &ast::Token) -> MacroSep {
         let (is_sep, s) = match token.kind {
             ast::TokenKind::At => (false, " @ ".to_string()),
+            ast::TokenKind::Colon => (true, ":".to_string()),
             ast::TokenKind::Comma => (true, ",".to_string()),
             ast::TokenKind::CloseDelim(ref delim) => (false, delim_to_string(delim, false)),
             ast::TokenKind::DotDotDot => (false, "...".to_string()),
