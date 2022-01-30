@@ -1,0 +1,4 @@
+pub const FOO: &str = foo!("
+    foo
+    bar
+");

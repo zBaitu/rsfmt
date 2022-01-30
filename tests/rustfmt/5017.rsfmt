@@ -1,0 +1,19 @@
+impl Bar {
+    fn foo() {
+        if let Some(curr_m) = m {
+            for meow in baz {
+                match &a.mission {
+                    Some(m) => {
+                        if 1 == 2 {
+                            debug!(
+                                   "{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                   a, a, a, a);
+                        }
+                    },
+                    None => {},
+                }
+            }
+        }
+    }
+}
+

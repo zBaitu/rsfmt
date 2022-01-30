@@ -1,0 +1,2 @@
+struct Foo<T, const N: u32>
+
