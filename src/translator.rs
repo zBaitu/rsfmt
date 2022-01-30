@@ -915,7 +915,6 @@ impl Translator {
 
     fn trans_type(&mut self, ty: &ast::Ty) -> Type {
         let loc = self.loc(&ty.span);
-
         let ty = match ty.kind {
             ast::TyKind::Infer => TypeKind::Symbol("_"),
             ast::TyKind::Never => TypeKind::Symbol("!"),
@@ -945,8 +944,8 @@ impl Translator {
             ast::TyKind::Err => TypeKind::Err(LocStr::new(loc, self.span_to_snippet(&ty.span))),
             ast::TyKind::Typeof(..) => unreachable!("{:#?}", ty.kind),
         };
-
         self.set_loc(&loc);
+
         Type {
             loc,
             ty,

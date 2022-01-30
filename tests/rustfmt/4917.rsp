@@ -1,0 +1,12 @@
+struct A {
+x: usize,
+}
+fn execute_instruction(instruction: Instruction) {
+match instruction {
+RotateAccRight => {
+},
+RotateAccLeftThroughCarry => {
+},
+}
+}
+

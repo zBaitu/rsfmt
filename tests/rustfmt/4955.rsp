@@ -1,0 +1,7 @@
+fn main() {
+match foo {
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa if Some(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb) = ccccccccccccccccccccccccccccccccccccccccccccccccc => {
+},
+}
+}
+

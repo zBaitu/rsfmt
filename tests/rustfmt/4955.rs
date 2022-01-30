@@ -1,0 +1,6 @@
+// This isn't rewritten
+fn main() {
+    match foo {
+        aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa if let Some(bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb) = ccccccccccccccccccccccccccccccccccccccccccccccccc => {}
+    }
+}
