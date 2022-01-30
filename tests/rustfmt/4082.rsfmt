@@ -1,0 +1,17 @@
+#![feature(abi_thiscall)]
+#![feature(core_intrinsics)]
+#![feature(lang_items)]
+#![feature(libc)]
+#![feature(nll)]
+#![feature(panic_runtime)]
+#![feature(panic_unwind)]
+#![feature(raw)]
+#![feature(rustc_attrs)]
+#![feature(staged_api)]
+#![feature(std_internals)]
+#![feature(unwind_attributes)]
+#![panic_runtime]
+
+// `real_imp` is unused with Miri, so silence warnings.
+#![cfg_attr(allow(dead_code), miri)]
+

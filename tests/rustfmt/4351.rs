@@ -1,0 +1,6 @@
+fn f() {
+let x = {let a = true; if a { 1 } else { 2 }};
+let y = match () {
+    _ => if true { 1 } else { 2 },
+};
+}

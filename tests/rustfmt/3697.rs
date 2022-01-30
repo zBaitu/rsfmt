@@ -1,0 +1,3 @@
+fn main() {
+    aaaaaaaaaaaaaaaaaaaaa :: bbbbbbbbbbbbbbbbbb :: ccccccccccccccccccccccccccccccccccccccc :: dddddddddddddddddddd ( eeeeeeeeeeeeeeeeeeee :: ffffffffffffffffffff ( ggggggggg ( hhhhhhhhhhhhhhhh ) , iiiiiiiii ( jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj ) ) );
+}

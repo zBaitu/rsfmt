@@ -1,0 +1,11 @@
+impl Peach {
+    fn banana(&self, rt: bb_aaa::RecordData) -> &'static str {
+        if true {
+            match rt {
+                bb_aaa::RecordData::zzzzz_AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAaaaaaaaAaaaaaAaaaaaa => "AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAaaaaaaaAaaaaaAaaaaaa"
+            }
+        } else {
+            ""
+        }
+    }
+}
