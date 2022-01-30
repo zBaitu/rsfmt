@@ -15,5 +15,6 @@ fn f() {
       quote! { &self.#field_ident }
 
     async_assert_fn!(tokio_stream::empty<Rc<u8>>(): Send & Sync);
-}
 
+    a!(Timeout<BoxFutureSync<()>>: Send & Sync & !Unpin);
+}

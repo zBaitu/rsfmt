@@ -1469,17 +1469,17 @@ fn is_if_one_line(expr: &IfExpr) -> bool {
 fn exract_if_else_value(expr: &IfExpr) -> (&Expr, &Expr) {
     let if_value = match &expr.block.stmts[0].stmt {
         StmtKind::Expr(ref expr, _) => expr,
-        _ => unreachable!("{:?}", expr.block.stmts[0].stmt),
+        _ => unreachable!("{:#?}", expr.block.stmts[0].stmt),
     };
 
     let else_value = match expr.br.as_ref().unwrap().expr {
         ExprKind::Block(ref block) => {
             match &block.block.stmts[0].stmt {
                 StmtKind::Expr(ref expr, _) => expr,
-                _ => unreachable!("{:?}", block.block.stmts[0].stmt),
+                _ => unreachable!("{:#?}", block.block.stmts[0].stmt),
             }
         },
-        _ => unreachable!("{:?}", expr.br.as_ref().unwrap().expr),
+        _ => unreachable!("{:#?}", expr.br.as_ref().unwrap().expr),
     };
 
     (if_value, else_value)

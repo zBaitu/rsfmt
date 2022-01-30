@@ -1966,6 +1966,13 @@ impl Translator {
         let ident: String;
         let (is_sep, s) = match token.kind {
             ast::TokenKind::At => (false, " @ "),
+            ast::TokenKind::BinOp(ref op) => {
+                let op = match op {
+                    ast::BinOpToken::Shr => ">>",
+                    _ => unreachable!("{:#?}", op),
+                };
+                (true, op)
+            },
             ast::TokenKind::Colon => (true, ":"),
             ast::TokenKind::Comma => (true, ","),
             ast::TokenKind::CloseDelim(ref delim) => (false, delim_to_str(delim, false)),
@@ -1980,7 +1987,7 @@ impl Translator {
             ast::TokenKind::Pound => (false, "#"),
             ast::TokenKind::RArrow => (false, " -> "),
             ast::TokenKind::Semi => (true, ";"),
-            _ => unreachable!("{:?}", token),
+            _ => unreachable!("{:#?}", token),
         };
 
         MacroSep {
