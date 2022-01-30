@@ -87,8 +87,7 @@ fn fmt_dir(path: &Path, opt: &Opt) {
         let entry = entry.unwrap();
         if entry.file_type().is_file() {
             let path = entry.into_path();
-            let ext = path.extension();
-            if let Some(ext) = ext {
+            if let Some(ext) = path.extension() {
                 if ext == "rs" {
                     fmt_file(&path, opt);
                 }

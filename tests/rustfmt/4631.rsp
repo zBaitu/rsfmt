@@ -1,0 +1,5 @@
+test_macro!(pub fn test_fn(); "foobar")
+fn main() {
+quote!(type Foo: Bar;);
+}
+

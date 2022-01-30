@@ -1,0 +1,6 @@
+pub trait Something<A, B, C> {
+fn a(&self, x: A) -> i32;
+fn b(&self, x: B) -> i32;
+fn c(&self, x: C) -> i32;
+}
+
