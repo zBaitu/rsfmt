@@ -1981,11 +1981,7 @@ impl Translator {
         };
 
         MacroSep {
-            loc: Loc {
-                start: token.span.lo().0,
-                end: token.span.hi().0,
-                nl: self.is_nl(token.span.lo().0),
-            },
+            loc: self.span_to_loc(&token.span),
             is_sep,
             s,
         }
@@ -1996,14 +1992,17 @@ impl Translator {
         MacroCall::Raw(LocStr::new(s))
     }
 
-    fn loc(&mut self, sp: &ast::Span) -> Loc {
-        self.trans_comments(sp.lo().0);
-
+    fn span_to_loc(&self, span: &ast::Span) -> Loc {
         Loc {
-            start: sp.lo().0,
-            end: sp.hi().0,
-            nl: self.is_nl(sp.lo().0),
+            start: span.lo().0,
+            end: span.hi().0,
+            nl: self.is_nl(span.lo().0),
         }
+    }
+
+    fn loc(&mut self, span: &ast::Span) -> Loc {
+        self.trans_comments(span.lo().0);
+        self.span_to_loc(span)
     }
 
     fn set_loc(&mut self, loc: &Loc) {
@@ -2011,8 +2010,8 @@ impl Translator {
         self.last_loc = *loc;
     }
 
-    fn leaf_loc(&mut self, sp: &ast::Span) -> Loc {
-        let loc = self.loc(sp);
+    fn leaf_loc(&mut self, span: &ast::Span) -> Loc {
+        let loc = self.loc(span);
         self.set_loc(&loc);
         loc
     }
@@ -2038,8 +2037,8 @@ impl Translator {
         self.span_to_snippet(&lit.span)
     }
 
-    fn span_to_snippet(&self, sp: &ast::Span) -> String {
-        self.sess.source_map().span_to_snippet(*sp).unwrap()
+    fn span_to_snippet(&self, span: &ast::Span) -> String {
+        self.sess.source_map().span_to_snippet(*span).unwrap()
     }
 
     fn crate_file_end(&self) -> Pos {
