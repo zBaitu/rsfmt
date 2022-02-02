@@ -39,7 +39,7 @@ pub fn ast(path: &Path) {
             Err(mut e) => {
                 e.emit();
                 std::process::exit(1);
-            },
+            }
         };
         d!(krate);
 
@@ -138,7 +138,9 @@ fn fmt_str(src: String, path: &Path, opt: &Opt) {
         exit = true;
     }
     if exit && !opt.keep {
-        ep!(path.display());
+        if !opt.check {
+            ep!(path.display());
+        }
         std::process::exit(1);
     }
 }

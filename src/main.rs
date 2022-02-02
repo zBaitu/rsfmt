@@ -12,7 +12,7 @@ mod typesetter;
 #[derive(Debug, StructOpt)]
 pub struct Opt {
     #[structopt(long, short)]
-    /// Print the rust original syntax ast debug info
+    /// Prints the rust original syntax ast debug info
     ast: bool,
 
     #[structopt(long, short)]
@@ -20,7 +20,7 @@ pub struct Opt {
     check: bool,
 
     #[structopt(long, short)]
-    /// Print the rsfmt ir debug info
+    /// Prints the rsfmt ir debug info
     debug: bool,
 
     #[structopt(long, short)]
@@ -28,7 +28,7 @@ pub struct Opt {
     keep: bool,
 
     #[structopt(long, short)]
-    /// Print the rsfmt ir simple format
+    /// Prints the rsfmt ir simple format
     print: bool,
 
     #[structopt(long, short)]
