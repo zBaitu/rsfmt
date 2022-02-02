@@ -39,7 +39,7 @@ pub fn ast(path: &Path) {
             Err(mut e) => {
                 e.emit();
                 std::process::exit(1);
-            }
+            },
         };
         d!(krate);
 
