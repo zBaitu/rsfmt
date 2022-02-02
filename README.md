@@ -125,7 +125,7 @@ fn main() {
 ```
 
 It looks OK, isn't it? Why rsfmt can keep the user wrap? Because of the
-[rsfmt ir](https://github.com/zBaitu/rsfmt/blob/master/src/ir.rs). The custom ir of Rust AST record location information
+[rsfmt ir](https://github.com/zBaitu/rsfmt/blob/main/src/ir.rs). The custom ir of Rust AST record location information
 of every element as far as possible. Look another example:
 
 ```
