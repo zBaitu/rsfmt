@@ -1,0 +1,7 @@
+fn main() {
+let visual_studio_path =  {
+let vswhere_stdout = String::from_utf8(vswhere_output.stdout).expect("vswhere output is not valid UTF-8")
+String::from(vswhere_stdout.trim())
+}
+}
+

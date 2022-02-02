@@ -1,0 +1,5 @@
+fn main() {
+if (ui & 0x1fffffff) != 0x10000000 || e == 0x7ff || (result - xy == z as f64 && result - z as f64 == xy) || fegetround() != FE_TONEAREST {
+}
+}
+
