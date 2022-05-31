@@ -15,3 +15,9 @@ fn f() -> bool {
     true
 }
 
+fn func_where<T>() -> bool
+where T: ?Sized {}
+
+fn func_where<T>()
+-> bool where T: ?Sized {}
+

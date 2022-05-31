@@ -12,3 +12,9 @@ pub fn fmt(krate: Crate, leading_cmnts: HashMap<Pos, Vec<String>>,
 fn f() -> bool { true }
 fn f() -> bool { 
     true }
+
+fn func_where<T>() -> bool 
+where T: ?Sized{}
+
+fn func_where<T>()
+    -> bool where T: ?Sized{}
