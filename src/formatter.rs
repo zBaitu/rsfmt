@@ -130,7 +130,7 @@ impl Display for Attr {
                     write!(f, "*/")?;
                 }
                 OK
-            }
+            },
             AttrKind::Attr(ref meta) => {
                 write!(f, "#")?;
                 if self.is_inner {
@@ -142,10 +142,10 @@ impl Display for Attr {
                     display_lists!(f, "(", ", ", ")", &**metas)?;
                 }
                 write!(f, "]")
-            }
+            },
             AttrKind::Raw(ref s) => {
                 Display::fmt(s, f)
-            }
+            },
         }
     }
 }
@@ -365,7 +365,7 @@ impl Display for TypeBinding {
             TypeBindingKind::Bound(ref bounds) => {
                 write!(f, "{}: ", self.name)?;
                 display_lists!(f, "+", &bounds.0)
-            }
+            },
         }
     }
 }
@@ -501,10 +501,10 @@ impl Display for StructBody {
         match self {
             StructBody::Struct(ref fields) => {
                 display_fields_block!(f, fields)
-            }
+            },
             StructBody::Tuple(ref fields) => {
                 display_lists!(f, "(", ", ", ")", fields)
-            }
+            },
             StructBody::Unit => OK,
         }
     }
@@ -674,7 +674,7 @@ impl Display for ImplItem {
             ImplItemKind::Fn(ref item) => {
                 is_fn = true;
                 Display::fmt(item, f)?
-            }
+            },
             ImplItemKind::MacroCall(ref item) => Display::fmt(item, f)?,
         }
         if !is_fn {
@@ -1479,7 +1479,7 @@ fn exract_if_else_value(expr: &IfExpr) -> (&Expr, &Expr) {
                 StmtKind::Expr(ref expr, _) => expr,
                 _ => unreachable!("{:#?}", block.block.stmts[0].stmt),
             }
-        }
+        },
         _ => unreachable!("{:#?}", expr.br.as_ref().unwrap().expr),
     };
 
@@ -1743,7 +1743,7 @@ macro_rules! fmt_qself_path {
 }
 
 pub fn format(krate: Crate, leading_cmnts: HashMap<Pos, Vec<String>>, trailing_cmnts: HashMap<Pos, String>)
-              -> TsResult {
+-> TsResult {
     Formatter::new(leading_cmnts, trailing_cmnts).fmt_crate(krate)
 }
 
@@ -1861,7 +1861,7 @@ impl Formatter {
                     group.clear();
 
                     self.fmt_doc_attr(&attr.loc, is_inner, doc);
-                }
+                },
                 AttrKind::Attr(ref meta) => {
                     if self.has_leading_comments(&attr.loc) {
                         self.fmt_meta_attr_group(&group);
@@ -1870,14 +1870,14 @@ impl Formatter {
                         self.fmt_leading_comments(&attr.loc);
                     }
                     group.push((is_inner, meta));
-                }
+                },
                 AttrKind::Raw(ref s) => {
                     self.fmt_meta_attr_group(&group);
                     group.clear();
 
                     self.fmt_loc_str(s);
                     self.nl();
-                }
+                },
             }
         }
 
@@ -2065,70 +2065,70 @@ impl Formatter {
             ItemKind::ExternCrate(ref item) => {
                 self.fmt_extern_crate(item);
                 false
-            }
+            },
             ItemKind::Use(ref item) => {
                 self.fmt_use(item);
                 false
-            }
+            },
             ItemKind::ModDecl(ref item) => {
                 self.fmt_mod_decl(item);
                 false
-            }
+            },
             ItemKind::Mod(ref item) => {
                 self.fmt_mod(item);
                 true
-            }
+            },
             ItemKind::TypeAlias(ref item) => {
                 self.fmt_type_alias(item);
                 false
-            }
+            },
             ItemKind::TraitAlias(ref item) => {
                 self.fmt_trait_alias(item);
                 false
-            }
+            },
             ItemKind::Const(ref item) => {
                 self.fmt_const(item);
                 false
-            }
+            },
             ItemKind::Static(ref item) => {
                 self.fmt_static(item);
                 false
-            }
+            },
             ItemKind::Struct(ref item) => {
                 self.fmt_struct(item)
-            }
+            },
             ItemKind::Union(ref item) => {
                 self.fmt_union(item);
                 true
-            }
+            },
             ItemKind::Enum(ref item) => {
                 self.fmt_enum(item);
                 true
-            }
+            },
             ItemKind::Fn(ref item) => {
                 self.fmt_fn(item);
                 true
-            }
+            },
             ItemKind::ForeignMod(ref item) => {
                 self.fmt_foreign_mod(item);
                 true
-            }
+            },
             ItemKind::Trait(ref item) => {
                 self.fmt_trait(item);
                 true
-            }
+            },
             ItemKind::Impl(ref item) => {
                 self.fmt_impl(item);
                 true
-            }
+            },
             ItemKind::MacroDef(ref item) => {
                 self.fmt_macro_def(item);
                 true
-            }
+            },
             ItemKind::MacroCall(ref item) => {
                 self.fmt_macro_call(item, true);
                 false
-            }
+            },
         };
         self.block_locs.pop();
 
@@ -2338,11 +2338,11 @@ impl Formatter {
             TypeBindingKind::Eq(ref ty) => {
                 self.raw_insert("=");
                 self.fmt_type(ty);
-            }
+            },
             TypeBindingKind::Bound(ref bounds) => {
                 self.raw_insert(": ");
                 fmt_lists!(self, "+", "+", &bounds.0, fmt_type_param_bound);
-            }
+            },
         }
     }
 
@@ -2472,7 +2472,7 @@ impl Formatter {
             StructBody::Tuple(_) | StructBody::Unit => {
                 self.raw_insert(";");
                 false
-            }
+            },
             _ => true,
         }
     }
@@ -2600,16 +2600,16 @@ impl Formatter {
             ForeignKind::TypeAlias(ref item) => {
                 self.fmt_type_alias(item);
                 false
-            }
+            },
             ForeignKind::Static(ref item) => {
                 self.fmt_static(item);
                 false
-            }
+            },
             ForeignKind::Fn(ref item) => self.fmt_fn(item),
             ForeignKind::MacroCall(ref item) => {
                 self.fmt_macro_call(item, true);
                 false
-            }
+            },
         }
     }
 
@@ -2634,10 +2634,10 @@ impl Formatter {
             TraitItemKind::TypeAlias(ref item) => self.fmt_type_alias(item),
             TraitItemKind::Fn(ref item) => {
                 nl = self.fmt_fn(item);
-            }
+            },
             TraitItemKind::MacroCall(ref item) => {
                 self.fmt_macro_call(item, true);
-            }
+            },
         }
         nl
     }
@@ -2673,10 +2673,10 @@ impl Formatter {
             ImplItemKind::TypeAlias(ref item) => self.fmt_type_alias(item),
             ImplItemKind::Fn(ref item) => {
                 nl = self.fmt_fn(item);
-            }
+            },
             ImplItemKind::MacroCall(ref item) => {
                 self.fmt_macro_call(item, true);
-            }
+            },
         }
         nl
     }
@@ -2721,7 +2721,7 @@ impl Formatter {
         match stmt.stmt {
             StmtKind::Item(ref item) => {
                 self.fmt_item(item, false);
-            }
+            },
             StmtKind::Let(ref local) => self.fmt_let(local),
             StmtKind::Expr(ref expr, is_semi) => self.fmt_expr_stmt(expr, is_semi),
             StmtKind::Macro(ref mac) => self.fmt_macro_stmt(mac),
@@ -3226,7 +3226,7 @@ impl Formatter {
             _ => {
                 self.raw_insert(" ");
                 self.fmt_expr(&expr.expr);
-            }
+            },
         }
     }
 
@@ -3240,11 +3240,11 @@ impl Formatter {
 
         self.fmt_patten(&arg.pattern);
         match arg.ty.ty {
-            TypeKind::Symbol(ref s) if s == &"_" => {}
+            TypeKind::Symbol(ref s) if s == &"_" => {},
             _ => {
                 self.raw_insert(": ");
                 self.fmt_type(&arg.ty)
-            }
+            },
         }
     }
 
@@ -3311,7 +3311,7 @@ impl Formatter {
                 if semi {
                     self.raw_insert(";");
                 }
-            }
+            },
         }
     }
 
