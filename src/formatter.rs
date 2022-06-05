@@ -1576,6 +1576,9 @@ macro_rules! fmt_comma_lists {
             } else {
                 if first_nl {
                     $sf.raw_insert(",");
+                    if !e.loc.nl {
+                        $sf.raw_insert(" ");
+                    }
                 } else {
                     is_wrap |= insert_sep!($sf, ",", e);
                 }
