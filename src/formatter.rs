@@ -1558,19 +1558,46 @@ macro_rules! insert_sep {
 macro_rules! fmt_comma_lists {
     ($sf:expr, $open:expr, $close:expr, $($list:expr, $fmt:ident),+) => ({
         let mut is_wrap = false;
-        $sf.insert_mark_align($open);
 
         let mut first = true;
+        let mut first_nl = false;
+        let mut empty = true;
         $(for e in $list {
-            if !first {
-                is_wrap |= insert_sep!($sf, ",", e);
-            }
+            empty = false;
 
-            $sf.$fmt(e);
+            if first {
+                if e.loc.nl {
+                    first_nl = true;
+                    $sf.raw_insert($open);
+                    $sf.indent();
+                } else {
+                    $sf.insert_mark_align($open);
+                }
+            } else {
+                if first_nl {
+                    $sf.raw_insert(",");
+                } else {
+                    is_wrap |= insert_sep!($sf, ",", e);
+                }
+            }
             first = false;
+
+            if first_nl && e.loc.nl {
+                $sf.nl_indent();
+            }
+            $sf.$fmt(e);
         })+
 
-        $sf.insert_unmark_align($close);
+        if empty {
+            $sf.insert_mark_align($open);
+        }
+        if first_nl {
+            $sf.outdent();
+            $sf.nl_indent();
+            $sf.raw_insert($close);
+        } else {
+            $sf.insert_unmark_align($close);
+        }
         is_wrap
     });
 
