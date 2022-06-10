@@ -5,6 +5,6 @@ const a: &[char] = ['a',
 const a: &[char] = [
     'a', 'b', 'c',
     'e', 'f', 'g',
-    'h', 'i'
+    'h', 'i',
 ];
 

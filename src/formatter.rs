@@ -1595,6 +1595,7 @@ macro_rules! fmt_comma_lists {
             $sf.insert_mark_align($open);
         }
         if first_nl {
+            $sf.raw_insert(",");
             $sf.outdent();
             $sf.nl_indent();
             $sf.raw_insert($close);

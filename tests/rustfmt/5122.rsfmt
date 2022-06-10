@@ -1,5 +1,5 @@
 struct Foo<
     T,
-    const N: u32
+    const N: u32,
 >;
 

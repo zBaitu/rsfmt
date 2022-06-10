@@ -1,7 +1,7 @@
 pub trait Something<
     A,
     B,
-    C
+    C,
 > {
     fn a(&self, x: A) -> i32;
     fn b(&self, x: B) -> i32;
