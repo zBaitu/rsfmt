@@ -1672,12 +1672,17 @@ macro_rules! fmt_lists {
         let mut first = true;
         for e in $list {
             if !first {
-                if $op.loc.nl {
+                let op_str = if $op.loc.nl {
                     $sf.wrap();
-                    $sf.raw_insert(&format!("{} ", $op));
+                    format!("{} ", $op)
                 } else {
-                    $sf.raw_insert(&format!(" {} ", $op));
-                }
+                    if e.loc.nl {
+                        format!(" {}", $op)
+                    } else {
+                        format!(" {} ", $op)
+                    }
+                };
+                $sf.raw_insert(&op_str);
             }
 
             $sf.$act(e);
