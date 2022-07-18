@@ -1594,7 +1594,7 @@ macro_rules! fmt_sep_lists {
             $sf.insert_mark_align($open);
         }
         if first_nl {
-            $sf.raw_insert(",");
+            $sf.raw_insert($sep);
             $sf.outdent();
             $sf.nl_indent();
             $sf.raw_insert($close);
@@ -3357,21 +3357,20 @@ impl Formatter {
     }
 
     fn fmt_macro_expr(&mut self, mac: &MacroExpr) {
+        self.insert(&format!("{}!", mac.name));
+
         let (open, close) = match mac.style {
             MacroStyle::Paren => ("(", ")"),
             MacroStyle::Bracket => ("[", "]"),
             MacroStyle::Brace => ("{", "}"),
         };
 
-        self.insert(&format!("{}!", mac.name));
-        self.insert_mark_align(open);
-
         if mac.seps.is_empty() {
-            fmt_lists!(self, &mac.exprs, fmt_expr);
-            self.insert_unmark_align(close);
+            fmt_sep_lists!(self, open, "", close, &mac.exprs, fmt_expr);
             return;
         }
 
+        self.insert_mark_align(open);
         let mut expr_idx = 0;
         let mut sep_idx = 0;
         while expr_idx < mac.exprs.len() && sep_idx < mac.seps.len() {
@@ -3390,7 +3389,6 @@ impl Formatter {
             self.fmt_expr(expr);
             expr_idx += 1;
         }
-
         self.insert_unmark_align(close);
     }
 
