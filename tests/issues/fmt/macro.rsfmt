@@ -14,10 +14,20 @@ fn f() {
 
     let d = vec![0, 1, 2];
     let e = vec![
-                 0, 1, 2];
+        0, 1, 2
+    ];
     let f = vec![
-                 0,
-                 1,
-                 2];
+        0,
+        1,
+        2
+    ];
+
+    debug!("{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", a, a,
+           a, a);
+
+    debug!(
+        "{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        a, a, a, a
+    );
 }
 

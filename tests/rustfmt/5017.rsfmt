@@ -6,8 +6,9 @@ impl Bar {
                     Some(m) => {
                         if 1 == 2 {
                             debug!(
-                                   "{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                                   a, a, a, a);
+                                "{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                a, a, a, a
+                            );
                         }
                     },
                     None => {},

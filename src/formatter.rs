@@ -1572,6 +1572,7 @@ macro_rules! fmt_sep_lists {
                 } else {
                     $sf.insert_mark_align($open);
                 }
+                first = false;
             } else {
                 if first_nl {
                     $sf.raw_insert($sep);
@@ -1582,7 +1583,6 @@ macro_rules! fmt_sep_lists {
                     is_wrap |= insert_sep!($sf, $sep, e);
                 }
             }
-            first = false;
 
             if first_nl && e.loc.nl {
                 $sf.nl_indent();
@@ -3370,33 +3370,65 @@ impl Formatter {
             return;
         }
 
-        self.insert_mark_align(open);
+        let mut first = true;
+        let mut first_nl = false;
         let mut expr_idx = 0;
         let mut sep_idx = 0;
         while expr_idx < mac.exprs.len() && sep_idx < mac.seps.len() {
             let expr = &mac.exprs[expr_idx];
             let sep = &mac.seps[sep_idx];
+
+            let nl = if expr.loc.start < sep.loc.start {
+                expr.loc.nl
+            } else {
+                sep.loc.nl
+            };
+            if first {
+                if nl {
+                    first_nl = true;
+                    self.raw_insert(open);
+                    self.indent();
+                } else {
+                    self.insert_mark_align(open);
+                }
+                first = false;
+            }
+
             if expr.loc.start < sep.loc.start {
+                if first_nl && expr.loc.nl {
+                    self.nl_indent();
+                }
                 self.fmt_expr(expr);
                 expr_idx += 1;
             } else {
-                self.fmt_macro_sep(sep, expr);
+                if sep.is_sep {
+                    if expr.loc.nl {
+                        self.raw_insert(&sep.s);
+                    } else {
+                        insert_sep!(self, &sep.s, expr);
+                    }
+                } else {
+                    self.insert(&sep.s);
+                }
                 sep_idx += 1;
             }
         }
+
         while expr_idx < mac.exprs.len() {
             let expr = &mac.exprs[expr_idx];
+            if first_nl && expr.loc.nl {
+                self.nl_indent();
+            }
             self.fmt_expr(expr);
             expr_idx += 1;
         }
-        self.insert_unmark_align(close);
-    }
 
-    fn fmt_macro_sep(&mut self, sep: &MacroSep, expr: &Expr) {
-        if sep.is_sep {
-            insert_sep!(self, &sep.s, expr);
+        if first_nl {
+            self.outdent();
+            self.nl_indent();
+            self.raw_insert(close);
         } else {
-            self.insert(&sep.s);
+            self.insert_unmark_align(close);
         }
     }
 

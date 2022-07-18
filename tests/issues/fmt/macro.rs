@@ -17,4 +17,12 @@ fn f() {
             0, 
         1, 
         2];
+
+    debug!("{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", a, a, a, a,
+                            );
+
+    debug!(
+        "{}{}{}{}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 
+        a, a, a, a,
+                            );
 }
