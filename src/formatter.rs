@@ -1555,10 +1555,9 @@ macro_rules! insert_sep {
     });
 }
 
-macro_rules! fmt_comma_lists {
-    ($sf:expr, $open:expr, $close:expr, $($list:expr, $fmt:ident),+) => ({
+macro_rules! fmt_sep_lists {
+    ($sf:expr, $open:expr, $sep:expr, $close:expr, $($list:expr, $fmt:ident),+) => ({
         let mut is_wrap = false;
-
         let mut first = true;
         let mut first_nl = false;
         let mut empty = true;
@@ -1575,12 +1574,12 @@ macro_rules! fmt_comma_lists {
                 }
             } else {
                 if first_nl {
-                    $sf.raw_insert(",");
+                    $sf.raw_insert($sep);
                     if !e.loc.nl {
                         $sf.raw_insert(" ");
                     }
                 } else {
-                    is_wrap |= insert_sep!($sf, ",", e);
+                    is_wrap |= insert_sep!($sf, $sep, e);
                 }
             }
             first = false;
@@ -1604,9 +1603,15 @@ macro_rules! fmt_comma_lists {
         }
         is_wrap
     });
+}
+
+macro_rules! fmt_comma_lists {
+    ($sf:expr, $open:expr, $close:expr, $($list:expr, $fmt:ident),+) => ({
+        fmt_sep_lists!($sf, $open, ",", $close, $($list, $fmt),+)
+    });
 
     ($sf:expr, $($list:expr, $fmt:ident),+) => ({
-        fmt_comma_lists!($sf, "", "", $($list, $fmt)+);
+        fmt_sep_lists!($sf, "", ",", "", $($list, $fmt),+)
     });
 }
 
