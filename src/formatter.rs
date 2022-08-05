@@ -1584,6 +1584,7 @@ macro_rules! fmt_sep_lists {
                 }
             }
 
+            $sf.try_fmt_blank_line(&e.loc);
             if first_nl && e.loc.nl {
                 $sf.nl_indent();
             }
@@ -1845,6 +1846,19 @@ impl Formatter {
                 self.insert_indent();
                 self.raw_insert(cmnt);
             }
+            self.nl();
+        }
+    }
+
+    fn try_fmt_blank_line(&mut self, loc: &Loc) {
+        let cmnts = self.leading_cmnts.get(&loc.start);
+        if cmnts.is_none() {
+            return;
+        }
+
+        let cmnts = cmnts.unwrap();
+        if cmnts.len() == 1 && cmnts[0].is_empty() {
+            self.leading_cmnts.remove(&loc.start);
             self.nl();
         }
     }
