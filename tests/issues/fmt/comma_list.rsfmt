@@ -9,3 +9,10 @@ const a: &[char] = [
     'h', 'i',
 ];
 
+const a: &[char] = [
+    // a
+    // b
+
+    'b',
+];
+

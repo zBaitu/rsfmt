@@ -1,5 +1,6 @@
 pub trait Something<
     A,
+    // some comment
     B,
     C,
 > {

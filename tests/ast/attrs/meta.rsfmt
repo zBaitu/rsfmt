@@ -5,6 +5,9 @@
 #![macro_use(bar, foo)]
 #![no_std]
 
-#![cfg(all(b = "a",
-           target_pointer_width = "32", unix))]
+#![cfg(all(
+    /* aaa */
+    b = "a",
+    target_pointer_width = "32", unix,
+))]
 
