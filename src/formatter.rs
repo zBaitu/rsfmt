@@ -2,12 +2,12 @@ use crate::{
     ir::*,
     need_nl_indent,
     need_wrap,
-    typesetter::*
+    typesetter::*,
 };
 
 use std::{
     collections::{BTreeMap, HashMap},
-    fmt::{self, Display}
+    fmt::{self, Display},
 };
 
 const OK: fmt::Result = Ok(());
@@ -2088,6 +2088,7 @@ impl Formatter {
         }
 
         if all_nl {
+            self.raw_insert(",");
             self.outdent();
             self.nl_indent();
         }

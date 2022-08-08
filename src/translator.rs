@@ -1,6 +1,6 @@
 use crate::{
     ast,
-    ir::*
+    ir::*,
 };
 
 use rustc_ap_rustc_parse::{self as parse};
@@ -8,7 +8,7 @@ use rustc_ap_rustc_session::parse::ParseSess;
 
 use std::{
     cmp::Ordering,
-    collections::HashMap
+    collections::HashMap,
 };
 
 const MAX_BLANK_LINES: u8 = 1;

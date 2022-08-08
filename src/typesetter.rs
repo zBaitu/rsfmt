@@ -1,6 +1,6 @@
 use std::{
     collections::BTreeSet,
-    fmt::{self, Debug}
+    fmt::{self, Debug},
 };
 
 const NL: char = '\n';

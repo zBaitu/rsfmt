@@ -14,7 +14,7 @@ use a::b::{
     d::{*,
         e::f},
     g,
-    h
+    h,
 };
 use a::b::{self, c, d::e};
 

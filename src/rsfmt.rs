@@ -1,7 +1,7 @@
 use crate::{
     Opt,
     formatter,
-    translator::{self, TrResult}
+    translator::{self, TrResult},
 };
 
 use rustc_ap_rustc_ast::util::comments;
@@ -11,7 +11,7 @@ use rustc_ap_rustc_span::{
     self as span,
     FileName,
     edition::Edition,
-    source_map::FilePathMapping
+    source_map::FilePathMapping,
 };
 use walkdir::WalkDir;
 
@@ -20,7 +20,7 @@ use std::{
     fs::File,
     io::{self, Read, Write},
     panic,
-    path::{Path, PathBuf}
+    path::{Path, PathBuf},
 };
 
 macro_rules! p {

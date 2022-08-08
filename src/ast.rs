@@ -3,7 +3,7 @@ pub use rustc_ap_rustc_ast::{
     ptr::P,
     token::{BinOpToken, CommentKind, DelimToken, Token, TokenKind},
     tokenstream::TokenStream,
-    util::comments::{Comment, CommentStyle}
+    util::comments::{Comment, CommentStyle},
 };
 pub use rustc_ap_rustc_span::{
     BytePos,
@@ -11,5 +11,5 @@ pub use rustc_ap_rustc_span::{
     SpanSnippetError,
     SyntaxContext,
     source_map::Spanned,
-    symbol::{Ident, Symbol, kw}
+    symbol::{Ident, Symbol, kw},
 };
