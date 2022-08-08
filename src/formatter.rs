@@ -1,12 +1,14 @@
-use std::collections::{BTreeMap, HashMap};
-use std::fmt::{self, Display};
+use crate::{
+    ir::*,
+    need_nl_indent,
+    need_wrap,
+    typesetter::*
+};
 
-use ir::*;
-use typesetter::*;
-
-use crate::ir;
-use crate::typesetter;
-use crate::{need_nl_indent, need_wrap};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fmt::{self, Display},
+};
 
 const OK: fmt::Result = Ok(());
 

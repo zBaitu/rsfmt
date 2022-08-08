@@ -1,5 +1,7 @@
-use std::collections::BTreeSet;
-use std::fmt::{self, Debug};
+use std::{
+    collections::BTreeSet,
+    fmt::{self, Debug},
+};
 
 const NL: char = '\n';
 

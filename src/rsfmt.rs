@@ -1,16 +1,27 @@
-use std::fs::File;
-use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
-use std::{fs, panic};
+use crate::{
+    Opt,
+    formatter,
+    translator::{self, TrResult}
+};
 
 use rustc_ap_rustc_ast::util::comments;
 use rustc_ap_rustc_parse::{self as parse};
 use rustc_ap_rustc_session::parse::ParseSess;
-use rustc_ap_rustc_span::{self as span, FileName, edition::Edition, source_map::FilePathMapping};
+use rustc_ap_rustc_span::{
+    self as span,
+    FileName,
+    edition::Edition,
+    source_map::FilePathMapping
+};
 use walkdir::WalkDir;
 
-use crate::translator::{self, TrResult};
-use crate::{Opt, formatter};
+use std::{
+    fs,
+    fs::File,
+    io::{self, Read, Write},
+    panic,
+    path::{Path, PathBuf}
+};
 
 macro_rules! p {
     ($arg:expr) => ({println!("{}", $arg)});
