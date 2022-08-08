@@ -7,7 +7,7 @@ use crate::{
 
 use std::{
     collections::{BTreeMap, HashMap},
-    fmt::{self, Display},
+    fmt::{self, Display}
 };
 
 const OK: fmt::Result = Ok(());
