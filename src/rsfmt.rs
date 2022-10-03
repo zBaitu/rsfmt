@@ -96,7 +96,8 @@ pub fn fmt(path: &Path, opt: &Opt) {
 fn fmt_dir(path: &Path, opt: &Opt) {
     const SKIP_DIRS: &[&str] = &[".git", "target"];
 
-    for entry in WalkDir::new(path).into_iter().filter_entry(|e| !SKIP_DIRS.contains(&e.file_name().to_str().unwrap())) {
+    let dir = WalkDir::new(path);
+    for entry in dir.into_iter().filter_entry(|e| !SKIP_DIRS.contains(&e.file_name().to_str().unwrap())) {
         let entry = entry.unwrap();
         if entry.file_type().is_file() {
             let path = entry.into_path();
