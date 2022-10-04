@@ -2874,9 +2874,21 @@ impl Formatter {
 
         if can_one_line!(self, pattern) {
             self.fmt_struct_patten_one_line(pattern);
-            return;
+        } else {
+            self.fmt_struct_patten_multi_line(pattern);
         }
+    }
 
+    fn fmt_struct_patten_one_line(&mut self, pattern: &StructPatten) {
+        self.raw_insert(" { ");
+        fmt_lists!(self, &pattern.fields, fmt_struct_field_patten);
+        if pattern.omit {
+            self.raw_insert(" ..");
+        }
+        self.raw_insert(" }");
+    }
+
+    fn fmt_struct_patten_multi_line(&mut self, pattern: &StructPatten) {
         self.open_brace();
         let loc = Loc {
             start: self.block_locs.last().unwrap().end,
@@ -2892,15 +2904,6 @@ impl Formatter {
 
         self.try_fmt_leading_comments(&loc);
         self.close_brace();
-    }
-
-    fn fmt_struct_patten_one_line(&mut self, pattern: &StructPatten) {
-        self.raw_insert(" { ");
-        fmt_lists!(self, &pattern.fields, fmt_struct_field_patten);
-        if pattern.omit {
-            self.raw_insert(" ..");
-        }
-        self.raw_insert(" }");
     }
 
     fn fmt_struct_field_patterns(&mut self, fields: &[StructFieldPatten]) {
@@ -3064,11 +3067,54 @@ impl Formatter {
     fn fmt_struct_expr(&mut self, expr: &StructExpr) {
         fmt_qself_path!(self, expr, false);
 
-        if expr.fields.is_empty() && !expr.has_rest {
-            self.insert(" {}");
-            return;
+        if self.can_struct_expr_one_line(expr) {
+            self.fmt_struct_expr_one_line(expr);
+        } else {
+            self.fmt_struct_expr_multi_line(expr);
+        }
+    }
+
+    fn can_struct_expr_one_line(&self, expr: &StructExpr) -> bool {
+        if expr.fields.is_empty() {
+            return can_one_line!(self, expr);
+        }
+        if expr.fields[0].loc.nl {
+            return false;
         }
 
+        for field in &expr.fields {
+            if self.has_leading_comments(&field.loc) || self.has_trailing_comment(&field.loc) {
+                return false;
+            }
+        }
+        if expr.has_rest {
+            if let Some(ref base) = expr.base {
+                if self.has_trailing_comment(&base.loc) {
+                    return false;
+                }
+            }
+        }
+
+        can_one_line!(self, expr)
+    }
+
+    fn fmt_struct_expr_one_line(&mut self, expr: &StructExpr) {
+        self.raw_insert(" {");
+        fmt_lists!(self, ", ", ", ", &expr.fields, fmt_struct_field_expr_one_line);
+
+        if expr.has_rest {
+            if !expr.fields.is_empty() {
+                self.raw_insert(", ");
+            }
+            self.raw_insert("..");
+            if let Some(ref base) = expr.base {
+                self.fmt_expr(base);
+            }
+        }
+        self.raw_insert("}");
+    }
+
+    fn fmt_struct_expr_multi_line(&mut self, expr: &StructExpr) {
         self.open_brace();
         let loc = Loc {
             start: self.block_locs.last().unwrap().end,
@@ -3100,13 +3146,17 @@ impl Formatter {
         }
     }
 
-    fn fmt_struct_field_expr(&mut self, field: &StructFieldExpr) {
+    fn fmt_struct_field_expr_one_line(&mut self, field: &StructFieldExpr) {
         self.insert(&field.name);
         let value = field.value.to_string();
         if field.name != value {
             insert_sep!(self, ":", field.value);
             self.fmt_expr(&field.value);
         }
+    }
+
+    fn fmt_struct_field_expr(&mut self, field: &StructFieldExpr) {
+        self.fmt_struct_field_expr_one_line(field);
         self.raw_insert(",");
     }
 
