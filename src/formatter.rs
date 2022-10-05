@@ -2743,7 +2743,7 @@ impl Formatter {
     }
 
     fn fmt_block(&mut self, block: &Block) {
-        if block.is_one_line() {
+        if block.is_one_line() && can_one_line!(self, block) {
             self.fmt_block_one_line(block);
         } else {
             self.fmt_block_multi_lines(block);
@@ -2751,6 +2751,7 @@ impl Formatter {
     }
 
     fn fmt_block_one_line(&mut self, block: &Block) {
+        self.insert(unsafe_head(block.is_unsafe));
         if self.block_non_sep {
             self.raw_insert("{ ");
             self.block_non_sep = false
@@ -2875,7 +2876,7 @@ impl Formatter {
         if can_one_line!(self, pattern) {
             self.fmt_struct_patten_one_line(pattern);
         } else {
-            self.fmt_struct_patten_multi_line(pattern);
+            self.fmt_struct_patten_multi_lines(pattern);
         }
     }
 
@@ -2888,7 +2889,7 @@ impl Formatter {
         self.raw_insert(" }");
     }
 
-    fn fmt_struct_patten_multi_line(&mut self, pattern: &StructPatten) {
+    fn fmt_struct_patten_multi_lines(&mut self, pattern: &StructPatten) {
         self.open_brace();
         let loc = Loc {
             start: self.block_locs.last().unwrap().end,
@@ -3070,7 +3071,7 @@ impl Formatter {
         if self.can_struct_expr_one_line(expr) {
             self.fmt_struct_expr_one_line(expr);
         } else {
-            self.fmt_struct_expr_multi_line(expr);
+            self.fmt_struct_expr_multi_lines(expr);
         }
     }
 
@@ -3114,7 +3115,7 @@ impl Formatter {
         self.raw_insert("}");
     }
 
-    fn fmt_struct_expr_multi_line(&mut self, expr: &StructExpr) {
+    fn fmt_struct_expr_multi_lines(&mut self, expr: &StructExpr) {
         self.open_brace();
         let loc = Loc {
             start: self.block_locs.last().unwrap().end,
@@ -3201,21 +3202,10 @@ impl Formatter {
     }
 
     fn fmt_if_expr(&mut self, expr: &IfExpr) {
-        if self.if_stacks == 0 && is_if_one_line(expr) {
-            return self.fmt_if_expr_one_line(expr);
-        }
-
-        self.block_non_sep = false;
-        self.raw_insert("if ");
-        self.fmt_expr(&expr.expr);
-        self.fmt_block(&expr.block);
-
-        if let Some(ref br) = expr.br {
-            self.if_stacks += 1;
-            self.block_non_sep = true;
-            self.raw_insert(" else ");
-            self.fmt_expr(br);
-            self.if_stacks -= 1;
+        if self.if_stacks == 0 && is_if_one_line(expr) && can_one_line!(self, expr) {
+            self.fmt_if_expr_one_line(expr);
+        } else {
+            self.fmt_if_expr_multi_lines(expr);
         }
     }
 
@@ -3230,6 +3220,21 @@ impl Formatter {
         self.raw_insert(" } else { ");
         self.fmt_expr(else_value);
         self.raw_insert(" }");
+    }
+
+    fn fmt_if_expr_multi_lines(&mut self, expr: &IfExpr) {
+        self.block_non_sep = false;
+        self.raw_insert("if ");
+        self.fmt_expr(&expr.expr);
+        self.fmt_block(&expr.block);
+
+        if let Some(ref br) = expr.br {
+            self.if_stacks += 1;
+            self.block_non_sep = true;
+            self.raw_insert(" else ");
+            self.fmt_expr(br);
+            self.if_stacks -= 1;
+        }
     }
 
     fn fmt_while_expr(&mut self, expr: &WhileExpr) {
