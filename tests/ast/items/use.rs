@@ -1,3 +1,6 @@
+use a::b::c;
+use crate::aa as x;
+
 use *;
 use ::*;
 use ::f;
@@ -22,5 +25,3 @@ use a::b::{
 use a::b::{ self as ab, 
     c, g, h, d::{*, e::f} };
 use p::q::r as x;
-
-use crate::aa as x;

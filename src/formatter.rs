@@ -6,6 +6,7 @@ use crate::{
 };
 
 use std::{
+    cmp::Ordering,
     collections::{BTreeMap, HashMap},
     fmt::{self, Display},
 };
@@ -1626,7 +1627,7 @@ macro_rules! fmt_item_groups {
             match item.item {
                 $item_kind(ref e) => {
                     if $sf.has_leading_comments(&item.loc) {
-                        fmt_item_group!($sf, &group, $item_type, $fmt_item);
+                        fmt_item_group!($sf, &mut group, $fmt_item);
                         group.clear();
 
                         $sf.fmt_leading_comments(&item.loc);
@@ -1634,22 +1635,31 @@ macro_rules! fmt_item_groups {
                     group.push((&item.loc, &item.vis, &item.attrs, e));
                 }
                 _ => {
-                    fmt_item_group!($sf, &group, $item_type, $fmt_item);
+                    fmt_item_group!($sf, &mut group, $fmt_item);
                     group.clear();
                 }
             }
         }
 
-        fmt_item_group!($sf, &group, $item_type, $fmt_item);
+        fmt_item_group!($sf, &mut group, $fmt_item);
     });
 }
 
 macro_rules! fmt_item_group {
-    ($sf:expr, $group:expr, $ty:ty, $fmt_item:ident) => ({
-        let map: BTreeMap<String, (&Loc, &String, &Vec<Attr>, $ty)>
-                = $group.into_iter().map(|e| (e.3.to_string(), *e)).collect();
+    ($sf:expr, $group:expr, $fmt_item:ident) => ({
+        $group.sort_by(|a, b| {
+            let astr = a.3.to_string();
+            let bstr = b.3.to_string();
+            if astr.starts_with("use crate") {
+                Ordering::Less
+            } else if bstr.starts_with("use crate") {
+                Ordering::Greater
+            } else {
+                astr.cmp(&bstr)
+            }
+        });
 
-        for (_, e) in map {
+        for e in $group {
             $sf.fmt_attrs(e.2);
 
             $sf.insert_indent();
