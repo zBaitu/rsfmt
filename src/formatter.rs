@@ -2090,7 +2090,13 @@ impl Formatter {
                 }
             }
             if all_nl {
-                self.nl_indent();
+                if self.has_leading_comments(&tree.loc) {
+                    self.nl();
+                    self.fmt_leading_comments(&tree.loc);
+                    self.insert_indent();
+                } else {
+                    self.nl_indent();
+                }
             }
 
             self.fmt_use_one_tree(tree);
