@@ -1,10 +1,15 @@
 mod a;
 mod b; // mod b
 
+pub mod error;
+mod catalog;
+mod mem;
+
 // mod aa
 mod aa {
     type a = bool;
 }
 
 pub unsafe mod bb {}
+
 

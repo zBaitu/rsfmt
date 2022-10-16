@@ -1655,7 +1655,13 @@ macro_rules! fmt_item_group {
             } else if bstr.starts_with("use crate") {
                 Ordering::Greater
             } else {
-                astr.cmp(&bstr)
+                if a.1 == "pub" && b.1 != "pub" {
+                    Ordering::Less
+                } else if a.1 != "pub" && b.1 == "pub" {
+                    Ordering::Greater
+                } else {
+                    astr.cmp(&bstr)
+                }
             }
         });
 

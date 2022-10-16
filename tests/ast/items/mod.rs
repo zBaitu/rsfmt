@@ -7,3 +7,8 @@ mod aa {
 }
 
 pub unsafe mod bb {}
+
+mod catalog;
+pub mod error;
+mod mem;
+
