@@ -1691,6 +1691,29 @@ macro_rules! fmt_lists {
             first = false;
         })+
     });
+    ($sf:expr, $sep:expr, $wrap_sep:expr, $nl_sep:expr, $($list:expr, $act:ident),+) => ({
+        let mut first = true;
+        $(for e in $list {
+            if !first {
+                if !need_wrap!($sf.ts, $sep, &e.to_string()) {
+                    if e.loc.nl {
+                        $sf.raw_insert($nl_sep);
+                        $sf.nl_indent();
+                    } else {
+                        $sf.raw_insert($sep);
+                    }
+                } else {
+                    $sf.wrap();
+                    $sf.raw_insert($wrap_sep);
+                }
+                $sf.$act(e);
+            } else {
+                $sf.$act(e);
+            }
+
+            first = false;
+        })+
+    });
 
     ($sf:expr, $op:expr, $list:expr, $act:ident) => ({
         let mut first = true;
@@ -2853,7 +2876,7 @@ impl Formatter {
     }
 
     fn fmt_patterns(&mut self, patterns: &[Pattern]) {
-        fmt_lists!(self, " | ", "| ", patterns, fmt_patten);
+        fmt_lists!(self, " | ", "| ", " |", patterns, fmt_patten);
     }
 
     fn fmt_box_patten(&mut self, pattern: &Pattern) {
