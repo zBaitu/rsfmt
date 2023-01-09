@@ -1,4 +1,6 @@
 fn f() {
+    let err = unsafe { result.unwrap_err_unchecked() };
+
     // aaa
     const a: bool = true; // bbb
 
