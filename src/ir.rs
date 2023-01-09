@@ -651,9 +651,8 @@ impl Block {
 
         match &self.stmts[0].stmt {
             StmtKind::Expr(ref expr, _) => {
-                matches!(expr.expr,
-                    ExprKind::Literal(_) | ExprKind::Path(_) | ExprKind::FnCall(_) | ExprKind::MethodCall(_))
-                    && !expr.loc.nl
+                !expr.loc.nl && matches!(expr.expr,
+                        ExprKind::Literal(_) | ExprKind::Path(_) | ExprKind::FnCall(_) | ExprKind::MethodCall(_))
             },
             _ => false,
         }
