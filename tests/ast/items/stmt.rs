@@ -1,5 +1,6 @@
 fn f() {
     let err = unsafe { result.unwrap_err_unchecked() };
+    fn schema(&self) -> &SchemaRef { &self.schema }
 
     ;
     // aaa
