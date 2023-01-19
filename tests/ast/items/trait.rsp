@@ -1,10 +1,10 @@
 auto trait IsCool {
 }
-unsafe trait Trait<T>: A + B + 'static + Sized {
+unsafe trait Trait<T>: 'static + A + B + Sized {
 }
 pub trait Trait {
 const a: bool = true;
-type E: Iterator + 'static = bool;
+type E: 'static + Iterator = bool;
 unsafe fn f();
 const fn f(&self);
 fn f(&self);

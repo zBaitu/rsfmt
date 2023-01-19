@@ -678,7 +678,25 @@ impl Translator {
     }
 
     fn trans_type_param_bounds(&mut self, bounds: &ast::GenericBounds) -> TypeParamBounds {
-        TypeParamBounds(trans_list!(self, bounds, trans_type_param_bound))
+        let mut param_bounds: Vec<TypeParamBound> = trans_list!(self, bounds, trans_type_param_bound);
+        param_bounds.sort_by(|a, b| {
+            if let TypeParamBound::Lifetime(ref lifetime_a) = a {
+                return match b {
+                    TypeParamBound::PolyTraitRef(_) => Ordering::Less,
+                    TypeParamBound::Lifetime(ref lifetime_b) => lifetime_a.s.cmp(&lifetime_b.s),
+                };
+            }
+            if let TypeParamBound::PolyTraitRef(ref poly_a) = a {
+                return match b {
+                    TypeParamBound::Lifetime(_) => Ordering::Greater,
+                    TypeParamBound::PolyTraitRef(ref poly_b) => {
+                        poly_a.trait_ref.segments[0].name.cmp(&poly_b.trait_ref.segments[0].name)
+                    },
+                };
+            }
+            unreachable!()
+        });
+        TypeParamBounds(param_bounds)
     }
 
     fn trans_type_param_bound(&mut self, bound: &ast::GenericBound) -> TypeParamBound {
