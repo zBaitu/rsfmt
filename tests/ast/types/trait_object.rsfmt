@@ -1,8 +1,8 @@
 type a = Trait;
 type b = dyn Send + Trait;
 type c = dyn Send + Sync + Trait;
-type d = dyn 'static + Trait;
-type e = dyn 'static + Send + Trait;
-type g = dyn 'static + Trait;
+type d = dyn Trait + 'static;
+type e = dyn Send + Trait + 'static;
+type g = dyn Trait + 'static;
 type h = dyn Trait;
 
