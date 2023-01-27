@@ -151,6 +151,9 @@ fn fmt_str(src: String, path: &Path, opt: &Opt) {
         ep!("trailing_ws_lines: {:?}", ft_result.trailing_ws_lines);
         exit = true;
     }
+    if exit {
+        ep!("{}", path.display());
+    }
     if exit && !opt.keep {
         if !opt.check {
             ep!(path.display());
