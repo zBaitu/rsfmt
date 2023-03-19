@@ -651,9 +651,15 @@ impl Block {
 
         match &self.stmts[0].stmt {
             StmtKind::Expr(ref expr, _) => {
-                !expr.loc.nl && matches!(expr.expr,
-                        ExprKind::Literal(_) | ExprKind::Path(_) | ExprKind::FnCall(_) | ExprKind::MethodCall(_)
-                        | ExprKind::Ref(_))
+                if expr.loc.nl {
+                    return false
+                }
+                match expr.expr {
+                    ExprKind::Literal(_) | ExprKind::Path(_) | ExprKind::FnCall(_) | ExprKind::MethodCall(_)
+                    | ExprKind::Ref(_) => true,
+                    ExprKind::MacroCall(ref mac) => matches!(mac, MacroCall::Expr(_)),
+                    _ => false,
+                }
             },
             _ => false,
         }
