@@ -132,12 +132,14 @@ fn fmt_str(src: String, path: &Path, opt: &Opt) {
         p!(path.display());
     }
 
-    let tr_result = trans(src, path);
+    let tr_result = trans(src.clone(), path);
     let ft_result = formatter::format(tr_result.krate, tr_result.leading_cmnts, tr_result.trailing_cmnts);
 
     if opt.overwrite {
-        let mut file = File::create(path).unwrap();
-        file.write_all(ft_result.s.as_bytes()).unwrap();
+        if src != ft_result.s {
+            let mut file = File::create(path).unwrap();
+            file.write_all(ft_result.s.as_bytes()).unwrap();
+        }
     } else if !opt.check {
         p!(ft_result.s);
     }
