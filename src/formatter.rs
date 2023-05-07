@@ -2803,8 +2803,11 @@ impl Formatter {
         } else {
             self.raw_insert(" { ");
         }
-        if let StmtKind::Expr(ref expr, _) = block.stmts[0].stmt {
+        if let StmtKind::Expr(ref expr, is_semi) = block.stmts[0].stmt {
             self.fmt_expr(expr);
+            if is_semi {
+                self.raw_insert(";");
+            }
         }
         self.raw_insert(" }");
     }
