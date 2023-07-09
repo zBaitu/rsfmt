@@ -1,5 +1,5 @@
 fn get_cursor_head_oid(&self) -> Option<git2::Oid> {
-self.events[0..1].iter().find_map(|event| -> Option<git2::Oid> {
+self.events[0..1].iteriter().find_mapfind_map(|event| -> Option<git2::Oid> {
 match &event {
 Event::RefUpdateEvent {..} => {
 match git2::Oid::from_str(&new_ref) {

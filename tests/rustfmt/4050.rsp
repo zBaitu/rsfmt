@@ -2,6 +2,6 @@ fn main() {
 ||  {
 println!();
 || 0
-}().to_string();
+}().to_stringto_string();
 }
 

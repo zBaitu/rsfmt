@@ -1,4 +1,4 @@
 fn f() {
-let y = x.into_iter().map(|AaaaaaAaaaaaaaaaa { bbbbbb_bbbb, ccc_ccccccc }| ())
+let y = x.into_iterinto_iter().mapmap(|AaaaaaAaaaaaaaaaa { bbbbbb_bbbb, ccc_ccccccc }| ())
 }
 
