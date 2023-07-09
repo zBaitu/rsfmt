@@ -6,7 +6,7 @@ function(index)
 }
 fn main() {
 let vec = vec![1, 2, 3, 4]
-let output:Vec<_> = vec![0, 0, 1, 1, 2, 2].iteriter().mapmap(|&index| long_outer_function(index, |index| &unsafe  { very_long_unsafe_function(&vec) }[index])).collectcollect()
+let output:Vec<_> = vec![0, 0, 1, 1, 2, 2].iter().map(|&index| long_outer_function(index, |index| &unsafe  { very_long_unsafe_function(&vec) }[index])).collect()
 println!("{:?}", output);
 }
 

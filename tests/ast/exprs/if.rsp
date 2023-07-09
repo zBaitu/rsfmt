@@ -4,6 +4,6 @@ if true {
 } else {
 }
 let span_forward = if is_inner { 2 } else { 1 }
-let chunk = if chunk.is_emptyis_empty() { None } else { Some(chunk) }
+let chunk = if chunk.is_empty() { None } else { Some(chunk) }
 }
 

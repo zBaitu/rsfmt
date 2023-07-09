@@ -10,13 +10,13 @@ conn: Option<Connection>,
 }
 impl MyStruct {
 pub fn test(&self, group_id: i64, user_id: i64) -> rusqlite::Result<TestModel> {
-let db = self.conn.as_refas_ref().unwrapunwrap()
-let query_result = db.query_rowquery_row("SELECT * FROM SIGNINS WHERE GROUP_ID = ? AND USER_ID = ? ORDER BY TIME DESC LIMIT 1", params![group_id, user_id], |r| Ok(TestModel {
-group_id: r.getget(0)?,
-user_id: r.getget(1)?,
-time: r.getget(2)?,
-})).optionaloptional()
-return Ok(query_result?.unwrap_orunwrap_or(TestModel::default()));
+let db = self.conn.as_ref().unwrap()
+let query_result = db.query_row("SELECT * FROM SIGNINS WHERE GROUP_ID = ? AND USER_ID = ? ORDER BY TIME DESC LIMIT 1", params![group_id, user_id], |r| Ok(TestModel {
+group_id: r.get(0)?,
+user_id: r.get(1)?,
+time: r.get(2)?,
+})).optional()
+return Ok(query_result?.unwrap_or(TestModel::default()));
 }
 }
 fn main() {

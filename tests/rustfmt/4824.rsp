@@ -7,11 +7,11 @@ println!("cargo:rerun-if-changed=favicon.ico");
 println!("cargo:rerun-if-changed=Cargo.toml");
  {
 let mut res = WindowsResource::new()
-res.set_iconset_icon("favicon.ico");
+res.set_icon("favicon.ico");
 let version = get_version_for_rc!()
-res.set_version_infoset_version_info(VersionInfo::PRODUCTVERSION, version);
-res.set_version_infoset_version_info(VersionInfo::FILEVERSION, version);
-res.compilecompile().unwrapunwrap();
+res.set_version_info(VersionInfo::PRODUCTVERSION, version);
+res.set_version_info(VersionInfo::FILEVERSION, version);
+res.compile().unwrap();
 }
 }
 #[cfg(not(windows))]

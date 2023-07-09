@@ -5,9 +5,9 @@ member: String,
 }
 impl Foo {
 pub fn some_fn() {
-let edb_file = fs::read_dir(&event_path)?.find_mapfind_map(|p| {
-let path = p.okok()?.pathpath()
-(path.is_fileis_file() && Self::as_regex().is_matchis_match(&get_file_name(&path).okok()?) && path.extensionextension()? == "edb").as_someas_some(path)
+let edb_file = fs::read_dir(&event_path)?.find_map(|p| {
+let path = p.ok()?.path()
+(path.is_file() && Self::as_regex().is_match(&get_file_name(&path).ok()?) && path.extension()? == "edb").as_some(path)
 })
 }
 }

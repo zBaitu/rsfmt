@@ -1088,10 +1088,8 @@ impl Display for FnCallExpr {
 impl Display for MethodCallExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}.{}", &self.args[0], self.path.name)?;
-        if self.path.is_empty() {
-            write!(f, "{}", self.path.name)?;
-        } else {
-            write!(f, "::{}", &self.path)?;
+        if !self.path.is_empty() {
+            write!(f, "::{}", &self.path.param)?;
         }
         display_lists!(f, "(", ", ", ")", &self.args[1..])
     }
