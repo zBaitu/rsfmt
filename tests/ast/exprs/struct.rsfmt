@@ -1,6 +1,6 @@
 fn f() {
     NothingInMe {..};
-    <::i32 as Vec<bool>>::NothingInMe {};
+    <::i32 as Vec::<bool>>::NothingInMe {};
     NothingInMe {};
     NothingInMe {..};
     Point {x: 10.0, y: 20.0};

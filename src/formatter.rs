@@ -3114,7 +3114,7 @@ impl Formatter {
     }
 
     fn fmt_struct_expr(&mut self, expr: &StructExpr) {
-        fmt_qself_path!(self, expr, false);
+        fmt_qself_path!(self, expr, true);
 
         if self.can_struct_expr_one_line(expr) {
             self.fmt_struct_expr_one_line(expr);
