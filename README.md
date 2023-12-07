@@ -22,9 +22,9 @@ Support for `Rust 1.60 nightly`
 
 # Install, Build
 
-* Rustup
+* rustup
 
-Need an old rustc version, 1.60.0-nightly.
+Need an old rustc version, 1.60.0-nightly
 
 ```
 rustup toolchain install nightly-2022-02-07-x86_64-apple-darwin
