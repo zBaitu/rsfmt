@@ -111,6 +111,8 @@ impl Typesetter {
     }
 
     pub fn force_insert(&mut self, s: &str) {
+        let nl = s.chars().filter(|c| c == &NL).count();
+        self.line += nl as u32;
         self.s.push_str(s);
     }
 

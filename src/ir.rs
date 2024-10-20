@@ -656,7 +656,7 @@ impl Block {
                 }
                 match expr.expr {
                     ExprKind::Literal(_) | ExprKind::Path(_) | ExprKind::FnCall(_) | ExprKind::MethodCall(_)
-                            | ExprKind::Ref(_) | ExprKind::ListOp(_) => true,
+                            | ExprKind::Ref(_) | ExprKind::ListOp(_) | ExprKind::UnaryOp(_) => true,
                     ExprKind::MacroCall(ref mac) => matches!(mac, MacroCall::Expr(_)),
                     _ => false,
                 }
